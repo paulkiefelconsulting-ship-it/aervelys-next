@@ -1,0 +1,1 @@
+AERVELYS NEXT ist ein separates Projekt. Auf Vercel das private Repository `paulkiefelconsulting-ship-it/aervelys-next` importieren; Vorschau durch Deployment Protection schützen. Keine Supabase-Service-Role-Keys im Frontend hinterlegen. Produktiver Zugriff erst nach Authentifizierung, RLS und serverseitigen Berechtigungen.
