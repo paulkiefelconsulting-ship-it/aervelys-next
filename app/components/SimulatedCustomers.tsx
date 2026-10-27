@@ -15,6 +15,7 @@ type Case={
  scenario:string;budget_ceiling_eur:number;lifecycle:string;response_count:number;
  next_action_at:string;origin:string;destination:string;departure:string;passengers:number;
  request_status:string;created_at:string;generation_source?:string;
+ round_trip:boolean;planned_return_at:string|null;special_requests:string|null;
 };
 type Message={id:number;request_id:string;kind:string;body:string;simulation_round:number;created_at:string};
 type SimulationSnapshot={profiles:Profile[];cases:Case[];messages:Message[];simulated_only:true;external_messages_sent:false;llm_connected:false};
@@ -182,7 +183,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
        <div><strong>{c.request_code}</strong><span>{phaseLabels[c.lifecycle]||c.lifecycle}</span></div>
        <h4>{c.customer_name}</h4>
        <p>{c.origin} → {c.destination} · {c.passengers} Pax · {when(c.departure)}</p>
-       <small>Interner Preisrahmen {euros(c.budget_ceiling_eur)} · {c.response_count} Reaktionen</small>
+       <small>Interner Preisrahmen {euros(c.budget_ceiling_eur)} · {c.response_count} Reaktionen{c.round_trip&&c.planned_return_at?' · Rückflug angefragt: '+when(c.planned_return_at):''}</small>
       </button>)}
     </div>
     <div className="sim-customer-section">
@@ -192,6 +193,8 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
        <div className="sim-customer-conversation-head">
         <strong>{currentCase.customer_name}</strong><p>{currentCase.request_code} · {phaseLabels[currentCase.lifecycle]||currentCase.lifecycle}</p>
         <small>Geplanter Abflug: {when(currentCase.departure)}</small>
+        {currentCase.round_trip&&currentCase.planned_return_at&&<small>Rückreise angefragt: {when(currentCase.planned_return_at)} (nur Anfrage)</small>}
+        {currentCase.special_requests&&<small>Servicewunsch: {currentCase.special_requests}</small>}
        </div>
        {currentMessages.map(m=><article className="sim-customer-message" key={m.id}>
         <div><strong>{kindLabels[m.kind]||m.kind}</strong><span>{when(m.created_at)}</span></div>
