@@ -116,3 +116,44 @@
 .charter-offer-checks .passed{border-color:#278b83;color:#67cbb5}
 .charter-offer-checks .blocked{border-color:var(--line)}
 @media(max-width:720px){.charter-offers{padding:18px 15px}}
+
+
+/* Flight dispatch: screening-only, never a release workflow */
+.dispatch-workspace{display:grid;grid-template-columns:minmax(400px,1.35fr) minmax(310px,.85fr);gap:18px;align-items:start;margin-bottom:26px}
+.dispatch-review,.dispatch-draft{min-width:0}
+.dispatch-form{display:grid;gap:16px;padding:24px}
+.dispatch-form label,.dispatch-draft .charter-form label{display:grid;gap:8px;font-size:12px;font-weight:700;color:var(--muted)}
+.dispatch-form input,.dispatch-form select{width:100%;min-width:0;color:var(--primary);border:1px solid var(--line);background:var(--notice);padding:12px;border-radius:9px;outline:none;font-size:13px}
+.dispatch-form input:focus,.dispatch-form select:focus{border-color:var(--brand)}
+.dispatch-form .charter-submit,.dispatch-draft .charter-submit{display:flex;align-items:center;justify-content:center;gap:10px}
+.dispatch-route{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--notice);border:1px solid var(--line);padding:17px;border-radius:11px}
+.dispatch-route>div:first-child{grid-column:1/-1}
+.dispatch-route span{display:block;color:var(--muted);font-size:10px;letter-spacing:1px;margin-bottom:9px}
+.dispatch-route strong{font-size:14px;color:var(--primary);display:flex;align-items:center;gap:9px}
+.dispatch-route svg{color:var(--brand)}
+.dispatch-results{padding:20px 24px 24px;border-top:1px solid var(--line)}
+.dispatch-results h3{font:800 18px Manrope,Arial,sans-serif;color:var(--primary);margin:10px 0 15px}
+.dispatch-blocked{display:flex;align-items:flex-start;gap:9px;color:#F5B8A6;background:rgba(173,88,57,.12);border:1px solid rgba(186,98,73,.5);padding:12px;border-radius:9px;font-size:12px;line-height:1.6;margin:0}
+.shell[data-theme="light"] .dispatch-blocked{color:#995235}
+.dispatch-blocked svg{flex-shrink:0}
+.dispatch-candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:10px;margin-top:16px}
+.dispatch-candidate{background:var(--notice);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.dispatch-candidate .charter-item-top strong{display:flex;align-items:center;gap:7px;color:var(--primary)}
+.dispatch-candidate .charter-item-top strong svg{color:var(--brand)}
+.dispatch-candidate p{font-size:11px;color:var(--muted);line-height:1.6;margin:11px 0}
+.dispatch-reasons{display:flex;gap:5px;flex-wrap:wrap}
+.dispatch-reasons span{font-size:10px;border:1px solid var(--line);color:var(--muted);padding:6px 8px;border-radius:8px}
+.dispatch-evidence{margin-top:18px;padding:15px;background:var(--notice);border:1px solid var(--line);border-radius:9px;font-size:12px;color:var(--muted)}
+.dispatch-evidence strong{color:var(--primary)}
+.dispatch-evidence p{line-height:1.6;overflow-wrap:anywhere}
+.dispatch-saved{color:var(--muted);font-size:12px;line-height:1.6;display:flex;align-items:center;gap:8px}
+.dispatch-draft-list{border-top:1px solid var(--line);padding:20px 24px}
+.dispatch-draft-list h3{color:var(--primary);font:800 17px Manrope,Arial,sans-serif;margin:12px 0}
+.dispatch-draft-list p{font-size:12px;color:var(--muted)}
+.dispatch-saved-item{display:grid;text-align:left;gap:8px;color:var(--primary);background:var(--notice);border:1px solid var(--line);width:100%;border-radius:9px;padding:13px;cursor:pointer;margin:8px 0}
+.dispatch-saved-item:hover,.dispatch-saved-item.active{border-color:var(--brand)}
+.dispatch-saved-item span{font-size:12px;font-weight:700;display:flex;align-items:center;gap:9px}
+.dispatch-saved-item small{font-size:11px;color:var(--muted)}
+.charter-detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:1190px){.dispatch-workspace{grid-template-columns:1fr}}
+@media(max-width:720px){.dispatch-form,.dispatch-results,.dispatch-draft-list{padding:16px}.dispatch-route{grid-template-columns:1fr}.dispatch-route>div:first-child{grid-column:auto}.dispatch-candidates{grid-template-columns:1fr}}
