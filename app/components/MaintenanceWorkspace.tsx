@@ -3,7 +3,7 @@
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import type {FormEvent} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
-import {AlertTriangle,Clock3,FileText,History,MapPin,RefreshCw,Save,ShieldAlert,Tool,Workflow} from 'lucide-react';
+import {AlertTriangle,Clock3,FileText,History,MapPin,RefreshCw,Save,ShieldAlert,Wrench,Workflow} from 'lucide-react';
 
 type MaintenanceAircraft={
  id:string;registration:string;type:string;location:string;
@@ -149,7 +149,7 @@ export default function MaintenanceWorkspace(){
      <div><MapPin size={16}/><span>Standort</span><strong>{aircraft.location}</strong></div>
      <div><Clock3 size={16}/><span>Betriebsstunden verifiziert</span><strong>{aircraft.hours_verified?'Ja':'Nein'}</strong></div>
      <div><ShieldAlert size={16}/><span>Wartungsfreigabe verifiziert</span><strong>{aircraft.release_verified?'Ja':'Nein'}</strong></div>
-     <div><Tool size={16}/><span>Wartungsprüfung</span><strong>{human(aircraft.decision?.reason||aircraft.decision?.status)}</strong></div>
+     <div><Wrench size={16}/><span>Wartungsprüfung</span><strong>{human(aircraft.decision?.reason||aircraft.decision?.status)}</strong></div>
     </div>
     <p className="maintenance-caveat">Fehlende Wartungseinträge bedeuten nicht, dass keine Wartung nötig ist. Ohne verifizierte Unterlagen bleibt das Flugzeug gesperrt.</p>
    </div>}
