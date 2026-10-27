@@ -17,12 +17,30 @@ type Case={
  next_action_at:string;origin:string;destination:string;departure:string;passengers:number;
  request_status:string;created_at:string;generation_source?:string;
  round_trip:boolean;planned_return_at:string|null;special_requests:string|null;
+ last_response_reason:string|null;last_offer_price_eur:number|null;last_wait_hours:number|null;
 };
 type Message={id:number;request_id:string;kind:string;body:string;simulation_round:number;created_at:string};
 type SimulationSnapshot={profiles:Profile[];cases:Case[];messages:Message[];simulated_only:true;external_messages_sent:false;llm_connected:false};
 type Settings={scheduled_enabled:boolean;daily_hard_cap:number;scheduled_window:string;llm_connected:false};
 type MarketMetrics={total:number;active:number;regular:number;occasional:number;prospect:number;dormant:number;at_risk:number;lost:number;acquired_this_month:number;repeat_customers:number;market_events:number};
 type MarketPage={profiles:Profile[];filtered_total:number;offset:number;limit:number;market:MarketMetrics};
+type DailyDemand={day:string;requests:number};
+type ReasonStat={reason:string;count:number};
+type SegmentStat={segment:string;customers:number;requests:number;average_satisfaction:number};
+type Insights={
+ total_customers:number;total_requests:number;requests_last_30d:number;
+ returning_customers:number;open_cases:number;withdrawn:number;interested:number;
+ no_issued_offer:number;simulated_replies:number;average_satisfaction:number|null;
+ daily_demand:DailyDemand[];response_reasons:ReasonStat[];segment_performance:SegmentStat[];
+ simulated_only:true;llm_connected:false;
+};
+const reasonLabels:Record<string,string>={
+ awaiting_response:'Antwort noch ausstehend',price_over_budget:'Angebot über Budget',
+ offer_within_budget:'Preis grundsätzlich passend',departure_too_close:'Abflug zu kurzfristig',
+ no_offer_after_followups:'Kein Angebot nach Nachfragen',slow_initial_response:'Lange Wartezeit',
+ first_followup:'Erste Rückfrage',alternative_requested:'Alternative gewünscht',
+ awaiting_formal_offer:'Verbindliches Angebot fehlt'
+};
 const stageLabels:Record<string,string>={regular:'Stammkunde',occasional:'Gelegenheitskunde',prospect:'Interessent',dormant:'Inaktiv',at_risk:'Abwanderungsrisiko',lost:'Verloren'};
 
 const segmentLabels:Record<string,string>={
@@ -63,6 +81,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
  const [selectedCase,setSelectedCase]=useState('');
  const [showAll,setShowAll]=useState(false);
  const [directory,setDirectory]=useState<MarketPage|null>(null);
+ const [insights,setInsights]=useState<Insights|null>(null);
  const [searchDraft,setSearchDraft]=useState('');
  const [searchTerm,setSearchTerm]=useState('');
  const [stage,setStage]=useState('all');
@@ -72,19 +91,21 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
   setLoading(true);setError('');
   try{
    const client=supabase();
-   const [list,control,marketList]=await Promise.all([
+   const [list,control,marketList,analytics]=await Promise.all([
     client.rpc('aervelys_sim_customers_dashboard'),
     client.rpc('aervelys_sim_customers_settings'),
     client.rpc('aervelys_sim_customers_market_page',{
      p_search:searchTerm,p_stage:stage,p_offset:offset,p_limit:36
-    })
+    }),
+    client.rpc('aervelys_sim_customers_insights')
    ]);
-   if(list.error||control.error||marketList.error||!Array.isArray(marketList.data?.profiles)||!Array.isArray(list.data?.cases))throw Error('No simulation data');
+   if(list.error||control.error||marketList.error||analytics.error||!Array.isArray(marketList.data?.profiles)||!Array.isArray(list.data?.cases)||!Array.isArray(analytics.data?.daily_demand))throw Error('No simulation data');
    const result=list.data as SimulationSnapshot;
    setSnapshot(result);
    setSettings(control.data as Settings);
    setDirectory(marketList.data as MarketPage);
-   setSelectedCustomer(old=>old&&result.profiles.some(p=>p.code===old)?old:'');
+   setInsights(analytics.data as Insights);
+   setSelectedCustomer(old=>old&&(marketList.data as MarketPage).profiles.some(p=>p.code===old)?old:'');
    setSelectedCase(old=>old&&result.cases.some(c=>c.request_id===old)?old:(result.cases[0]?.request_id||''));
   }catch{
    setError('Virtuelle Kunden sind nicht erreichbar. Bitte Anmeldung sowie CEO-/OPS-Rechte prüfen.');
@@ -159,6 +180,37 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
     <div><MessageCircle size={18}/><strong>{snapshot.messages.filter(m=>m.kind!=='initial_request').length}</strong><span>Kundenreaktionen im Verlauf</span></div>
     <div><CalendarClock size={18}/><strong>{settings.scheduled_enabled?'Aktiv':'Pause'}</strong><span>Zeitgesteuerter Kundenverkehr</span></div>
    </div>
+   {insights&&<div className="sim-insights">
+    <div className="sim-insights-head"><div><div className="eyebrow">MARKET INTELLIGENCE / SIMULATION ONLY</div>
+      <h3>Markt- und Kundenverhalten</h3>
+      <p>Auswertung der tatsächlich erzeugten Simulationsvorgänge – keine prognostizierten Buchungen oder Umsätze.</p></div>
+     <span>{insights.total_requests} historische Simulationsanfragen</span>
+    </div>
+    <div className="sim-insights-metrics">
+     <div><strong>{insights.requests_last_30d}</strong><span>Anfragen in 30 Tagen</span></div>
+     <div><strong>{insights.open_cases}</strong><span>In Bearbeitung / Rückfrage</span></div>
+     <div><strong>{insights.no_issued_offer}</strong><span>Ohne ausgestelltes Angebot</span></div>
+     <div><strong>{insights.withdrawn}</strong><span>Zurückgezogen</span></div>
+     <div><strong>{insights.interested}</strong><span>Unverbindlich interessiert</span></div>
+     <div><strong>{insights.average_satisfaction===null?'—':insights.average_satisfaction.toFixed(1)+'/100'}</strong><span>Ø simulierte Zufriedenheit</span></div>
+    </div>
+    <div className="sim-insights-columns">
+     <div><h4>Nachfrage der letzten 14 Tage</h4>
+      <div className="sim-insights-bars" role="img" aria-label="Tägliche Anzahl simulierter Charteranfragen in den letzten 14 Tagen">
+       {insights.daily_demand.map(d=><div key={d.day} title={d.day+': '+d.requests+' Anfragen'}>
+        <div className="sim-insights-bar-track"><div className="sim-insights-bar" style={{height:Math.max(3,100*d.requests/Math.max(1,...insights.daily_demand.map(x=>x.requests)))+'%'}}/></div>
+        <small>{d.day.slice(8)}</small></div>)}
+      </div>
+      <p>Der Markt erzeugt nur dann Anfragen, wenn die Nachfrage- und Aktivitätsregeln greifen.</p>
+     </div>
+     <div><h4>Gründe für Kundenreaktionen</h4>
+      {insights.response_reasons.length===0?<p>Noch keine Kundenreaktionen gespeichert.</p>:
+       insights.response_reasons.slice(0,6).map(r=><div className="sim-insights-reason" key={r.reason}>
+       <span>{reasonLabels[r.reason]||r.reason}</span><strong>{r.count}</strong></div>)}
+      <p>Interesse ist keine Buchung. Vertrags- und Flugfreigaben bleiben unverändert.</p>
+     </div>
+    </div>
+   </div>}
    <div className="sim-customer-controls">
     <div><div className="eyebrow">CUSTOMER TRAFFIC CONTROL</div><h3>Realistische Nachfrage simulieren</h3>
      <p>Stammkunden, Gelegenheitskunden und Neukunden fragen unterschiedlich häufig an. Werktags entsteht mehr Nachfrage als am Wochenende. Höchstens 15 Anfragen pro 24 Stunden schützen den Posteingang; neue Marktprofile können monatlich hinzukommen.</p></div>
@@ -235,6 +287,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
         <small>Geplanter Abflug: {when(currentCase.departure)}</small>
         {currentCase.round_trip&&currentCase.planned_return_at&&<small>Rückreise angefragt: {when(currentCase.planned_return_at)} (nur Anfrage)</small>}
         {currentCase.special_requests&&<small>Servicewunsch: {currentCase.special_requests}</small>}
+        {currentCase.last_response_reason&&<small>Letzte Reaktion: {reasonLabels[currentCase.last_response_reason]||currentCase.last_response_reason}{currentCase.last_offer_price_eur!==null?' · Angebotswert '+euros(currentCase.last_offer_price_eur):''}</small>}
        </div>
        {currentMessages.map(m=><article className="sim-customer-message" key={m.id}>
         <div><strong>{kindLabels[m.kind]||m.kind}</strong><span>{when(m.created_at)}</span></div>
