@@ -50,7 +50,7 @@ function defaultLeg(r:RequestItem,d:DispatchDraft):Leg{
  return {origin:r.origin_icao,destination:r.destination_icao,departure:localDate(r.requested_departure),
   arrival:localDate(new Date(from.getTime()+d.estimated_block_minutes*60000).toISOString()),purpose:'charter'};
 }
-export default function CrewPreplanning({initialRequestId}:{initialRequestId?:string}){
+export default function CrewPreplanning({initialRequestId,onOpenRelease}:{initialRequestId?:string;onOpenRelease:(requestId:string)=>void}){
  const [requests,setRequests]=useState<RequestItem[]>([]);
  const [dispatches,setDispatches]=useState<DispatchDraft[]>([]);
  const [requestId,setRequestId]=useState('');
@@ -217,6 +217,7 @@ export default function CrewPreplanning({initialRequestId}:{initialRequestId?:st
     <div className="dispatch-blocked"><ShieldAlert size={17}/> Jede Speicherung bleibt „Nachweise offen“. Keine operative Reservierung.</div>
     <button type="submit" className="charter-submit" disabled={saving||reviewing||!review}><Save size={16}/>{saving?'Wird gespeichert …':'Crew- und Rotationsentwurf speichern'}</button>
    </form>
+   <div className="release-next-step"><strong>Nachweisprüfung</strong><p>Öffne den vollständigen Prüfbericht für Flugzeug, Crew, Wartung und Flughäfen. Die Flugfreigabe bleibt gesperrt.</p><button type="button" className="charter-open-inbox" onClick={()=>onOpenRelease(requestId)}>Freigabe-Cockpit öffnen <ArrowRight size={16}/></button></div>
    {review?.draft&&<div className="crew-review-summary"><div className="eyebrow">SAVED PLAN / REVIEW</div>
     <h3><Users size={18}/> Gespeicherte Crewprüfung</h3>
     <p>Status: {review.draft.planning_status} · letzte Änderung {new Date(review.draft.updated_at).toLocaleString('de-DE')}</p>
