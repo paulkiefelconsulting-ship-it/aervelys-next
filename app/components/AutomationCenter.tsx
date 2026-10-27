@@ -56,7 +56,7 @@ export default function AutomationCenter(){
    const snapshot=data as Overview;
    setOverview(snapshot);
    setActiveRun(old=>old&&snapshot.review_runs.some(r=>r.id===old)?old:snapshot.review_runs[0]?.id||'');
-   setNotes(old=>({...Object.fromEntries(snapshot.followups.map(t=>[t.id,t.note||''])),...old}));
+   setNotes(Object.fromEntries(snapshot.followups.map(t=>[t.id,t.note||''])) as Record<string,string>);
    setTaskStatuses(Object.fromEntries(snapshot.followups.map(t=>[t.id,t.status])) as Record<string,TaskStatus>);
   }catch{
    setOverview(null);setError('Automationszentrale nicht erreichbar. Bitte aktive CEO-Berechtigung und Anmeldung prüfen.');
