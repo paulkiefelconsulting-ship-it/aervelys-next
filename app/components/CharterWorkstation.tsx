@@ -22,6 +22,20 @@ type CharterRequest={
  received_at:string;
 };
 
+type CharterOffer={
+ id:string;request_code:string;aircraft:string;revision:number;status:string;
+ price_eur:number|null;feasibility_approved:boolean;crew_approved:boolean;
+ maintenance_approved:boolean;airport_rules_approved:boolean;
+ performance_approved:boolean;contract_terms_approved:boolean;
+};
+const offerChecks:{key:keyof CharterOffer;label:string}[]=[
+ {key:'feasibility_approved',label:'Machbarkeit'},
+ {key:'crew_approved',label:'Crew'},
+ {key:'maintenance_approved',label:'Wartung'},
+ {key:'airport_rules_approved',label:'Airport-Regeln'},
+ {key:'performance_approved',label:'Leistungsdaten'},
+ {key:'contract_terms_approved',label:'Vertragsprüfung'},
+];
 type FormValues={
  origin:string;destination:string;departure:string;passengers:string;
  contact:string;email:string;note:string;priority:string;
@@ -41,6 +55,8 @@ function client(){
 export default function CharterWorkstation({onCreated,onOpenInbox}:{onCreated:()=>Promise<void>;onOpenInbox:()=>void}){
  const [form,setForm]=useState<FormValues>(initial);
  const [records,setRecords]=useState<CharterRequest[]>([]);
+ const [offers,setOffers]=useState<CharterOffer[]>([]);
+ const [offersError,setOffersError]=useState(false);
  const [loading,setLoading]=useState(true);
  const [submitting,setSubmitting]=useState(false);
  const [error,setError]=useState('');
@@ -56,6 +72,8 @@ export default function CharterWorkstation({onCreated,onOpenInbox}:{onCreated:()
    if(rpcError)throw rpcError;
    if(!Array.isArray(data))throw new Error('Unerwartete Serverantwort');
    setRecords(data as CharterRequest[]);setReady(true);
+   const offersResponse=await client().rpc('aervelys_charter_offers_list');
+   if(!offersResponse.error&&Array.isArray(offersResponse.data)){setOffers(offersResponse.data as CharterOffer[]);setOffersError(false);}else{setOffersError(true);}
   }catch{
    setReady(false);
    setError('Chartervorgänge nicht erreichbar. Bitte Anmeldung und CEO-/OPS-Berechtigung prüfen.');
@@ -157,6 +175,18 @@ export default function CharterWorkstation({onCreated,onOpenInbox}:{onCreated:()
     </button>)}
    </div>}
    {current&&<div className="charter-detail"><div className="eyebrow">SELECTED REQUEST</div><h3>{current.request_code}</h3><p><CalendarClock size={15}/> {formatDate(current.requested_departure)}</p><p>Ansprechpartner: <strong>{current.contact_name||'Nicht erfasst'}</strong></p>{current.contact_email&&<p>Kontakt: {current.contact_email}</p>}<p>Priorität: {current.priority||'normal'} · Bearbeitung: {current.processing_status||current.request_status}</p>{current.customer_note&&<p>Hinweise: {current.customer_note}</p>}<button type="button" className="charter-open-inbox" onClick={onOpenInbox}>Posteingang öffnen <ArrowRight size={15}/></button></div>}
+   <div className="charter-offers">
+    <div className="eyebrow">OFFER REVIEW</div>
+    <h3>Angebotsentwürfe & Freigaben</h3>
+    <p>Preis- und Freigabedaten werden nur gelesen. Ein Angebot kann hier noch nicht versendet werden.</p>
+    {offersError?<p className="charter-error">Angebotsdaten aktuell nicht abrufbar.</p>:null}
+    {!offersError&&offers.length===0?<div className="charter-offer-empty">Noch keine Angebotsentwürfe vorhanden.</div>:null}
+    {offers.map(o=><article className="charter-offer-card" key={o.id}>
+     <div className="charter-item-top"><strong>{o.request_code} · {o.aircraft}</strong><span className="pill">{o.status}</span></div>
+     <p>Revision {o.revision} · {typeof o.price_eur==='number'?o.price_eur.toLocaleString('de-DE',{style:'currency',currency:'EUR'}):'Preis noch offen'}</p>
+     <div className="charter-offer-checks">{offerChecks.map(c=><span key={c.key} className={o[c.key]===true?'passed':'blocked'}>{c.label}: {o[c.key]===true?'geprüft':'offen'}</span>)}</div>
+    </article>)}
+   </div>
    <div className="ops-footer">{ready?records.length+' Vorgänge · Geschützte Live-Daten':'Nur autorisierte CEO- und OPS-Benutzer'}</div>
   </section>
  </div>;
