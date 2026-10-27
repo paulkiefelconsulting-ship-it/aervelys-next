@@ -8,7 +8,7 @@ const workstreams:Workstream[]=[
 {title:'Crewplanung & HR',phase:'partial',existing:'31 Mitarbeiter und eigene Crew-Vorplanung mit PIC/SIC, bis zu 6 Flugabschnitten, Qualifikations-Screening, konservativer Ruhezeitprüfung und Änderungsprotokoll',next:'Verifizierte Musterberechtigungen, verbindliche Dienst-/Ruhezeitlogik und freigegebene Crew-Reservierungen'},
 {title:'Charter & Angebote',phase:'partial',existing:'Geschützte manuelle Chartererfassung mit Posteingangsverknüpfung, Live-Anfrageliste und Angebots-/Freigabeübersicht',next:'Angebotskalkulation, geprüfte Freigaben, Kundenkommunikation und vollständiger Flugauftrag'},
 {title:'Posteingang & Anfragen',phase:'partial',existing:'Geschützte Liste, Zuweisung, Status und Verlauf',next:'Echte E-Mails, Anhänge und End-to-End-Test'},
-{title:'Wartung EDAZ',phase:'backend',existing:'Wartungsaufträge und externe Dienstleistermodelle',next:'Wartungsworkflow und verifizierte Freigaben'},
+{title:'Wartung EDAZ',phase:'partial',existing:'Geschützte Live-Wartungsübersicht für alle fünf Jets, Aufträge, Fälligkeiten, Werkstattpartner sowie Mängelmeldungen mit revisionsähnlichem Ereignisverlauf',next:'Verifizierte Wartungsunterlagen, Werkstattauftrag-Workflow und fachlich bestätigte technische Freigaben'},
 {title:'Finanzen & Verträge',phase:'backend',existing:'Vertrags- und Buchungsstrukturen',next:'Rechnungs- und Zahlungsoberfläche'},
 {title:'Training Center',phase:'backend',existing:'Drei Kurse und Qualifikationsstrukturen',next:'Trainingsplanung und Schulungsnachweise'},
 {title:'Hangars & Immobilien',phase:'backend',existing:'Standort- und Mietmodelle',next:'Verträge und laufende Mietverwaltung'},
