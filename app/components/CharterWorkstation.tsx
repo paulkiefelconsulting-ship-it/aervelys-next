@@ -169,7 +169,7 @@ export default function CharterWorkstation({onCreated,onOpenInbox,onOpenDispatch
    {!loading&&ready&&visible.length===0?<div className="charter-empty"><ClipboardList size={27}/><strong>Noch keine Anfragen</strong><p>{query?'Keine Treffer für deine Suche.':'Erfasse links die erste Charteranfrage.'}</p></div>:null}
    {!loading&&ready&&visible.length>0&&<div className="charter-items">
     {visible.map(item=><button key={item.request_id} type="button" className={'charter-item '+(selected===item.request_id?'selected':'')} onClick={()=>setSelected(item.request_id)}>
-     <div className="charter-item-top"><strong>{item.request_code}</strong><span className="pill">{item.processing_status||item.request_status}</span></div>
+     <div className="charter-item-top"><strong>{item.request_code}{item.request_code.startsWith('AV-SIM-')&&<span className="sim-tag">SIM</span>}</strong><span className="pill">{item.processing_status||item.request_status}</span></div>
      <div className="charter-route">{item.origin_icao} <ArrowRight size={16}/> {item.destination_icao}</div>
      <div className="charter-item-meta">{item.contact_name||'Kontakt nicht erfasst'} · {item.passengers} Pax · {formatDate(item.requested_departure)}</div>
     </button>)}
