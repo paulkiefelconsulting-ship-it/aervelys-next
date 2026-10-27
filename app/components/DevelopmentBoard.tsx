@@ -4,8 +4,8 @@ import {ChevronDown, ChevronUp, CheckCircle2, Clock3, ShieldAlert} from 'lucide-
 
 type Workstream={title:string;phase:'backend'|'partial'|'planned';existing:string;next:string};
 const workstreams:Workstream[]=[
-{title:'Flotte & Flugplanung',phase:'backend',existing:'Fünf Jets und Dispositions-/Konfliktprüfungen in Supabase',next:'Verifizierte Flugzeugleistungen und operativer Dispatch'},
-{title:'Crewplanung & HR',phase:'backend',existing:'31 Mitarbeiter und Modelle für Crewrotationen',next:'Qualifikationsprüfung und vollständige Dienst-/Ruhezeitlogik'},
+{title:'Flotte & Flugplanung',phase:'partial',existing:'Fünf Jets, geschützte Live-Flottenkarten mit ICAO-Standorten und Dispositionsprüfungen in Supabase',next:'Verifizierte Flugzeugleistungen und operativer Dispatch'},
+{title:'Crewplanung & HR',phase:'partial',existing:'31 Mitarbeiter, geschützte durchsuchbare Crewübersicht und Modelle für Crewrotationen',next:'Qualifikationsprüfung und vollständige Dienst-/Ruhezeitlogik'},
 {title:'Charter & Angebote',phase:'backend',existing:'Anfrage-, Angebots- und Prüfdatenmodelle',next:'Angebotsbearbeitung bis zum fakturierten Flug'},
 {title:'Posteingang & Anfragen',phase:'partial',existing:'Geschützte Liste, Zuweisung, Status und Verlauf',next:'Echte E-Mails, Anhänge und End-to-End-Test'},
 {title:'Wartung EDAZ',phase:'backend',existing:'Wartungsaufträge und externe Dienstleistermodelle',next:'Wartungsworkflow und verifizierte Freigaben'},
