@@ -97,6 +97,7 @@ export default function ReleaseCockpit({initialRequestId}:{initialRequestId?:str
   if(!report||savingGate||!tasks[gate.code])return;
   const note=notes[gate.code]?.trim()||null;
   if(note&&note.length>2000){setError('Notiz darf höchstens 2000 Zeichen enthalten.');return;}
+  if(tasks[gate.code]==='review_requested'&&(!note||note.length<8)){setError('Für „Zur Prüfung vorgelegt“ ist eine Belegreferenz oder Begründung mit mindestens 8 Zeichen erforderlich.');return;}
   setSavingGate(gate.code);setError('');setMessage('');
   try{
    const {error:rpcError}=await getClient().rpc('aervelys_release_task_update',{
