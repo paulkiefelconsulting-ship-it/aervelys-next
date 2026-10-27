@@ -754,3 +754,16 @@
 @media(max-width:1100px){.virtual-staff-cols{grid-template-columns:1fr}}
 @media(max-width:850px){.virtual-staff-controls{align-items:stretch;flex-direction:column}.virtual-staff-controls>div:last-child{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.virtual-staff-title{flex-direction:column}.virtual-staff-safety{padding:15px}.virtual-staff-feedback{margin:16px}.virtual-staff-metrics{grid-template-columns:1fr 1fr;padding:16px;gap:9px}.virtual-staff-metrics>div{padding:12px}.virtual-staff-controls{margin:0 16px 16px;padding:15px}.virtual-staff-controls>div:last-child{grid-template-columns:1fr}.virtual-staff-cols{padding:0 16px 16px}.virtual-staff-block{padding:15px}.virtual-staff-training,.virtual-staff-audit{margin:0 16px 16px}.virtual-staff-hours{grid-template-columns:1fr}}
+
+
+/* Proactive simulated employee inbox on CEO dashboard */
+.virtual-ceo-preview{margin-top:18px;margin-bottom:18px}
+.virtual-ceo-preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.virtual-ceo-preview-head h2{display:flex;align-items:center;gap:9px}
+.virtual-ceo-preview-messages{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px;padding:0 24px 22px}
+.virtual-ceo-preview-messages button{cursor:pointer;text-align:left;display:grid;gap:8px;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--notice);color:var(--primary)}
+.virtual-ceo-preview-messages button:hover{border-color:var(--brand)}
+.virtual-ceo-preview-messages strong{font-size:12px;color:var(--brand)}
+.virtual-ceo-preview-messages span{font-size:11px;line-height:1.6}
+.virtual-ceo-preview-empty{font-size:12px;color:var(--muted);padding:0 24px 20px}
+@media(max-width:700px){.virtual-ceo-preview-head{align-items:stretch;flex-direction:column}.virtual-ceo-preview-messages{padding:0 16px 16px}.virtual-ceo-preview-empty{padding:0 16px 16px}}
