@@ -40,7 +40,11 @@ const reasonLabels:Record<string,string>={
  offer_within_budget:'Preis grundsätzlich passend',departure_too_close:'Abflug zu kurzfristig',
  no_offer_after_followups:'Kein Angebot nach Nachfragen',slow_initial_response:'Lange Wartezeit',
  first_followup:'Erste Rückfrage',alternative_requested:'Alternative gewünscht',
- awaiting_formal_offer:'Verbindliches Angebot fehlt'
+ awaiting_formal_offer:'Verbindliches Angebot fehlt',
+ simulation_price_far_over_budget:'SIM-Preis deutlich zu hoch',
+ simulation_price_over_budget:'SIM-Preis über Budget',
+ simulation_schedule_unacceptable:'SIM-Abflugzeit unpassend',
+ simulation_price_and_time_plausible:'SIM-Preis und Termin passend'
 };
 const stageLabels:Record<string,string>={regular:'Stammkunde',occasional:'Gelegenheitskunde',prospect:'Interessent',dormant:'Inaktiv',at_risk:'Abwanderungsrisiko',lost:'Verloren'};
 
