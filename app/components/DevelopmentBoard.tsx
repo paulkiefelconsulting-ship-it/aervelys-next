@@ -10,7 +10,7 @@ const workstreams:Workstream[]=[
 {title:'Posteingang & Anfragen',phase:'partial',existing:'Geschützte Liste, Zuweisung, Status und Verlauf',next:'Echte E-Mails, Anhänge und End-to-End-Test'},
 {title:'Wartung EDAZ',phase:'partial',existing:'Geschützte Live-Wartungsübersicht für alle fünf Jets, Aufträge, Fälligkeiten, Werkstattpartner sowie Mängelmeldungen mit revisionsähnlichem Ereignisverlauf',next:'Verifizierte Wartungsunterlagen, Werkstattauftrag-Workflow und fachlich bestätigte technische Freigaben'},
 {title:'Finanzen & Verträge',phase:'partial',existing:'Geschütztes Firmenledger ohne Privatbuchungen, Live-Verträge und Angebote, Rechnungsübersicht sowie Vertragsentwürfe mit eingeschränkter Bearbeitung',next:'Rechnungsprüfung, Freigabeprozesse, Finanzplanung, Buchungskontrollen und Zahlungssimulation ohne reale Transaktionen'},
-{title:'Training Center',phase:'backend',existing:'Drei Kurse und Qualifikationsstrukturen',next:'Trainingsplanung und Schulungsnachweise'},
+{title:'Training Center',phase:'partial',existing:'Geschützter Kurskatalog, Trainingszentren, Termine mit Status geplant, Teilnahmeanfragen und sichtbare Zertifikats-/Qualifikationsnachweise',next:'Verifizierte Ausbildungsanbieter, verbindliche Terminbestätigung, echte Schulungsnachweise und kontrollierte Qualifikationsfreigaben'},
 {title:'Hangars & Immobilien',phase:'backend',existing:'Standort- und Mietmodelle',next:'Verträge und laufende Mietverwaltung'},
 {title:'KI & Automatisierung',phase:'planned',existing:'Automatisierbare Prüfschritte in einzelnen Modulen',next:'Sichere KI-Agenten und Freigabeprozesse'},
 {title:'CEO-Dashboard',phase:'partial',existing:'Login, Live-Kennzahlen und Firmen-Navigation',next:'Weitere operative Managementansichten'},
