@@ -27,7 +27,7 @@ const readableReasons:Record<string,string>={
  aircraft_schedule_conflict:'Flugplan-Konflikt',
  crew_maintenance_performance_checks_pending:'Crew, Wartung und Leistungsdaten nicht abschließend geprüft'
 };
-export default function DispatchWorkbench({initialRequestId}:{initialRequestId?:string}){
+export default function DispatchWorkbench({initialRequestId,onOpenCrew}:{initialRequestId?:string;onOpenCrew:(requestId:string)=>void}){
  const [requests,setRequests]=useState<RequestItem[]>([]);
  const [fleet,setFleet]=useState<Aircraft[]>([]);
  const [drafts,setDrafts]=useState<Draft[]>([]);
@@ -169,6 +169,7 @@ export default function DispatchWorkbench({initialRequestId}:{initialRequestId?:
     <button className="charter-submit" type="submit" disabled={!checkedCurrent||!aircraftId||saving}><Save size={16}/>{saving?'Speichern …':'Entwurf speichern'}</button>
     {currentDraft&&<p className="dispatch-saved"><Clock3 size={15}/> Bestehender Entwurf: {currentDraft.registration} · {currentDraft.estimated_block_minutes} Min. · {dateText(currentDraft.updated_at)}</p>}
    </form>
+   {currentDraft&&<div className="dispatch-nextstep"><strong>Nächster Schritt</strong><p>Plane PIC, SIC und mehrteilige Flugroute. Die Crewfreigabe bleibt offen.</p><button type="button" className="charter-open-inbox" onClick={()=>onOpenCrew(requestId)}>Crew-Vorplanung öffnen <ArrowRight size={16}/></button></div>}
    <div className="dispatch-draft-list"><div className="eyebrow">SAVED PLANNING DRAFTS</div><h3>Gespeicherte Entwürfe ({drafts.length})</h3>
     {drafts.length===0?<p>Keine Dispositionsentwürfe vorhanden.</p>:drafts.map(d=><button className={'dispatch-saved-item '+(selectedDraft===d.id?'active':'')} key={d.id} type="button" onClick={()=>setRequestId(d.request_id)}>
      <span><ClipboardList size={16}/> {d.request_code} · {d.registration}</span><small>Nur Planung · {dateText(d.updated_at)}</small>
