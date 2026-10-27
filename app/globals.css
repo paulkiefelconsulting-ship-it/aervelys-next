@@ -373,3 +373,51 @@
 @media(max-width:1190px){.finance-layout{grid-template-columns:1fr}}
 @media(max-width:950px){.finance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.finance-heading{flex-direction:column}.finance-safety{padding:14px 16px}.finance-feedback{margin:16px}.finance-metrics{padding:16px;gap:8px}.finance-metrics article{padding:13px}.finance-metrics article>strong{font-size:17px}.finance-layout{padding:0 16px 16px}.finance-block,.finance-editor{padding:16px}.finance-form-row{grid-template-columns:1fr}.finance-filters select{flex:1}.finance-block-top{flex-direction:column}}
+
+
+/* AERVELYS Training Center: administrative session planning only */
+.training-workspace{margin-bottom:26px;min-width:0}
+.training-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.training-warning{display:flex;align-items:flex-start;gap:11px;color:var(--muted);font-size:12px;line-height:1.7;padding:16px 24px;border-block:1px solid var(--line);background:var(--notice)}
+.training-warning svg{color:var(--brand);flex-shrink:0}
+.training-feedback{margin:15px 24px}
+.training-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:22px 24px}
+.training-metrics>div{display:grid;align-content:start;gap:9px;background:var(--notice);border:1px solid var(--line);border-radius:11px;padding:16px;min-width:0}
+.training-metrics svg{color:var(--brand)}
+.training-metrics strong{color:var(--primary);font-size:29px;line-height:1}
+.training-metrics span{color:var(--muted);font-size:11px}
+.training-course-section{padding:4px 24px 24px;border-bottom:1px solid var(--line)}
+.training-course-section h3,.training-block h3{color:var(--primary);font:800 18px Manrope,Arial,sans-serif;margin:9px 0 16px}
+.training-course-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.training-course{padding:17px;border:1px solid var(--line);border-radius:11px;background:var(--notice);min-width:0}
+.training-course-top{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.training-course-top strong{color:var(--brand);font-size:11px}
+.training-course-top>span{font-size:10px;color:var(--muted)}
+.training-course h4{font-size:14px;line-height:1.4;color:var(--primary);margin:14px 0 9px}
+.training-course p,.training-course small{font-size:11px;color:var(--muted);line-height:1.6;display:block}
+.training-approval-warning,.training-unverified{display:block;background:rgba(173,88,57,.09);border:1px solid rgba(186,98,73,.45);color:#f3b5a5;padding:10px;border-radius:8px;font-size:11px;line-height:1.5;margin-top:12px}
+.shell[data-theme="light"] .training-approval-warning,.shell[data-theme="light"] .training-unverified{color:#995235}
+.training-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);gap:18px;align-items:start;padding:23px 24px}
+.training-list-col,.training-forms{display:grid;gap:16px;min-width:0}
+.training-block{padding:20px;border:1px solid var(--line);border-radius:11px;min-width:0}
+.training-block-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.training-block-top select,.training-form select,.training-form input{background:var(--notice);border:1px solid var(--line);border-radius:9px;color:var(--primary);padding:11px;min-width:0;font-size:12px}
+.training-block-top select{max-width:160px}
+.training-session,.training-line{border-bottom:1px solid var(--line);padding:13px 0}
+.training-session:last-child,.training-line:last-child{border-bottom:0}
+.training-session>div:first-child{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.training-session strong,.training-line strong{color:var(--primary);font-size:12px}
+.training-pill{border:1px solid var(--line);border-radius:50px;padding:5px 8px;color:var(--brand);font-size:10px}
+.training-session p,.training-line p,.training-session small,.training-line small,.training-hint,.training-empty{display:block;color:var(--muted);font-size:11px;line-height:1.65;margin:8px 0}
+.training-session .training-unverified{display:inline-block}
+.training-empty{border:1px dashed var(--line);border-radius:9px;background:var(--notice);padding:15px}
+.training-form{display:grid;gap:15px;margin-top:17px}
+.training-form label{display:grid;gap:8px;color:var(--muted);font-weight:700;font-size:11px;min-width:0}
+.training-form select,.training-form input{width:100%}
+.training-form input:focus,.training-form select:focus{outline:1px solid var(--brand)}
+.training-form input[type="datetime-local"]{color-scheme:dark}
+.shell[data-theme="light"] .training-form input[type="datetime-local"]{color-scheme:light}
+.training-form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.training-form .charter-submit{display:flex;justify-content:center;align-items:center;gap:9px}
+@media(max-width:1150px){.training-layout{grid-template-columns:1fr}.training-course-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.training-heading,.training-block-top{flex-direction:column}.training-warning{padding:15px}.training-metrics{grid-template-columns:repeat(2,minmax(0,1fr));padding:16px;gap:9px}.training-course-section{padding:5px 16px 16px}.training-course-grid{grid-template-columns:1fr}.training-layout{padding:16px}.training-block{padding:16px}.training-feedback{margin:15px}.training-form-row{grid-template-columns:1fr}.training-block-top select{max-width:none}}
