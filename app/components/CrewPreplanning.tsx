@@ -94,21 +94,28 @@ export default function CrewPreplanning({initialRequestId}:{initialRequestId?:st
   const r=requests.find(x=>x.request_id===requestId);
   const d=dispatches.find(x=>x.request_id===requestId);
   if(r&&d){setLegs([defaultLeg(r,d)]);setPic('');setSic('');setNote('');}
-  getClient().rpc('aervelys_crew_preplan_review',{p_request_id:requestId}).then(({data,error:rpcError})=>{
-   if(!active)return;
-   if(rpcError||!data||data.status!=='planning_only'){setError('Crewprüfung derzeit nicht verfügbar.');return;}
-   const v=data as Review;
-   setReview(v);
-   if(v.draft){
-    setPic(v.draft.pic_id);setSic(v.draft.sic_id);setNote(v.draft.note||'');
-    setLegs(v.draft.legs.map(l=>({...l,departure:localDate(l.departure),arrival:localDate(l.arrival)})));
+  void (async()=>{
+   try{
+    const {data,error:rpcError}=await getClient().rpc('aervelys_crew_preplan_review',{p_request_id:requestId});
+    if(!active)return;
+    if(rpcError||!data||data.status!=='planning_only'){setError('Crewprüfung derzeit nicht verfügbar.');return;}
+    const v=data as Review;
+    setReview(v);
+    if(v.draft){
+     setPic(v.draft.pic_id);setSic(v.draft.sic_id);setNote(v.draft.note||'');
+     setLegs(v.draft.legs.map(l=>({...l,departure:localDate(l.departure),arrival:localDate(l.arrival)})));
+    }
+   }catch{
+    if(active)setError('Crewprüfung derzeit nicht verfügbar.');
+   }finally{
+    if(active)setReviewing(false);
    }
-  }).catch(()=>{if(active)setError('Crewprüfung derzeit nicht verfügbar.');}).finally(()=>{if(active)setReviewing(false);});
+  })();
   return()=>{active=false;};
  },[requestId,requests,dispatches]);
 
  function patchLeg(index:number,field:keyof Leg,value:string){
-  setLegs(old=>old.map((l,i)=>i===index?{...l,[field]:value}:l));
+  setLegs(old=>old.map((l,i)=>i===index?({...l,[field]:value} as Leg):l));
   setMessage('');
  }
  function addLeg(){
