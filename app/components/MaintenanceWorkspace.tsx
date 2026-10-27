@@ -3,7 +3,7 @@
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import type {FormEvent} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
-import {AlertTriangle,ClipboardList,Clock3,FileText,History,MapPin,RefreshCw,Save,ShieldAlert,Tool,Workflow} from 'lucide-react';
+import {AlertTriangle,Clock3,FileText,History,MapPin,RefreshCw,Save,ShieldAlert,Tool,Workflow} from 'lucide-react';
 
 type MaintenanceAircraft={
  id:string;registration:string;type:string;location:string;
@@ -156,7 +156,7 @@ export default function MaintenanceWorkspace(){
    <div className="maintenance-layout">
     <div className="maintenance-main">
      <div className="maintenance-section"><div className="eyebrow">TECHNICAL WORK PACKAGES</div><h3>Wartungsanforderungen ({snapshot.requirements.filter(r=>r.registration===aircraft?.registration).length})</h3>
-      {snapshot.requirements.filter(r=>r.registration===aircraft?.registration).length===0?<p className="maintenance-empty">Noch keine Anforderungen erfasst. Dies ist **kein** Nachweis technischer Einsatzbereitschaft.</p>:
+      {snapshot.requirements.filter(r=>r.registration===aircraft?.registration).length===0?<p className="maintenance-empty">Noch keine Anforderungen erfasst. Dies ist kein Nachweis technischer Einsatzbereitschaft.</p>:
       snapshot.requirements.filter(r=>r.registration===aircraft?.registration).map(r=><article className="maintenance-line" key={r.id}><strong>{r.title}</strong><p>{r.status} · Fällig: {formatDate(r.due_at)} · {r.due_airframe_hours===null?'Keine Stundenfälligkeit':r.due_airframe_hours+' Stunden'}</p><small>Nachweis: {r.source_reference||'nicht hinterlegt'}</small></article>)}
      </div>
      <div className="maintenance-section"><div className="eyebrow">WORK ORDERS</div><h3>Werkstattaufträge ({snapshot.work_orders.filter(w=>w.registration===aircraft?.registration).length})</h3>
