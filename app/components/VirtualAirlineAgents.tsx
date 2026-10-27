@@ -11,7 +11,8 @@ type Training={id:string;person:string;role:string|null;course:string;target_air
  hours_verified:boolean;status:string;message:string;created_at:string};
 type CeoMessage={id:number;sender:string;subject:string;body:string;category:string;status:'unread'|'read';created_at:string};
 type Log={id:number;action:string;result:string;detail:string;created_at:string};
-type Overview={enabled:boolean;max_sim_quotes_per_day:number;sim_quotes_today:number;ops_review_required:number;ops_alerts_unread:number;plans:Plan[];training:Training[];
+type PositionDraft={request_id:string;request_code:string;registration:string;origin:string;destination:string;previous_case:string|null;window_from:string;window_until:string;status:string;explanation:string};
+type Overview={enabled:boolean;max_sim_quotes_per_day:number;sim_quotes_today:number;ops_review_required:number;ops_alerts_unread:number;positioning_drafts:PositionDraft[];plans:Plan[];training:Training[];
  ceo_messages:CeoMessage[];events:Log[];model_connected:false;verified_crew_assignments:false};
 type Pilot={person_id:string;person:string;pilot_role:'PIC'|'SIC';total_hours:number|null;pic_hours:number|null;source_reference:string|null;
  verification_status:'missing'|'reported'|'verified'};
@@ -129,6 +130,14 @@ export default function VirtualAirlineAgents(){
        </div>
        <small>Geprüfte Sitzplätze: {p.evidence.passenger_capacity_verified?'Ja':'Nein'} · PIC Type Rating: {p.evidence.pic_type_rating_verified?'Ja':'Nein'} · SIC Type Rating: {p.evidence.sic_type_rating_verified?'Ja':'Nein'}</small>
        <p className="virtual-staff-warning">Vorläufig – keine verbindliche Flugzeug- oder Crewzuordnung</p>
+       {data.positioning_drafts.filter(d=>d.request_id===p.request_id&&d.status==='unverified').map(d=>
+        <div className="virtual-positioning-draft" key={d.request_id}>
+         <strong>Auto-Positionierungsentwurf: {d.origin} → {d.destination}</strong>
+         <small>Frühestes Planungsfenster: {date(d.window_from)}</small>
+         <small>Spätester gewünschter Rückkehrzeitpunkt: {date(d.window_until)}</small>
+         {d.previous_case&&<small>Nach vorheriger Anfrage: {d.previous_case}</small>}
+         <p>Fiktiver Planungsvorschlag – keine bestätigte Flugzeit, Crew, Genehmigung oder Bewegung</p>
+        </div>)}
       </article>)}
     </div>
    </div>
