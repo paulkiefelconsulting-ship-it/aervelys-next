@@ -3,6 +3,7 @@
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
 import {Bot,BriefcaseBusiness,CalendarClock,Clock3,MapPin,MessageCircle,Pause,Play,RefreshCw,ShieldAlert,Users} from 'lucide-react';
+import SimulatedPriceLab from './SimulatedPriceLab';
 
 type Profile={
  code:string;display_name:string;contact_name:string;segment:string;base_icao:string;
@@ -55,6 +56,7 @@ const phaseLabels:Record<string,string>={
 };
 const kindLabels:Record<string,string>={
  initial_request:'Erstanfrage',reminder:'Nachfrage',price_question:'Preis / Änderung',
+ test_price_feedback:'Antwort auf SIM-Preisindikation',
  customer_interest:'Interesse',withdrawal:'Rückzug'
 };
 function supabase(){
@@ -296,6 +298,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
       </>}
     </div>
    </div>
+   <SimulatedPriceLab current={currentCase} onChanged={async()=>{await load();if(onInboxChanged)await onInboxChanged();}}/>
    <div className="ops-footer"><Bot size={15}/> Stufe 1: wachsender synthetischer Markt mit Stamm- und Gelegenheitskunden, Kundenhistorie und monatlicher Akquise. Die Anfragen bleiben simuliert; keine LLM-Kosten und keine externen Kontakte.</div>
   </>}
  </section>;
