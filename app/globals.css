@@ -783,3 +783,10 @@
 .virtual-staff-ops-state.is-blocked{border-color:rgba(195,111,76,.5);background:rgba(195,111,76,.075)}
 .virtual-staff-ops-state.is-blocked>strong{color:#e0a08e}
 .shell[data-theme="light"] .virtual-staff-ops-state.is-blocked>strong{color:#94452f}
+
+
+/* Draft aircraft repositioning routes are not actual ferry flights */
+.virtual-positioning-draft{display:grid;gap:6px;margin:10px 0 4px;padding:12px;border:1px dashed rgba(190,125,85,.65);border-radius:9px;background:rgba(190,125,85,.075)}
+.virtual-positioning-draft>strong{color:var(--primary);font-size:11px}
+.virtual-positioning-draft>small{color:var(--muted);font-size:10px;line-height:1.55}
+.virtual-positioning-draft>p{color:var(--muted);font-size:10px;line-height:1.6;margin:5px 0 0}
