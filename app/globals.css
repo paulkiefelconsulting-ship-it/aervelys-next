@@ -626,3 +626,28 @@
 .sim-customer-pagination>span{color:var(--muted);font-size:11px}
 @media(max-width:950px){.sim-customer-market-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){.sim-customer-market-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-customer-directory-tools,.sim-customer-directory-tools form{flex-direction:column;align-items:stretch}.sim-customer-directory-tools select{flex:1}.sim-customer-pagination{justify-content:center}}
+
+
+/* Synthetic customer market analytics: measured behaviour, not revenue forecasts */
+.sim-insights{margin:0 24px 22px;padding:22px;border:1px solid var(--line);border-radius:11px;background:var(--notice)}
+.sim-insights-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sim-insights-head h3{font:800 19px Manrope,Arial,sans-serif;color:var(--primary);margin:10px 0}
+.sim-insights-head p,.sim-insights-head>span{color:var(--muted);font-size:11px;line-height:1.7}
+.sim-insights-head>span{border:1px solid var(--line);border-radius:20px;padding:8px 11px}
+.sim-insights-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:15px 0 21px}
+.sim-insights-metrics>div{display:grid;gap:7px;border:1px solid var(--line);border-radius:9px;padding:13px;min-width:0}
+.sim-insights-metrics strong{font-size:21px;color:var(--primary);overflow-wrap:anywhere}
+.sim-insights-metrics span{font-size:10px;color:var(--muted);line-height:1.5}
+.sim-insights-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.sim-insights-columns>div{border:1px solid var(--line);border-radius:10px;padding:17px;min-width:0}
+.sim-insights-columns h4{font-size:13px;color:var(--primary);margin:0 0 14px}
+.sim-insights-columns p{font-size:11px;color:var(--muted);line-height:1.7;margin-top:14px}
+.sim-insights-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:5px;align-items:end;height:150px}
+.sim-insights-bars>div{display:grid;grid-template-rows:120px auto;gap:5px;min-width:0}
+.sim-insights-bar-track{height:120px;display:flex;align-items:end;background:rgba(135,150,170,.08);border-radius:5px;overflow:hidden}
+.sim-insights-bar{width:100%;background:var(--brand);min-height:3px;opacity:.9;border-radius:3px 3px 0 0}
+.sim-insights-bars small{font-size:9px;text-align:center;color:var(--muted)}
+.sim-insights-reason{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}
+.sim-insights-reason strong{font-size:13px;color:var(--primary)}
+@media(max-width:970px){.sim-insights-columns{grid-template-columns:1fr}}
+@media(max-width:680px){.sim-insights{margin:0 16px 16px;padding:16px}.sim-insights-head{flex-direction:column}.sim-insights-metrics{grid-template-columns:1fr 1fr}.sim-insights-columns>div{padding:12px}}
