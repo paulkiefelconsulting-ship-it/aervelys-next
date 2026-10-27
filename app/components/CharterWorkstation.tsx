@@ -52,7 +52,7 @@ function client(){
  if(!url||!key)throw new Error('Supabase-Verbindung nicht konfiguriert.');
  return createBrowserClient(url,key);
 }
-export default function CharterWorkstation({onCreated,onOpenInbox}:{onCreated:()=>Promise<void>;onOpenInbox:()=>void}){
+export default function CharterWorkstation({onCreated,onOpenInbox,onOpenDispatch}:{onCreated:()=>Promise<void>;onOpenInbox:()=>void;onOpenDispatch:(requestId:string)=>void}){
  const [form,setForm]=useState<FormValues>(initial);
  const [records,setRecords]=useState<CharterRequest[]>([]);
  const [offers,setOffers]=useState<CharterOffer[]>([]);
@@ -174,7 +174,7 @@ export default function CharterWorkstation({onCreated,onOpenInbox}:{onCreated:()
      <div className="charter-item-meta">{item.contact_name||'Kontakt nicht erfasst'} · {item.passengers} Pax · {formatDate(item.requested_departure)}</div>
     </button>)}
    </div>}
-   {current&&<div className="charter-detail"><div className="eyebrow">SELECTED REQUEST</div><h3>{current.request_code}</h3><p><CalendarClock size={15}/> {formatDate(current.requested_departure)}</p><p>Ansprechpartner: <strong>{current.contact_name||'Nicht erfasst'}</strong></p>{current.contact_email&&<p>Kontakt: {current.contact_email}</p>}<p>Priorität: {current.priority||'normal'} · Bearbeitung: {current.processing_status||current.request_status}</p>{current.customer_note&&<p>Hinweise: {current.customer_note}</p>}<button type="button" className="charter-open-inbox" onClick={onOpenInbox}>Posteingang öffnen <ArrowRight size={15}/></button></div>}
+   {current&&<div className="charter-detail"><div className="eyebrow">SELECTED REQUEST</div><h3>{current.request_code}</h3><p><CalendarClock size={15}/> {formatDate(current.requested_departure)}</p><p>Ansprechpartner: <strong>{current.contact_name||'Nicht erfasst'}</strong></p>{current.contact_email&&<p>Kontakt: {current.contact_email}</p>}<p>Priorität: {current.priority||'normal'} · Bearbeitung: {current.processing_status||current.request_status}</p>{current.customer_note&&<p>Hinweise: {current.customer_note}</p>}<div className="charter-detail-actions"><button type="button" className="charter-open-inbox" onClick={onOpenInbox}>Posteingang öffnen <ArrowRight size={15}/></button><button type="button" className="charter-open-inbox" onClick={()=>onOpenDispatch(current.request_id)}>Zur Flugdisposition <ArrowRight size={15}/></button></div></div>}
    <div className="charter-offers">
     <div className="eyebrow">OFFER REVIEW</div>
     <h3>Angebotsentwürfe & Freigaben</h3>
