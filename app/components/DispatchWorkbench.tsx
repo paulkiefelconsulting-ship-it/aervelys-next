@@ -73,7 +73,7 @@ export default function DispatchWorkbench({initialRequestId}:{initialRequestId?:
   setNote(draft?.coordinator_note||'');
   setSelectedDraft(draft?.id||null);
   setReview(null);setNotice('');
- },[requestId,drafts]);
+ },[requestId]);
 
  const selectedRequest=requests.find(r=>r.request_id===requestId);
  const currentDraft=drafts.find(d=>d.request_id===requestId);
