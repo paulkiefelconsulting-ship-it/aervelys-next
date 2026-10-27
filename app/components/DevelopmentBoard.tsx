@@ -4,7 +4,7 @@ import {ChevronDown, ChevronUp, CheckCircle2, Clock3, ShieldAlert} from 'lucide-
 
 type Workstream={title:string;phase:'backend'|'partial'|'planned';existing:string;next:string};
 const workstreams:Workstream[]=[
-{title:'Flotte & Flugplanung',phase:'partial',existing:'Live-Flotte, Dispositions-Screening, gesperrte Flugzeugentwürfe und Übergabe an mehrteilige Crew-/Routen-Vorplanung',next:'Verifizierte Flugzeugleistungen, geprüfte Crew-/Airport-Freigaben und tatsächlicher Dispatch nach Gesamtprüfung'},
+{title:'Flotte & Flugplanung',phase:'partial',existing:'Live-Flotte, geschützte Flugdisposition, mehrteilige Crew-Vorplanung sowie ein Freigabe-Cockpit mit 11 datenbasierten Nachweisprüfungen',next:'Verifizierte Flugzeugleistungen, Airport-Genehmigungen, verbindliche Crew-Richtlinie und tatsächlicher Dispatch nach Gesamtprüfung'},
 {title:'Crewplanung & HR',phase:'partial',existing:'31 Mitarbeiter und eigene Crew-Vorplanung mit PIC/SIC, bis zu 6 Flugabschnitten, Qualifikations-Screening, konservativer Ruhezeitprüfung und Änderungsprotokoll',next:'Verifizierte Musterberechtigungen, verbindliche Dienst-/Ruhezeitlogik und freigegebene Crew-Reservierungen'},
 {title:'Charter & Angebote',phase:'partial',existing:'Geschützte manuelle Chartererfassung mit Posteingangsverknüpfung, Live-Anfrageliste und Angebots-/Freigabeübersicht',next:'Angebotskalkulation, geprüfte Freigaben, Kundenkommunikation und vollständiger Flugauftrag'},
 {title:'Posteingang & Anfragen',phase:'partial',existing:'Geschützte Liste, Zuweisung, Status und Verlauf',next:'Echte E-Mails, Anhänge und End-to-End-Test'},
@@ -14,7 +14,7 @@ const workstreams:Workstream[]=[
 {title:'Hangars & Immobilien',phase:'backend',existing:'Standort- und Mietmodelle',next:'Verträge und laufende Mietverwaltung'},
 {title:'KI & Automatisierung',phase:'planned',existing:'Automatisierbare Prüfschritte in einzelnen Modulen',next:'Sichere KI-Agenten und Freigabeprozesse'},
 {title:'CEO-Dashboard',phase:'partial',existing:'Login, Live-Kennzahlen und Firmen-Navigation',next:'Weitere operative Managementansichten'},
-{title:'Sicherheit & Benutzerverwaltung',phase:'partial',existing:'Aktiver CEO-Zugang und abgesicherte RPC-Funktionen',next:'Benutzerverwaltung, Rollenoberfläche und End-to-End-Sicherheitstests'},
+{title:'Sicherheit & Benutzerverwaltung',phase:'partial',existing:'Aktiver CEO-Zugang, rollenbasierte Supabase-RPCs und gesperrte Freigabe-Aufgaben mit Audit-Verlauf',next:'Benutzerverwaltung, vollständiger Sicherheits-Audit und durchgängige Rechte- und Session-Tests'},
 {title:'Infrastruktur & Deployment',phase:'partial',existing:'GitHub, Supabase und Vercel mit erfolgreichem Build',next:'Build-Tests im CI und kontinuierliches Monitoring'},
 {title:'MSFS 2024',phase:'planned',existing:'Als eigenständiger Bereich vorgesehen',next:'Ereignisempfang und sichere Simulator-Synchronisation'}
 ];
