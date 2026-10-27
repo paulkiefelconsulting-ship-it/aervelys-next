@@ -4,7 +4,7 @@ import {ChevronDown, ChevronUp, CheckCircle2, Clock3, ShieldAlert} from 'lucide-
 
 type Workstream={title:string;phase:'backend'|'partial'|'planned';existing:string;next:string};
 const workstreams:Workstream[]=[
-{title:'Flotte & Flugplanung',phase:'partial',existing:'Fünf Jets, geschützte Live-Flottenkarten mit ICAO-Standorten und Dispositionsprüfungen in Supabase',next:'Verifizierte Flugzeugleistungen und operativer Dispatch'},
+{title:'Flotte & Flugplanung',phase:'partial',existing:'Live-Flotte und gesonderte Flugdisposition mit Konflikt-Screening, integriertem Prüfbericht, gesperrtem Dispositionsentwurf und Vorgangshistorie',next:'Verifizierte Flugzeugleistungen, Crew-/Airport-Freigaben, Mehrflugrotationen und tatsächlicher Dispatch nach Gesamtprüfung'},
 {title:'Crewplanung & HR',phase:'partial',existing:'31 Mitarbeiter, geschützte durchsuchbare Crewübersicht und Modelle für Crewrotationen',next:'Qualifikationsprüfung und vollständige Dienst-/Ruhezeitlogik'},
 {title:'Charter & Angebote',phase:'partial',existing:'Geschützte manuelle Chartererfassung mit Posteingangsverknüpfung, Live-Anfrageliste und Angebots-/Freigabeübersicht',next:'Angebotskalkulation, geprüfte Freigaben, Kundenkommunikation und vollständiger Flugauftrag'},
 {title:'Posteingang & Anfragen',phase:'partial',existing:'Geschützte Liste, Zuweisung, Status und Verlauf',next:'Echte E-Mails, Anhänge und End-to-End-Test'},
