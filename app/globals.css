@@ -421,3 +421,66 @@
 .training-form .charter-submit{display:flex;justify-content:center;align-items:center;gap:9px}
 @media(max-width:1150px){.training-layout{grid-template-columns:1fr}.training-course-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.training-heading,.training-block-top{flex-direction:column}.training-warning{padding:15px}.training-metrics{grid-template-columns:repeat(2,minmax(0,1fr));padding:16px;gap:9px}.training-course-section{padding:5px 16px 16px}.training-course-grid{grid-template-columns:1fr}.training-layout{padding:16px}.training-block{padding:16px}.training-feedback{margin:15px}.training-form-row{grid-template-columns:1fr}.training-block-top select{max-width:none}}
+
+
+/* Hangars and property: observed status and non-binding capacity inquiry */
+.hangar-workspace{margin-bottom:26px;min-width:0}
+.hangar-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.hangar-safety{display:flex;gap:11px;align-items:flex-start;padding:16px 24px;border-block:1px solid var(--line);background:var(--notice);color:var(--muted);font-size:12px;line-height:1.7}
+.hangar-safety svg{flex-shrink:0;color:var(--brand)}
+.hangar-feedback{margin:18px 24px}
+.hangar-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:22px 24px}
+.hangar-metrics article{min-width:0;background:var(--notice);border:1px solid var(--line);border-radius:11px;padding:16px;display:grid;align-content:start;gap:9px}
+.hangar-metrics svg{color:var(--brand)}
+.hangar-metrics strong{font:800 26px Manrope,Arial,sans-serif;color:var(--primary);overflow-wrap:anywhere}
+.hangar-metrics span{font-size:11px;color:var(--muted);line-height:1.5}
+.hangar-main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);align-items:start;gap:17px;padding:0 24px 25px}
+.hangar-left,.hangar-right{display:grid;gap:17px;min-width:0}
+.hangar-block{border:1px solid var(--line);border-radius:11px;padding:20px;min-width:0}
+.hangar-block h3{color:var(--primary);font:800 18px Manrope,Arial,sans-serif;margin:9px 0 15px}
+.hangar-block-head{display:flex;align-items:start;justify-content:space-between;gap:10px}
+.hangar-block-head>select,.hangar-form input,.hangar-form select,.hangar-form textarea{border:1px solid var(--line);background:var(--notice);border-radius:9px;padding:11px 12px;color:var(--primary);font-size:12px;min-width:0}
+.hangar-block-head>select{max-width:160px}
+.hangar-aircraft-list{display:grid;gap:10px}
+.hangar-aircraft{border:1px solid var(--line);border-radius:10px;padding:15px;background:var(--notice);min-width:0}
+.hangar-aircraft-top{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.hangar-aircraft-top strong{font:800 16px Manrope,Arial,sans-serif;color:var(--primary)}
+.hangar-aircraft-top span{font-size:11px;color:var(--brand);border:1px solid var(--line);padding:6px 9px;border-radius:99px}
+.hangar-aircraft p{font-size:12px;color:var(--muted);margin:10px 0 15px}
+.hangar-facts{display:grid;grid-template-columns:minmax(100px,.55fr) minmax(0,1fr);gap:11px 12px;font-size:11px;line-height:1.5;align-items:start}
+.hangar-facts span{color:var(--muted)}
+.hangar-facts strong{color:var(--primary);font-weight:700;overflow-wrap:anywhere}
+.hangar-aircraft small{font-size:11px;color:var(--muted);display:block;margin-top:14px;line-height:1.6;border-top:1px solid var(--line);padding-top:12px}
+.hangar-line{padding:12px 0;border-bottom:1px solid var(--line)}
+.hangar-line:last-child{border-bottom:0}
+.hangar-line strong{font-size:12px;color:var(--primary)}
+.hangar-line p,.hangar-line small{display:block;margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
+.hangar-empty{border:1px dashed var(--line);background:var(--notice);border-radius:9px;padding:15px;font-size:12px;line-height:1.6;color:var(--muted)}
+.hangar-helper{font-size:12px;line-height:1.7;color:var(--muted)}
+.hangar-form{display:grid;gap:15px;margin-top:16px}
+.hangar-form label{display:grid;gap:7px;color:var(--muted);font-size:11px;font-weight:700;min-width:0}
+.hangar-form input,.hangar-form select,.hangar-form textarea{width:100%;outline:none}
+.hangar-form input:focus,.hangar-form select:focus,.hangar-form textarea:focus{border-color:var(--brand)}
+.hangar-form textarea{resize:vertical}
+.hangar-form input[type="date"]{color-scheme:dark}
+.shell[data-theme="light"] .hangar-form input[type="date"]{color-scheme:light}
+.hangar-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hangar-form button{display:flex;align-items:center;justify-content:center;gap:8px}
+.hangar-form .ops-refresh{justify-self:start}
+.hangar-show-closed{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.hangar-show-closed input{accent-color:var(--brand)}
+.hangar-inquiry{display:grid;gap:9px;width:100%;border:1px solid var(--line);border-radius:9px;padding:13px;background:var(--notice);color:var(--primary);cursor:pointer;text-align:left;margin:8px 0}
+.hangar-inquiry:hover,.hangar-inquiry.selected{border-color:var(--brand)}
+.hangar-inquiry>span{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.hangar-inquiry strong{font-size:12px}
+.hangar-inquiry small{font-size:10px;color:var(--brand)}
+.hangar-inquiry p{font-size:11px;color:var(--muted);margin:0}
+.hangar-history{border-top:1px solid var(--line);margin-top:21px;padding-top:16px}
+.hangar-history h4{font-size:13px;display:flex;gap:8px;align-items:center;color:var(--primary)}
+.hangar-history>div{border-bottom:1px solid var(--line);padding:12px 0}
+.hangar-history>div strong,.hangar-history>div small{display:block}
+.hangar-history>div strong{font-size:11px;color:var(--primary)}
+.hangar-history>div small{font-size:10px;color:var(--muted);margin-top:6px}
+.hangar-history>div p,.hangar-history>p{font-size:11px;color:var(--muted);line-height:1.6}
+@media(max-width:1150px){.hangar-main{grid-template-columns:1fr}}
+@media(max-width:760px){.hangar-heading,.hangar-block-head{flex-direction:column}.hangar-metrics{grid-template-columns:1fr 1fr;padding:16px;gap:9px}.hangar-metrics article{padding:13px}.hangar-metrics strong{font-size:22px}.hangar-main{padding:0 16px 16px}.hangar-safety{padding:15px}.hangar-feedback{margin:16px}.hangar-block{padding:16px}.hangar-form-row{grid-template-columns:1fr}.hangar-block-head>select{max-width:none}}
