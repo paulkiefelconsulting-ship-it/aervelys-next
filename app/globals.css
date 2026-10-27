@@ -255,3 +255,65 @@
 .release-next-step p{line-height:1.6}
 @media(max-width:900px){.release-overview{grid-template-columns:1fr 1fr}.release-overview>div:last-child{grid-column:1/-1}.release-task-controls{grid-template-columns:1fr 1fr}.release-task-controls label:nth-child(2){grid-column:1/-1}.release-task-controls button{grid-column:1/-1}}
 @media(max-width:650px){.release-controls,.release-gate-heading{flex-direction:column;align-items:stretch}.release-overview,.release-statistics{grid-template-columns:1fr 1fr}.release-overview>div:last-child{grid-column:1/-1}.release-alert,.release-controls,.release-gate-heading,.release-footer{padding:16px}.release-overview,.release-statistics,.release-gates{padding:0 16px 16px}.release-gate{padding:14px}.release-task-controls{grid-template-columns:1fr}.release-task-controls label:nth-child(2),.release-task-controls button{grid-column:auto}.release-feedback{margin:0 16px 16px}}
+
+
+/* EDAZ Maintenance management – read-only operational status, administrative intake only */
+.maintenance-workspace{margin-bottom:26px;min-width:0}
+.maintenance-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+.maintenance-warning{display:flex;align-items:flex-start;gap:11px;color:#F5B8A6;background:rgba(173,88,57,.1);padding:16px 24px;border-block:1px solid rgba(186,98,73,.3);font-size:12px;line-height:1.65}
+.shell[data-theme="light"] .maintenance-warning{color:#995235}
+.maintenance-warning svg{flex-shrink:0}
+.maintenance-feedback{margin:18px 24px}
+.maintenance-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;padding:22px 24px 10px}
+.maintenance-metrics>div{border:1px solid var(--line);background:var(--notice);border-radius:10px;display:grid;gap:8px;padding:16px}
+.maintenance-metrics strong{color:var(--primary);font-size:27px;line-height:1}
+.maintenance-metrics span{color:var(--muted);font-size:11px}
+.maintenance-selector{padding:15px 24px 22px}
+.maintenance-selector label{display:grid;gap:9px;max-width:560px;font-size:12px;font-weight:700;color:var(--muted)}
+.maintenance-selector select,.maintenance-form input,.maintenance-form select,.maintenance-form textarea{border:1px solid var(--line);border-radius:9px;background:var(--notice);color:var(--primary);padding:11px 12px;font-size:12px;min-width:0;width:100%;outline:none}
+.maintenance-selector select:focus,.maintenance-form input:focus,.maintenance-form select:focus,.maintenance-form textarea:focus{border-color:var(--brand)}
+.maintenance-aircraft{margin:0 24px 24px;padding:22px;border:1px solid var(--line);border-radius:12px;background:var(--notice)}
+.maintenance-aircraft-title{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.maintenance-aircraft-title h3{color:var(--primary);font:800 22px Manrope,Arial,sans-serif;margin:8px 0 3px}
+.maintenance-aircraft-title p{color:var(--muted);font-size:12px;margin:0}
+.maintenance-blocked{display:flex;align-items:center;gap:7px;color:#F5B8A6;background:rgba(173,88,57,.1);border:1px solid rgba(186,98,73,.4);padding:10px;border-radius:9px;font-size:11px;font-weight:800}
+.shell[data-theme="light"] .maintenance-blocked{color:#995235}
+.maintenance-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:21px}
+.maintenance-facts>div{display:grid;grid-template-columns:16px 1fr;gap:5px 10px;align-items:start;padding:13px;border:1px solid var(--line);border-radius:9px;min-width:0}
+.maintenance-facts svg{color:var(--brand);grid-row:1/3}
+.maintenance-facts span{font-size:10px;color:var(--muted)}
+.maintenance-facts strong{font-size:12px;font-weight:800;color:var(--primary);overflow-wrap:anywhere}
+.maintenance-caveat{font-size:12px;line-height:1.6;color:var(--muted);margin:17px 0 0}
+.maintenance-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,.9fr);gap:17px;padding:0 24px 24px;align-items:start}
+.maintenance-main,.maintenance-intake{display:grid;gap:17px;min-width:0}
+.maintenance-section{border:1px solid var(--line);border-radius:11px;padding:20px;min-width:0}
+.maintenance-section h3{color:var(--primary);font:800 17px Manrope,Arial,sans-serif;margin:9px 0 15px}
+.maintenance-help,.maintenance-empty,.maintenance-detail p{font-size:12px;line-height:1.65;color:var(--muted)}
+.maintenance-empty{padding:14px;background:var(--notice);border-radius:9px;border:1px dashed var(--line)}
+.maintenance-line{border-bottom:1px solid var(--line);padding:12px 0}
+.maintenance-line:last-child{border-bottom:0;padding-bottom:0}
+.maintenance-line strong{font-size:12px;color:var(--primary)}
+.maintenance-line p,.maintenance-line small{display:block;color:var(--muted);font-size:11px;line-height:1.6;margin:8px 0 0}
+.maintenance-form{display:grid;gap:14px;margin-top:16px}
+.maintenance-form label{display:grid;gap:7px;color:var(--muted);font-size:11px;font-weight:700}
+.maintenance-form textarea{resize:vertical}
+.maintenance-form button{display:flex;align-items:center;justify-content:center;gap:8px}
+.maintenance-form .ops-refresh{justify-self:start}
+.maintenance-reports-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.maintenance-reports-head label{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted)}
+.maintenance-reports-head input{accent-color:var(--brand)}
+.maintenance-report-button{display:grid;gap:9px;width:100%;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--notice);padding:12px;cursor:pointer;margin:7px 0;color:var(--primary)}
+.maintenance-report-button.selected,.maintenance-report-button:hover{border-color:var(--brand)}
+.maintenance-report-button>span{display:flex;gap:8px;align-items:center}
+.maintenance-report-button svg{color:var(--brand)}
+.maintenance-report-button strong{font-size:12px}
+.maintenance-report-button small,.maintenance-detail small{font-size:11px;color:var(--muted)}
+.maintenance-history{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.maintenance-history h4{display:flex;align-items:center;gap:9px;color:var(--primary);font-size:13px}
+.maintenance-history>div{padding:10px 0;border-bottom:1px solid var(--line)}
+.maintenance-history>div strong,.maintenance-history>div small{display:block}
+.maintenance-history>div strong{font-size:12px;color:var(--primary)}
+.maintenance-history>div small{margin-top:6px}
+.maintenance-history p{overflow-wrap:anywhere}
+@media(max-width:1150px){.maintenance-layout{grid-template-columns:1fr}}
+@media(max-width:720px){.maintenance-heading,.maintenance-aircraft-title{flex-direction:column}.maintenance-metrics{grid-template-columns:1fr 1fr}.maintenance-metrics,.maintenance-selector{padding:16px}.maintenance-aircraft{margin:0 16px 16px;padding:16px}.maintenance-facts{grid-template-columns:1fr}.maintenance-layout{padding:0 16px 16px}.maintenance-section{padding:16px}.maintenance-warning{padding:14px 16px}.maintenance-feedback{margin:16px}}
