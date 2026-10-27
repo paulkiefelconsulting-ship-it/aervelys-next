@@ -103,3 +103,16 @@
 .charter-open-inbox{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--brand);border:1px solid var(--brand);border-radius:8px;padding:11px 14px;margin-top:16px;cursor:pointer;font-size:12px;font-weight:800}
 @media(max-width:1120px){.charter-layout{grid-template-columns:1fr}}
 @media(max-width:720px){.charter-form{padding:16px}.charter-alert{padding:14px 16px}.charter-search{margin:0 16px 16px}.charter-list-header{flex-direction:column}.charter-form-row{grid-template-columns:1fr}.charter-detail{padding:18px}}
+
+
+.charter-offers{padding:22px 24px;border-top:1px solid var(--line);color:var(--muted)}
+.charter-offers h3{font:800 17px Manrope,Arial,sans-serif;color:var(--primary);margin:10px 0}
+.charter-offers>p{font-size:12px;line-height:1.6;margin:0 0 16px}
+.charter-offer-empty{padding:16px;border:1px dashed var(--line);border-radius:9px;font-size:12px}
+.charter-offer-card{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:10px;background:var(--notice);color:var(--primary)}
+.charter-offer-card p{font-size:12px;color:var(--muted);margin:12px 0}
+.charter-offer-checks{display:flex;flex-wrap:wrap;gap:6px}
+.charter-offer-checks span{font-size:10px;border:1px solid var(--line);border-radius:25px;padding:6px 8px;color:var(--muted)}
+.charter-offer-checks .passed{border-color:#278b83;color:#67cbb5}
+.charter-offer-checks .blocked{border-color:var(--line)}
+@media(max-width:720px){.charter-offers{padding:18px 15px}}
