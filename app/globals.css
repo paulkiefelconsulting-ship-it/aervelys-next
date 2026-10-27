@@ -688,3 +688,12 @@
 .sim-price-footer{margin:15px 0 0}
 @media(max-width:1050px){.sim-price-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.sim-price-lab{padding:17px 16px}.sim-price-head{flex-direction:column}.sim-price-form,.sim-price-history{padding:15px}}
+
+
+/* Explicit customer counter-proposals and nonbinding simulated intent */
+.sim-price-customer-target{border:1px solid var(--line);border-radius:9px;padding:12px;background:var(--notice);display:grid;gap:9px}
+.sim-price-customer-target strong{color:var(--brand);font-size:12px;line-height:1.55}
+.sim-price-customer-target p{font-size:11px;color:var(--primary);line-height:1.55;margin:0}
+.sim-price-customer-target .ops-refresh{justify-self:start}
+.sim-price-history .sim-price-customer-target{margin-top:10px;background:rgba(135,150,170,.05)}
+.sim-price-history .sim-price-customer-target strong{font-size:11px}
