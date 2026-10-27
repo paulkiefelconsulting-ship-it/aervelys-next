@@ -773,3 +773,13 @@
 .sim-customer-message.sim-agent-answer{border-color:rgba(88,159,173,.6);background:rgba(74,134,155,.08)}
 .sim-customer-message.sim-agent-answer>div strong{color:#73bdd3}
 .shell[data-theme="light"] .sim-customer-message.sim-agent-answer>div strong{color:#226a85}
+
+
+/* Simulation OPS blockers: show aircraft location continuity and crew duty warnings */
+.virtual-staff-ops-state{margin:12px 0;padding:12px;border-radius:9px;border:1px solid var(--line);background:var(--notice);display:grid;gap:8px}
+.virtual-staff-ops-state>strong{color:var(--primary);font-size:11px}
+.virtual-staff-ops-state>small{color:var(--muted);font-size:10px;line-height:1.6}
+.virtual-staff-ops-state>ul{margin:0;padding-left:18px;font-size:11px;line-height:1.65;color:var(--primary)}
+.virtual-staff-ops-state.is-blocked{border-color:rgba(195,111,76,.5);background:rgba(195,111,76,.075)}
+.virtual-staff-ops-state.is-blocked>strong{color:#e0a08e}
+.shell[data-theme="light"] .virtual-staff-ops-state.is-blocked>strong{color:#94452f}
