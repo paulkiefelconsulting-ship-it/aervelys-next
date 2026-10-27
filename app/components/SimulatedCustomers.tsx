@@ -63,6 +63,7 @@ const phaseLabels:Record<string,string>={
 const kindLabels:Record<string,string>={
  initial_request:'Erstanfrage',reminder:'Nachfrage',price_question:'Preis / Änderung',
  test_price_feedback:'Antwort auf SIM-Preisindikation',
+ sales_agent_reply:'Automatische Antwort des virtuellen Vertriebs',
  customer_interest:'Interesse',withdrawal:'Rückzug'
 };
 function supabase(){
@@ -298,7 +299,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
         {currentCase.special_requests&&<small>Servicewunsch: {currentCase.special_requests}</small>}
         {currentCase.last_response_reason&&<small>Letzte Reaktion: {reasonLabels[currentCase.last_response_reason]||currentCase.last_response_reason}{currentCase.last_offer_price_eur!==null?' · '+(currentCase.last_response_reason.startsWith('simulation_')?'SIM-Preisindikation ':'Bewerteter Preis ')+euros(currentCase.last_offer_price_eur):''}</small>}
        </div>
-       {currentMessages.map(m=><article className="sim-customer-message" key={m.id}>
+       {currentMessages.map(m=><article className={'sim-customer-message '+(m.kind==='sales_agent_reply'?'sim-agent-answer':'')} key={m.id}>
         <div><strong>{kindLabels[m.kind]||m.kind}</strong><span>{when(m.created_at)}</span></div>
         <p>{m.body}</p><small>Simulation · Runde {m.simulation_round}</small>
        </article>)}
