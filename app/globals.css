@@ -157,3 +157,49 @@
 .charter-detail-actions{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:1190px){.dispatch-workspace{grid-template-columns:1fr}}
 @media(max-width:720px){.dispatch-form,.dispatch-results,.dispatch-draft-list{padding:16px}.dispatch-route{grid-template-columns:1fr}.dispatch-route>div:first-child{grid-column:auto}.dispatch-candidates{grid-template-columns:1fr}}
+
+
+/* Crew and multileg preplanning – safe planning only, never an assignment */
+.crew-planning{margin-bottom:26px}
+.crew-planning-toolbar{display:flex;align-items:end;gap:14px;justify-content:space-between;padding:22px 24px;border-bottom:1px solid var(--line)}
+.crew-planning-toolbar label{flex:1;max-width:600px}
+.crew-planning-toolbar label,.crew-form label{display:grid;gap:7px;color:var(--muted);font-weight:700;font-size:11px}
+.crew-planning-toolbar select,.crew-form select,.crew-form input,.crew-form textarea{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;background:var(--notice);padding:11px 12px;color:var(--primary);font-size:12px;outline:none}
+.crew-form select:focus,.crew-form input:focus,.crew-form textarea:focus,.crew-planning-toolbar select:focus{border-color:var(--brand)}
+.crew-form input[readonly]{opacity:.75;cursor:not-allowed}
+.crew-form input[type="datetime-local"]{color-scheme:dark}
+.shell[data-theme="light"] .crew-form input[type="datetime-local"]{color-scheme:light}
+.crew-planning-content{padding:22px 24px}
+.crew-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:22px}
+.crew-summary>div{background:var(--notice);border:1px solid var(--line);border-radius:9px;padding:15px}
+.crew-summary span{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;font-weight:700;margin-bottom:10px}
+.crew-summary strong{color:var(--primary);font-size:14px;overflow-wrap:anywhere}
+.crew-form{display:grid;gap:20px}
+.crew-pilot-fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.crew-qualification-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.crew-qualification{display:grid;align-content:start;gap:9px;background:var(--notice);border:1px solid var(--line);border-radius:9px;padding:15px;font-size:11px;color:var(--muted)}
+.crew-qualification strong{color:var(--primary);font-size:12px}
+.crew-qualification span{border-left:2px solid var(--brand);padding-left:8px;line-height:1.5}
+.crew-legs-header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:21px}
+.crew-legs-header h3{font:800 18px Manrope,Arial,sans-serif;color:var(--primary);margin:7px 0}
+.crew-legs{display:grid;gap:14px}
+.crew-leg{background:var(--notice);border:1px solid var(--line);border-radius:10px;padding:16px}
+.crew-leg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.crew-leg-top strong{display:flex;align-items:center;gap:9px;color:var(--primary);font-size:13px}
+.crew-leg-top svg{color:var(--brand)}
+.crew-remove{border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;padding:7px}
+.crew-remove:hover{color:#f3b0b0;border-color:#f3b0b0}
+.crew-leg-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.crew-form .charter-submit{display:flex;align-items:center;justify-content:center;gap:9px;max-width:370px}
+.crew-feedback{margin:15px 24px}
+.crew-review-summary{border-top:1px solid var(--line);margin-top:24px;padding-top:22px;color:var(--muted);font-size:12px;line-height:1.7}
+.crew-review-summary h3{color:var(--primary);font:800 19px Manrope,Arial,sans-serif;display:flex;align-items:center;gap:9px}
+.crew-review-summary h3 svg{color:var(--brand)}
+.crew-check{display:grid;gap:6px;border:1px solid var(--line);background:var(--notice);padding:14px;border-radius:9px;margin:9px 0}
+.crew-check strong{color:var(--primary)}
+.crew-rest-issues{margin-top:16px;padding:15px;border:1px solid rgba(186,98,73,.5);border-radius:9px}
+.crew-rest-issues strong{color:var(--primary)}
+.dispatch-nextstep{margin:2px 24px 20px;padding:17px;border:1px solid var(--line);border-radius:10px;background:var(--notice);font-size:12px;color:var(--muted)}
+.dispatch-nextstep>strong{color:var(--primary)}
+.dispatch-nextstep p{line-height:1.6}
+@media(max-width:750px){.crew-planning-toolbar{padding:16px;flex-direction:column;align-items:stretch}.crew-planning-toolbar label{max-width:none}.crew-planning-content{padding:16px}.crew-summary{grid-template-columns:1fr}.crew-pilot-fields,.crew-qualification-grid,.crew-leg-fields{grid-template-columns:1fr}.crew-legs-header{align-items:flex-start;flex-direction:column}.crew-feedback{margin:16px}.dispatch-nextstep{margin:4px 16px 16px}}
