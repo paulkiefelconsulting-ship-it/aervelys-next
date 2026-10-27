@@ -4,8 +4,8 @@ import {ChevronDown, ChevronUp, CheckCircle2, Clock3, ShieldAlert} from 'lucide-
 
 type Workstream={title:string;phase:'backend'|'partial'|'planned';existing:string;next:string};
 const workstreams:Workstream[]=[
-{title:'Flotte & Flugplanung',phase:'partial',existing:'Live-Flotte und gesonderte Flugdisposition mit Konflikt-Screening, integriertem Prüfbericht, gesperrtem Dispositionsentwurf und Vorgangshistorie',next:'Verifizierte Flugzeugleistungen, Crew-/Airport-Freigaben, Mehrflugrotationen und tatsächlicher Dispatch nach Gesamtprüfung'},
-{title:'Crewplanung & HR',phase:'partial',existing:'31 Mitarbeiter, geschützte durchsuchbare Crewübersicht und Modelle für Crewrotationen',next:'Qualifikationsprüfung und vollständige Dienst-/Ruhezeitlogik'},
+{title:'Flotte & Flugplanung',phase:'partial',existing:'Live-Flotte, Dispositions-Screening, gesperrte Flugzeugentwürfe und Übergabe an mehrteilige Crew-/Routen-Vorplanung',next:'Verifizierte Flugzeugleistungen, geprüfte Crew-/Airport-Freigaben und tatsächlicher Dispatch nach Gesamtprüfung'},
+{title:'Crewplanung & HR',phase:'partial',existing:'31 Mitarbeiter und eigene Crew-Vorplanung mit PIC/SIC, bis zu 6 Flugabschnitten, Qualifikations-Screening, konservativer Ruhezeitprüfung und Änderungsprotokoll',next:'Verifizierte Musterberechtigungen, verbindliche Dienst-/Ruhezeitlogik und freigegebene Crew-Reservierungen'},
 {title:'Charter & Angebote',phase:'partial',existing:'Geschützte manuelle Chartererfassung mit Posteingangsverknüpfung, Live-Anfrageliste und Angebots-/Freigabeübersicht',next:'Angebotskalkulation, geprüfte Freigaben, Kundenkommunikation und vollständiger Flugauftrag'},
 {title:'Posteingang & Anfragen',phase:'partial',existing:'Geschützte Liste, Zuweisung, Status und Verlauf',next:'Echte E-Mails, Anhänge und End-to-End-Test'},
 {title:'Wartung EDAZ',phase:'backend',existing:'Wartungsaufträge und externe Dienstleistermodelle',next:'Wartungsworkflow und verifizierte Freigaben'},
