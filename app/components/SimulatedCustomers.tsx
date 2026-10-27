@@ -14,7 +14,7 @@ type Profile={
 };
 type Case={
  request_id:string;request_code:string;customer_code:string;customer_name:string;contact_name:string;
- scenario:string;budget_ceiling_eur:number;lifecycle:string;response_count:number;
+ scenario:string;budget_ceiling_eur:number;lifecycle:string;response_count:number;display_response_count:number;
  next_action_at:string;origin:string;destination:string;departure:string;passengers:number;
  request_status:string;created_at:string;generation_source?:string;
  round_trip:boolean;planned_return_at:string|null;special_requests:string|null;
@@ -31,7 +31,7 @@ type SegmentStat={segment:string;customers:number;requests:number;average_satisf
 type Insights={
  total_customers:number;total_requests:number;requests_last_30d:number;
  returning_customers:number;open_cases:number;withdrawn:number;interested:number;
- no_issued_offer:number;simulated_replies:number;average_satisfaction:number|null;
+ no_issued_offer:number;simulated_replies:number;simulated_intentions:number;average_satisfaction:number|null;
  daily_demand:DailyDemand[];response_reasons:ReasonStat[];segment_performance:SegmentStat[];
  simulated_only:true;llm_connected:false;
 };
@@ -44,7 +44,9 @@ const reasonLabels:Record<string,string>={
  simulation_price_far_over_budget:'SIM-Preis deutlich zu hoch',
  simulation_price_over_budget:'SIM-Preis über Budget',
  simulation_schedule_unacceptable:'SIM-Abflugzeit unpassend',
- simulation_price_and_time_plausible:'SIM-Preis und Termin passend'
+ simulation_price_and_time_plausible:'SIM-Preis und Termin passend',
+ simulated_booking_intention:'Unverbindliche SIM-Buchungsabsicht',
+ indicative_terms_acceptable:'SIM-Variante grundsätzlich passend'
 };
 const stageLabels:Record<string,string>={regular:'Stammkunde',occasional:'Gelegenheitskunde',prospect:'Interessent',dormant:'Inaktiv',at_risk:'Abwanderungsrisiko',lost:'Verloren'};
 
@@ -56,7 +58,7 @@ const segmentLabels:Record<string,string>={
 };
 const phaseLabels:Record<string,string>={
  inquired:'Neue Anfrage',followup_sent:'Kunde fragt nach',negotiating:'Änderung / Preisfrage',
- interested:'Interesse, noch keine Buchung',withdrawn:'Kunde zieht zurück'
+ interested:'Interesse, noch keine Buchung',withdrawn:'Kunde zieht zurück',booking_intent:'SIM-Buchungsabsicht (unverbindlich)'
 };
 const kindLabels:Record<string,string>={
  initial_request:'Erstanfrage',reminder:'Nachfrage',price_question:'Preis / Änderung',
@@ -198,6 +200,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
      <div><strong>{insights.no_issued_offer}</strong><span>Ohne ausgestelltes Angebot</span></div>
      <div><strong>{insights.withdrawn}</strong><span>Zurückgezogen</span></div>
      <div><strong>{insights.interested}</strong><span>Unverbindlich interessiert</span></div>
+     <div><strong>{insights.simulated_intentions}</strong><span>SIM-Buchungsabsichten – keine Buchungen</span></div>
      <div><strong>{insights.average_satisfaction===null?'—':insights.average_satisfaction.toFixed(1)+'/100'}</strong><span>Ø simulierte Zufriedenheit</span></div>
     </div>
     <div className="sim-insights-columns">
@@ -281,7 +284,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
        <div><strong>{c.request_code}</strong><span>{phaseLabels[c.lifecycle]||c.lifecycle}</span></div>
        <h4>{c.customer_name}</h4>
        <p>{c.origin} → {c.destination} · {c.passengers} Pax · {when(c.departure)}</p>
-       <small>Interner Preisrahmen {euros(c.budget_ceiling_eur)} · {c.response_count} Reaktionen{c.round_trip&&c.planned_return_at?' · Rückflug angefragt: '+when(c.planned_return_at):''}</small>
+       <small>Interner Preisrahmen {euros(c.budget_ceiling_eur)} · {c.display_response_count ?? c.response_count} Reaktionen{c.round_trip&&c.planned_return_at?' · Rückflug angefragt: '+when(c.planned_return_at):''}</small>
       </button>)}
     </div>
     <div className="sim-customer-section">
@@ -303,7 +306,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
     </div>
    </div>
    <SimulatedPriceLab current={currentCase} onChanged={async()=>{await load();if(onInboxChanged)await onInboxChanged();}}/>
-   <div className="ops-footer"><Bot size={15}/> Stufe 1: wachsender synthetischer Markt mit Stamm- und Gelegenheitskunden, Kundenhistorie und monatlicher Akquise. Die Anfragen bleiben simuliert; keine LLM-Kosten und keine externen Kontakte.</div>
+   <div className="ops-footer"><Bot size={15}/> Stufe 1: wachsender synthetischer Markt mit Stamm- und Gelegenheitskunden, Kundenhistorie und monatlicher Akquise. Auch die mehrstufige SIM-Verhandlung und die simulierte Buchungsabsicht bleiben ohne echte Aufträge, LLM-Kosten oder externe Kundenkontakte.</div>
   </>}
  </section>;
 }
