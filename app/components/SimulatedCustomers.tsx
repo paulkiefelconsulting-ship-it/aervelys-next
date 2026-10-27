@@ -293,7 +293,7 @@ export default function SimulatedCustomers({onInboxChanged}:{onInboxChanged?:()=
         <small>Geplanter Abflug: {when(currentCase.departure)}</small>
         {currentCase.round_trip&&currentCase.planned_return_at&&<small>Rückreise angefragt: {when(currentCase.planned_return_at)} (nur Anfrage)</small>}
         {currentCase.special_requests&&<small>Servicewunsch: {currentCase.special_requests}</small>}
-        {currentCase.last_response_reason&&<small>Letzte Reaktion: {reasonLabels[currentCase.last_response_reason]||currentCase.last_response_reason}{currentCase.last_offer_price_eur!==null?' · Angebotswert '+euros(currentCase.last_offer_price_eur):''}</small>}
+        {currentCase.last_response_reason&&<small>Letzte Reaktion: {reasonLabels[currentCase.last_response_reason]||currentCase.last_response_reason}{currentCase.last_offer_price_eur!==null?' · '+(currentCase.last_response_reason.startsWith('simulation_')?'SIM-Preisindikation ':'Bewerteter Preis ')+euros(currentCase.last_offer_price_eur):''}</small>}
        </div>
        {currentMessages.map(m=><article className="sim-customer-message" key={m.id}>
         <div><strong>{kindLabels[m.kind]||m.kind}</strong><span>{when(m.created_at)}</span></div>
