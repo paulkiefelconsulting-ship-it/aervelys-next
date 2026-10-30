@@ -116,7 +116,7 @@ export default function VirtualHandoffInbox(){
  const current=visible.find(c=>c.request_id===selected)||visible[0]||null;
  const timeline=current?data?.handoffs.filter(h=>h.request_id===current.request_id)||[]:[];
  const currentOpen=timeline.find(x=>x.status==='open');
- const executionById=new Map((execution?.states||[]).map(x=>[x.handoff_id,x]));
+ const executionById=new Map<number,AgentState>((execution?.states||[]).map(x=>[x.handoff_id,x] as const));
  const currentRuns=(execution?.runs||[]).filter(x=>x.request_id===current?.request_id);
  const openIds=new Set((data?.handoffs||[]).filter(x=>x.status==='open').map(x=>x.id));
  const openStates=(execution?.states||[]).filter(x=>openIds.has(x.handoff_id));
