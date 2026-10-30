@@ -4,6 +4,7 @@ import {useCallback,useEffect,useState} from 'react';
 import type {FormEvent} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
 import {Bot,Plane,Users,BookOpen,Inbox,RefreshCw,Play,Pause,CheckCircle2,AlertTriangle,FileCheck2,Send} from 'lucide-react';
+import VirtualRotationsPanel from './VirtualRotationsPanel';
 
 type Plan={request_id:string;request_code:string;registration:string|null;aircraft_type:string|null;pic:string|null;sic:string|null;
  status:string;note:string;updated_at:string;evidence:Record<string,unknown>};
@@ -141,6 +142,7 @@ export default function VirtualAirlineAgents(){
       </article>)}
     </div>
    </div>
+   <VirtualRotationsPanel/>
    <div className="virtual-staff-block virtual-staff-training">
     <div className="eyebrow">EMPLOYEE DEVELOPMENT</div><h3>Weiterbildung & Musterberechtigungen</h3>
     <p>Interne SIM-Vorsortierung: PIC mindestens 1.000 bestätigte Gesamtstunden, SIC mindestens 250. Diese Werte sind reine AERVELYS-Prüfrichtwerte, keine behördlichen Type-Rating-Voraussetzungen. Allgemeine Fortbildungen haben hier kein Flugstundenminimum.</p>
