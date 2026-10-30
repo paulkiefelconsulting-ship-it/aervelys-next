@@ -7,6 +7,7 @@ import {Bot,Plane,Users,BookOpen,Inbox,RefreshCw,Play,Pause,CheckCircle2,AlertTr
 import VirtualRotationsPanel from './VirtualRotationsPanel';
 import AgentDecisionGates from './AgentDecisionGates';
 import AgentCaseCoordinator from './AgentCaseCoordinator';
+import VirtualHandoffInbox from './VirtualHandoffInbox';
 import VirtualRotationTiming from './VirtualRotationTiming';
 
 type Plan={request_id:string;request_code:string;registration:string|null;aircraft_type:string|null;pic:string|null;sic:string|null;
@@ -145,6 +146,7 @@ export default function VirtualAirlineAgents(){
       </article>)}
     </div>
    </div>
+   <VirtualHandoffInbox/>
    <AgentCaseCoordinator/>
    <AgentDecisionGates enabled={data.enabled} plans={data.plans} training={data.training} modelConnected={data.model_connected} verifiedCrewAssignments={data.verified_crew_assignments}/>
    <VirtualRotationsPanel/>
