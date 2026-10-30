@@ -822,3 +822,42 @@
 .virtual-rotation-option small{border-top:1px solid var(--line);padding-top:9px;color:var(--muted);font-size:10px;line-height:1.5}
 .virtual-rotations-note{margin-top:10px}
 @media(max-width:780px){.virtual-rotations{margin:0 16px 16px;padding:15px}.virtual-rotations-head{flex-direction:column}.virtual-rotations-head button{white-space:normal}.virtual-rotations-options{grid-template-columns:1fr}}
+
+
+/* Nonbinding multiday SIM rotation timeline */
+.virtual-timing{margin:0 24px 18px;padding:20px;border:1px solid var(--line);border-radius:11px;background:var(--notice);min-width:0}
+.virtual-timing-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
+.virtual-timing-head h3{display:flex;gap:8px;align-items:center;margin:9px 0;font:800 18px Manrope,Arial,sans-serif;color:var(--primary)}
+.virtual-timing-head p,.virtual-timing-note{color:var(--muted);font-size:11px;line-height:1.65}
+.virtual-timing-head button{display:flex;align-items:center;gap:8px}
+.virtual-timing-disclaimer{display:flex;align-items:flex-start;gap:10px;border:1px solid rgba(185,111,70,.35);border-radius:9px;padding:13px;margin:15px 0;color:var(--muted);font-size:11px;line-height:1.65}
+.virtual-timing-disclaimer svg{color:var(--brand);flex-shrink:0}
+.virtual-timing-summary{display:flex;gap:15px;flex-wrap:wrap;margin:17px 0;color:var(--muted);font-size:11px}
+.virtual-timing-summary span{display:flex;align-items:center;gap:7px}
+.virtual-timing-summary strong{font-size:20px;color:var(--primary)}
+.virtual-timing-select{display:grid;gap:8px;color:var(--muted);font-size:11px;font-weight:700}
+.virtual-timing-select select{background:var(--notice);color:var(--primary);padding:11px;border:1px solid var(--line);border-radius:8px;width:100%;font-size:12px}
+.virtual-timing-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:18px 0}
+.virtual-timing-card{min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--notice);padding:15px}
+.virtual-timing-card.is-current{border-color:var(--brand)}
+.virtual-timing-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.virtual-timing-card-head strong{color:var(--primary);font-size:14px}
+.virtual-timing-card-head span{font-size:10px;color:var(--brand);border:1px solid var(--line);border-radius:24px;padding:5px 8px}
+.virtual-timing-track{display:grid;gap:9px;margin:15px 0}
+.virtual-timing-segment{border:1px solid var(--line);border-radius:9px;padding:12px;display:grid;gap:6px}
+.virtual-timing-segment.position{border-left:3px solid #d6a773}
+.virtual-timing-segment.charter{border-left:3px solid var(--brand)}
+.virtual-timing-segment.duty{border-left:3px solid #7f9db0}
+.virtual-timing-segment>div{display:flex;gap:7px;align-items:center;color:var(--primary)}
+.virtual-timing-segment strong{font-size:11px}
+.virtual-timing-segment p{display:flex;align-items:center;gap:6px;color:var(--primary);font-size:11px;margin:0;line-height:1.45}
+.virtual-timing-segment small{font-size:10px;color:var(--muted);line-height:1.55}
+.virtual-timing-flags{display:grid;gap:7px}
+.virtual-timing-flags span{display:flex;gap:6px;align-items:flex-start;color:var(--muted);font-size:10px;line-height:1.5}
+.virtual-timing-flags span.bad{color:#d58c79}
+.virtual-timing-flags svg{flex-shrink:0}
+.virtual-timing-card details{border-top:1px solid var(--line);padding-top:12px;margin-top:14px;color:var(--muted);font-size:11px}
+.virtual-timing-card summary{cursor:pointer;font-size:11px;color:var(--primary)}
+.virtual-timing-card ul{padding-left:19px;line-height:1.65;font-size:10px}
+.virtual-timing-note{margin:15px 0 0}
+@media(max-width:760px){.virtual-timing{margin:0 16px 16px;padding:15px}.virtual-timing-head{flex-direction:column}.virtual-timing-rows{grid-template-columns:1fr}}
