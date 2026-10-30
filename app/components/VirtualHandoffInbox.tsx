@@ -9,7 +9,7 @@ type Department='system'|'sales'|'dispatch'|'crew'|'ops';
 type Handoff={
  id:number;request_id:string;request_code:string;stage:string;
  from_agent:Department;to_agent:Department;subject:string;body:string;
- status:'open'|'superseded';created_at:string;completed_at:string|null;
+ status:'open'|'superseded'|'closed';created_at:string;completed_at:string|null;
 };
 type Overview={handoffs:Handoff[];open_count:number;simulation_only:true;llm_connected:false;operational_approval:false};
 type Tick={examined:number;new_handoffs:number;closed_previous:number;simulation_only:true;operational_changes:0};
@@ -131,7 +131,7 @@ export default function VirtualHandoffInbox(){
              <div className={styles.messageTop}>
                <strong>{departments[h.from_agent]} <ArrowRight size={13}/> {departments[h.to_agent]}</strong>
                <span className={h.status==='open'?styles.open:styles.superseded}>
-                 {h.status==='open'?'Aktuell':'Abgelöst'}</span>
+                 {h.status==='open'?'Aktuell':h.status==='closed'?'Beendet':'Abgelöst'}</span>
              </div>
              <h5>{h.subject}</h5>
              <p>{h.body}</p>
