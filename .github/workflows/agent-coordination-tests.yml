@@ -1,0 +1,32 @@
+name: Agent coordination unit tests
+
+on:
+  pull_request:
+    paths:
+      - "app/lib/agentCoordination.ts"
+      - "tests/agentCoordination.test.mjs"
+      - ".github/workflows/agent-coordination-tests.yml"
+  push:
+    branches:
+      - "feature/**"
+    paths:
+      - "app/lib/agentCoordination.ts"
+      - "tests/agentCoordination.test.mjs"
+      - ".github/workflows/agent-coordination-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  agent-coordination:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Pure-function regression tests
+        run: node --experimental-strip-types --test tests/agentCoordination.test.mjs
