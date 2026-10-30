@@ -1,0 +1,53 @@
+.coordinator{margin-top:18px}
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px}
+.header h3{margin:9px 0;font-size:18px}
+.header p{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 12px}
+.disclaimer{display:flex;gap:10px;align-items:flex-start;padding:13px;border:1px solid var(--line);background:var(--notice);border-radius:9px;color:var(--muted);font-size:11px;line-height:1.65}
+.disclaimer svg{flex-shrink:0;color:var(--brand)}
+.synced{margin:10px 0;font-size:11px;color:var(--muted)}
+.error{border:1px solid #ba6969;color:#ffb4b4;background:rgba(191,62,62,.12);padding:14px;border-radius:8px;font-size:12px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.metrics>div{background:var(--notice);border:1px solid var(--line);border-radius:9px;padding:13px}
+.metrics strong{display:block;font-size:26px;color:var(--primary)}
+.metrics span{display:block;color:var(--muted);font-size:11px;line-height:1.5;margin-top:6px}
+.controls{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{background:var(--notice);border:1px solid var(--line);color:var(--primary);border-radius:100px;padding:8px 11px;font-size:11px;cursor:pointer}
+.filters button.active{border-color:var(--brand);color:var(--brand)}
+.controls input{background:var(--notice);border:1px solid var(--line);color:var(--primary);border-radius:8px;padding:9px 12px;min-width:220px;max-width:100%}
+.layout{display:grid;grid-template-columns:minmax(230px,.86fr) minmax(0,1.14fr);gap:14px;align-items:start}
+.list{display:grid;gap:7px;max-height:580px;overflow-y:auto;min-width:0}
+.list button{display:grid;gap:7px;border:1px solid var(--line);border-radius:9px;background:var(--notice);padding:13px;text-align:left;color:var(--primary);cursor:pointer;min-width:0}
+.list button.selected{border-color:var(--brand)}
+.listHead{display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.listHead strong{font-size:12px}
+.list button>span:not(.listHead){color:var(--muted);font-size:11px}
+.list button small{display:flex;gap:5px;align-items:center;color:var(--muted);font-size:10px}
+.conflict,.overdue,.monitor,.closed{font-size:10px;border-radius:100px;padding:4px 8px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
+.conflict{border-color:#e0985b;color:#e0985b}
+.overdue{border-color:#df7c7c;color:#df7c7c}
+.monitor{border-color:var(--brand);color:var(--brand)}
+.closed{color:var(--muted)}
+.detail{border:1px solid var(--line);background:var(--notice);border-radius:10px;padding:19px;min-width:0}
+.detail h4{margin:9px 0;font-size:17px;color:var(--primary)}
+.detail>p{font-size:12px;color:var(--muted);line-height:1.5}
+.detail h5{font-size:13px;margin:19px 0 9px;color:var(--primary)}
+.next{display:grid;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:13px;margin-top:16px}
+.next strong{font-size:12px;color:var(--primary)}
+.next span{font-size:12px;color:var(--muted);line-height:1.4}
+.next small{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.issues{border:1px solid #d6a062;border-radius:8px;margin-top:10px;padding:12px;font-size:12px}
+.issues strong{display:flex;align-items:center;gap:7px;color:#e9b071}
+.issues ul{padding-left:19px;margin:9px 0 0;line-height:1.6;color:var(--muted)}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.steps li{padding:11px;border:1px solid var(--line);border-radius:8px}
+.stepHead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.stepHead strong{font-size:12px}
+.stepHead small{font-size:10px}
+.steps li p{font-size:11px;color:var(--muted);margin:7px 0 0;line-height:1.5}
+.done{color:#4eba98}
+.pending{color:var(--muted)}
+.blocked{color:#e9b071}
+.empty{padding:14px;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:8px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.list{max-height:330px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.header{flex-direction:column}.controls input{width:100%}.metrics{gap:6px}.metrics>div{padding:10px}}
