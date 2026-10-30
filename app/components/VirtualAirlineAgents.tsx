@@ -5,6 +5,8 @@ import type {FormEvent} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
 import {Bot,Plane,Users,BookOpen,Inbox,RefreshCw,Play,Pause,CheckCircle2,AlertTriangle,FileCheck2,Send} from 'lucide-react';
 import VirtualRotationsPanel from './VirtualRotationsPanel';
+import AgentDecisionGates from './AgentDecisionGates';
+import AgentCaseCoordinator from './AgentCaseCoordinator';
 import VirtualRotationTiming from './VirtualRotationTiming';
 
 type Plan={request_id:string;request_code:string;registration:string|null;aircraft_type:string|null;pic:string|null;sic:string|null;
@@ -143,6 +145,8 @@ export default function VirtualAirlineAgents(){
       </article>)}
     </div>
    </div>
+   <AgentCaseCoordinator/>
+   <AgentDecisionGates enabled={data.enabled} plans={data.plans} training={data.training} modelConnected={data.model_connected} verifiedCrewAssignments={data.verified_crew_assignments}/>
    <VirtualRotationsPanel/>
    <VirtualRotationTiming/>
    <div className="virtual-staff-block virtual-staff-training">
