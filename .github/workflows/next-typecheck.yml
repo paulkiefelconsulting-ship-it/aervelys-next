@@ -1,0 +1,25 @@
+name: Next.js typecheck
+on:
+  push:
+    branches:
+      - "feature/executable-sim-agent-queue-20261031"
+  pull_request:
+    paths:
+      - "app/**"
+      - "package.json"
+      - ".github/workflows/next-typecheck.yml"
+permissions:
+  contents: read
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies for isolated typecheck
+        run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund
+      - name: Run strict TypeScript check
+        run: npx tsc --noEmit
