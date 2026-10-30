@@ -191,7 +191,7 @@ export default function VirtualHandoffInbox(){
                <strong>{departments[action.agent]} · {action.outcome}</strong>
                {' · '+action.detail+' · '+when(action.created_at)}
              </p>)}
-           </div>
+           </div>}
          </div>}
        </div>}
    </>}
