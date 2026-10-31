@@ -23,7 +23,13 @@ type Passenger={
 };
 type EventRow={id:number;request_id:string;event_kind:string;passenger_id:string|null;
  payload:Record<string,unknown>;created_at:string};
-type Overview={requests:RequestRow[];missions:Mission[];passengers:Passenger[];
+type FinanceIndication={
+ request_id:string;request_code:string;indicated_price_eur:number|null;
+ price_status:string|null;modelled_cost_floor_eur:number|null;
+ potential_difference_eur:number|null;revenue_booked:false;costs_booked:false;
+ profit_realized:false;source:'fictitious_sim_indication_only';
+};
+type Overview={finance_indications:FinanceIndication[];requests:RequestRow[];missions:Mission[];passengers:Passenger[];
  events:EventRow[];simulation_only:true;simconnect_connected:false;
  real_flight_approvals:false;route_source:'pilot_simbrief_paste'};
 type Ack={simulation_only:true;telemetry_connected?:false;real_flights_modified?:0;
@@ -57,6 +63,7 @@ function localTime(s:string|null|undefined){
 }
 function phaseName(key:string){return phases.find(p=>p[0]===key)?.[1]||key;}
 function inRange(n:number){return Math.max(0,Math.min(100,Number(n)||0));}
+function money(n:number|null){return n===null?'—':new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(n));}
 
 export default function VirtualSimMissionControl(){
  const [snapshot,setSnapshot]=useState<Overview|null>(null);
@@ -74,7 +81,7 @@ export default function VirtualSimMissionControl(){
    const {data,error:rpcError}=await db().rpc('aervelys_sim_missions_overview');
    const v=data as Overview|null;
    if(rpcError||!v||!Array.isArray(v.requests)||!Array.isArray(v.missions)||
-    !Array.isArray(v.passengers)||!Array.isArray(v.events)||
+    !Array.isArray(v.passengers)||!Array.isArray(v.events)||!Array.isArray(v.finance_indications)||
     v.simulation_only!==true||v.simconnect_connected!==false||
     v.real_flight_approvals!==false||v.route_source!=='pilot_simbrief_paste')
     throw Error('SIM mission data unavailable');
@@ -94,6 +101,7 @@ export default function VirtualSimMissionControl(){
  },[load]);
  const current=snapshot?.requests.find(r=>r.request_id===requestId)||null;
  const mission=snapshot?.missions.find(m=>m.request_id===requestId)||null;
+ const finance=snapshot?.finance_indications.find(f=>f.request_id===requestId)||null;
  const passengers=useMemo(()=>(snapshot?.passengers||[]).filter(p=>p.request_id===requestId)
   .sort((a,b)=>a.seat_index-b.seat_index),[snapshot,requestId]);
  const events=useMemo(()=>(snapshot?.events||[]).filter(e=>e.request_id===requestId)
@@ -225,6 +233,18 @@ export default function VirtualSimMissionControl(){
       <div><strong>{avg===null?'—':avg.toFixed(1)+' / 100'}</strong><span>Ø Passagierzufriedenheit</span></div>
       <div><strong>{serviceCount}</strong><span>Protokollierte Servicevorgänge</span></div>
       <div><strong>{totalPax}</strong><span>Fiktive Passagiere</span></div>
+     </div>
+     <div className={styles.finance}>
+      <div className={styles.sectionHeader}>
+       <h4>SIM-Vertrieb & Kalkulation</h4>
+       <small>Unverbindliche Rechenwerte · keine Einnahmen oder Gewinne gebucht</small>
+      </div>
+      <div className={styles.financeGrid}>
+       <div><span>Letzter fiktiver Angebotspreis</span><strong>{money(finance?.indicated_price_eur??null)}</strong></div>
+       <div><span>SIM-Modellkosten / Vergleich</span><strong>{money(finance?.modelled_cost_floor_eur??null)}</strong></div>
+       <div><span>Rechnerische Differenz</span><strong>{money(finance?.potential_difference_eur??null)}</strong></div>
+      </div>
+      <p>{finance?.price_status?'SIM-Angebotsstatus: '+finance.price_status+' · ':''}Keine bestätigte Kundenzusage, keine echten Kosten und keine Finanzbuchung.</p>
      </div>
      <div className={styles.phaseBox}>
       <div className={styles.sectionHeader}><h4>Flugphasen</h4><small>Manuelle Eingabe · keine automatische MSFS-Erkennung</small></div>
