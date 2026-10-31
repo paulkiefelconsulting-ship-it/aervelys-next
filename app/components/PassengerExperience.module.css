@@ -128,3 +128,16 @@
 .preparedStatus strong{color:#d7f5ff;font-size:13px}
 .preparedStatus span{color:#95bfd1;font-size:12px;line-height:1.5}
 @media(max-width:700px){.preparedStatus{align-items:stretch}.preparedStatus>a{justify-content:center}}
+
+/* Passenger Experience: three dedicated sections */
+.areaTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch}
+.areaTab,.areaActive{display:flex;align-items:center;gap:12px;min-width:0;border:1px solid #27475d;background:#0d2030;color:#afc8d5;text-align:left;padding:17px 18px;cursor:pointer;border-radius:13px}
+.areaTab:hover{background:#15354c;border-color:#407390}
+.areaActive{background:linear-gradient(125deg,#174e70,#113148);border-color:#59b6d8;color:#f4fbff;box-shadow:inset 0 0 0 1px rgba(91,189,223,.1)}
+.areaTab svg,.areaActive svg{color:#76c5e7;flex-shrink:0}
+.areaTab span,.areaActive span{display:grid;gap:5px;min-width:0}
+.areaTab strong,.areaActive strong{font-size:13px;line-height:1.25}
+.areaTab small,.areaActive small{font-size:10px;line-height:1.4;color:#89aabf}
+.areaActive small{color:#b0dbea}
+.areaTab:focus-visible,.areaActive:focus-visible{outline:2px solid #71d5ff;outline-offset:3px}
+@media(max-width:780px){.areaTabs{gap:6px}.areaTab,.areaActive{padding:12px 9px;gap:6px;flex-direction:column;align-items:center;text-align:center}.areaTab strong,.areaActive strong{font-size:11px}.areaTab small,.areaActive small{font-size:9px}}
