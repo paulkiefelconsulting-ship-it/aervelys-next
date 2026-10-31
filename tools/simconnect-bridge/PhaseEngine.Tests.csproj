@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="FlightPhaseDetector.cs" />
+    <Compile Include="FlightPhaseScenarios.cs" />
+    <Compile Include="PhaseTestRunner.cs" />
+  </ItemGroup>
+</Project>
