@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
 import {ArrowLeftRight,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
 import styles from './PassengerExperience.module.css';
+import PassengerSections from './PassengerSections';
 import {readPreparedPlan,type PassengerPlan,type RouteFix} from '../lib/passengerPlan';
 
 type Geo={lat:number;lon:number;name:string};
@@ -189,6 +190,7 @@ function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,
 
 export default function PassengerExperience({publicDemo=false}:{publicDemo?:boolean}){
  const [mode,setMode]=useState<'demo'|'dispatch'>('demo');
+ const [area,setArea]=useState<'map'|'cabin'|'connection'>('map');
  const [prepared,setPrepared]=useState<PassengerPlan|null>(null);
  const [playbackSpeed,setPlaybackSpeed]=useState(1);
  useEffect(()=>{
@@ -244,6 +246,12 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
    <div><div className="eyebrow">AERVELYS NEXT / DIGITAL CABIN</div><h2>Passenger Experience</h2><p>{publicDemo?'Öffentliche Demo der Passagierkarte – ohne Konto und ausschließlich mit fiktiven Flugdaten.':'Interaktive Fluginformationskarte für Chartergäste und Simulatorflüge. Geschützte NEXT-Integration im ersten Ausbauschritt.'}</p></div>
    <span className={styles.beta}>PASSENGER DISPLAY · BETA</span>
   </section>
+  <div className={styles.areaTabs} role="tablist" aria-label="Bereiche der Passenger Experience">
+   <button role="tab" type="button" aria-selected={area==='map'} className={area==='map'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('map');setFullscreen(false);}}><MapPin size={18}/><span><strong>01 · Flugkarte</strong><small>Route & Flugfortschritt</small></span></button>
+   <button role="tab" type="button" aria-selected={area==='cabin'} className={area==='cabin'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('cabin');setFullscreen(false);}}><Plane size={18}/><span><strong>02 · Kabinendisplay</strong><small>Passagierinformationen</small></span></button>
+   <button role="tab" type="button" aria-selected={area==='connection'} className={area==='connection'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('connection');setFullscreen(false);}}><RadioTower size={18}/><span><strong>03 · Integration</strong><small>SimBrief · NEXT · MSFS</small></span></button>
+  </div>
+  {area==='map'&&<>
   <div className={styles.modeBar} role="group" aria-label="Datenquelle">
    <button type="button" className={mode==='demo'?styles.modeActive:styles.mode} onClick={()=>{setMode('demo');setPlaying(false);}}><Play size={15}/>{publicDemo&&prepared?'SimBrief-Route · Demo-Wiedergabe':'Demo-Flug'}</button>
    {!publicDemo&&<button type="button" className={mode==='dispatch'?styles.modeActive:styles.mode} onClick={()=>{setMode('dispatch');setPlaying(false);}}><ArrowLeftRight size={15}/>NEXT-Dispositionsentwürfe</button>}
@@ -262,7 +270,8 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
   </div>}
   {mode==='dispatch'&&state==='error'&&<p role="alert" className={styles.warning}>{message}</p>}
   {mode==='dispatch'&&state==='ready'&&!flight&&<p className={styles.warning}>Noch keine Dispositionsentwürfe vorhanden. Erstelle zunächst einen Flugplan in der Flugdisposition. Alternativ kannst du die Karte im Demo-Modus testen.</p>}
-  <div className={fullscreen?styles.fullscreen:styles.display}>
+  </>}
+  {area==='map'&&<div className={fullscreen?styles.fullscreen:styles.display}>
    <div className={styles.displayHeader}>
     <div className={styles.brand}><span className={styles.brandIcon}>A</span><span><strong>AERVELYS</strong><small>PRIVATE AVIATION</small></span></div>
     <div className={styles.flightId}><span>{mode==='demo'&&publicDemo&&prepared?'SIMBRIEF ROUTE / DEMO PLAYBACK':mode==='demo'?'ILLUSTRATION / DEMO':'DISPATCH DRAFT / PLANNING ONLY'}</span><strong>{flight?.request_code||'KEIN FLUG GEWÄHLT'}</strong></div>
@@ -291,7 +300,8 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
    </div>}
    {mode==='dispatch'&&flight&&<div className={styles.dispatchNotice}><Clock3 size={15}/> Geplanter Abflug: {shortDate(flight.requested_departure)} · {flight.planning_status} · Keine Live-Position oder Flugfreigabe</div>}
    <div className={styles.disclaimer}><ShieldAlert size={15}/> Dieser Bildschirm stellt keine flugbetriebliche Freigabe dar. Für Live-Tracking sind ein gekoppelter MSFS-Connector und geprüfte Telemetrie erforderlich.</div>
-  </div>
+  </div>}
+  {area!=='map'&&<PassengerSections section={area} flight={flight??null} originName={origin?.name||'—'} destinationName={destination?.name||'—'} distance={distance} progress={mode==='demo'?progress:0} remaining={mode==='demo'?remaining:null} prepared={publicDemo?prepared:null} publicDemo={publicDemo} dispatchState={state} draftCount={drafts.length} onOpenMap={()=>setArea('map')}/>}
   <div className={styles.footerNote}>Kartendaten © OpenStreetMap-Mitwirkende. {publicDemo?'Der vorbereitete SimBrief-Plan wird ausschließlich lokal in diesem Browser gelesen. Es findet keine Synchronisierung auf weitere Geräte statt. Flugbewegung und Werte sind Demo-Animation, keine MSFS-Telemetrie.':'Die Flugplanliste wird nur mit bestehenden NEXT-Berechtigungen gelesen; es werden keine Flüge angelegt oder verändert.'}</div>
  </div>;
 }
