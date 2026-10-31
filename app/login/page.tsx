@@ -36,5 +36,6 @@ export default function Login() {
       <button disabled={loading || !url || !key} type="submit">{loading?"Anmeldung läuft …":"Sicher anmelden"}</button>
     </form>
     <small>Kein öffentlicher Registrierungszugang · Interne Testumgebung</small>
+    <a href="/passenger-demo" style={{display:"block",marginTop:20,textAlign:"center",color:"#7dcff1",fontWeight:700,fontSize:12}}>Passagierkarte ohne Anmeldung testen</a>
   </section></main>;
 }

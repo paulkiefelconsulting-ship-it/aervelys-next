@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>AERVELYS.SimConnectBridge</AssemblyName>
+    <RootNamespace>Aervelys.SimConnectBridge</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SimConnectManagedDll Condition="'$(SimConnectManagedDll)' == '' and Exists('$(MSFS2024_SDK)\SimConnect SDK\lib\managed\SimConnect.dll')">$(MSFS2024_SDK)\SimConnect SDK\lib\managed\SimConnect.dll</SimConnectManagedDll>
+    <SimConnectManagedDll Condition="'$(SimConnectManagedDll)' == '' and Exists('$(MSFS2024_SDK)\SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll')">$(MSFS2024_SDK)\SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll</SimConnectManagedDll>
+    <SimConnectManagedDll Condition="'$(SimConnectManagedDll)' == '' and Exists('$(MSFS_SDK)\SimConnect SDK\lib\managed\SimConnect.dll')">$(MSFS_SDK)\SimConnect SDK\lib\managed\SimConnect.dll</SimConnectManagedDll>
+    <SimConnectManagedDll Condition="'$(SimConnectManagedDll)' == '' and Exists('$(MSFS_SDK)\SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll')">$(MSFS_SDK)\SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll</SimConnectManagedDll>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.FlightSimulator.SimConnect">
+      <HintPath>$(SimConnectManagedDll)</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Web.Extensions"/>
+  </ItemGroup>
+</Project>
