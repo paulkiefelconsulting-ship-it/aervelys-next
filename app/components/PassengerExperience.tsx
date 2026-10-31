@@ -1,10 +1,10 @@
 'use client';
 
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
-import {ArrowLeftRight,ClipboardCopy,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
+import {ArrowLeftRight,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
 import styles from './PassengerExperience.module.css';
-import {readPreparedPlan,PLAN_STORAGE_KEY,type PassengerPlan,type RouteFix} from '../lib/passengerPlan';
+import {readPreparedPlan,type PassengerPlan,type RouteFix} from '../lib/passengerPlan';
 
 type Geo={lat:number;lon:number;name:string};
 type Point={lat:number;lon:number};
@@ -37,13 +37,6 @@ const AIRPORTS:Record<string,Geo>={
  WSSS:{lat:1.3644,lon:103.9915,name:'Singapur'},RJTT:{lat:35.5494,lon:139.7798,name:'Tokio Haneda'}
 };
 const DEMO:Flight={id:'demo',request_code:'AV-DEMO-001',registration:'AERVELYS Demojet',origin:'EDAZ',destination:'LFMN',requested_departure:'',estimated_block_minutes:110,planning_status:'DEMO / nicht disponiert'};
-const DEMO_PRESETS=[
- {label:'Côte d’Azur',origin:'EDAZ',destination:'LFMN'},
- {label:'Mallorca',origin:'EDAZ',destination:'LEPA'},
- {label:'London',origin:'EDDB',destination:'EGLC'},
- {label:'New York',origin:'EDDB',destination:'KJFK'}
-] as const;
-const AIRPORT_OPTIONS=Object.entries(AIRPORTS).sort((a,b)=>a[0].localeCompare(b[0]));
 const flightPhase=(progress:number)=>{
  if(progress<=0)return 'BEREIT';
  if(progress<6)return 'START';
