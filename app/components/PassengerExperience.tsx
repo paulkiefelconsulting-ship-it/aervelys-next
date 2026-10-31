@@ -201,7 +201,7 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
  const [selected,setSelected]=useState('');
  const [state,setState]=useState<'loading'|'ready'|'error'>('loading');
  const [message,setMessage]=useState('');
- const [progress,setProgress]=useState(35);
+ const [progress,setProgress]=useState(0);
  const [playing,setPlaying]=useState(false);
  const [fullscreen,setFullscreen]=useState(false);
  const refresh=useCallback(async()=>{
