@@ -196,31 +196,14 @@ function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,
 
 export default function PassengerExperience({publicDemo=false}:{publicDemo?:boolean}){
  const [mode,setMode]=useState<'demo'|'dispatch'>('demo');
- const [demoOrigin,setDemoOrigin]=useState('EDAZ');
- const [demoDestination,setDemoDestination]=useState('LFMN');
+ const [prepared,setPrepared]=useState<PassengerPlan|null>(null);
  const [playbackSpeed,setPlaybackSpeed]=useState(1);
- const [copyStatus,setCopyStatus]=useState('');
- const selectRoute=(origin:string,destination:string)=>{
-  if(origin===destination||!AIRPORTS[origin]||!AIRPORTS[destination])return;
-  setDemoOrigin(origin);setDemoDestination(destination);setProgress(0);setPlaying(false);setCopyStatus('');
-  if(publicDemo){
-   const url=new URL(window.location.href);
-   url.searchParams.set('from',origin);url.searchParams.set('to',destination);
-   window.history.replaceState(window.history.state,'',url.pathname+url.search);
-  }
- };
  useEffect(()=>{
   if(!publicDemo)return;
-  const params=new URLSearchParams(window.location.search);
-  const from=params.get('from')?.toUpperCase(),to=params.get('to')?.toUpperCase();
-  if(from&&to&&from!==to&&AIRPORTS[from]&&AIRPORTS[to])selectRoute(from,to);
-  // Only read the initial query. Subsequent routes are handled by the selectors.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const load=()=>setPrepared(readPreparedPlan());
+  load();window.addEventListener('storage',load);
+  return()=>window.removeEventListener('storage',load);
  },[publicDemo]);
- async function copyDemoLink(){
-  try{await navigator.clipboard.writeText(window.location.href);setCopyStatus('Link kopiert');}
-  catch{setCopyStatus('Link konnte nicht kopiert werden');}
- }
  const [drafts,setDrafts]=useState<Flight[]>([]);
  const [selected,setSelected]=useState('');
  const [state,setState]=useState<'loading'|'ready'|'error'>('loading');
@@ -242,13 +225,24 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
  useEffect(()=>{if(!publicDemo)void refresh();},[refresh,publicDemo]);
  useEffect(()=>{if(!playing||mode!=='demo')return;const id=window.setInterval(()=>setProgress(p=>Math.min(100,p+playbackSpeed)),750);return()=>window.clearInterval(id);},[playing,mode,playbackSpeed]);
  useEffect(()=>{if(progress>=100&&playing)setPlaying(false);},[progress,playing]);
- const demoDistance=routeLength(AIRPORTS[demoOrigin],AIRPORTS[demoDestination]);
- const demoDuration=Math.max(40,Math.round((demoDistance/740*60+35)/5)*5);
- const demoFlight:Flight={...DEMO,origin:demoOrigin,destination:demoDestination,estimated_block_minutes:demoDuration};
+ const demoOrigin=publicDemo&&prepared?prepared.origin:'EDAZ';
+ const demoDestination=publicDemo&&prepared?prepared.destination:'LFMN';
+ const fromFix=publicDemo&&prepared?prepared.originPoint:null;
+ const toFix=publicDemo&&prepared?prepared.destinationPoint:null;
+ const demoA=fromFix??AIRPORTS[demoOrigin]??prepared?.fixes?.[0]??AIRPORTS.EDAZ;
+ const demoB=toFix??AIRPORTS[demoDestination]??prepared?.fixes?.at(-1)??AIRPORTS.LFMN;
+ const plannedPoints=publicDemo&&prepared?prepared.fixes:[];
+ const demoDistance=routeDistance(flightPath(demoA,demoB,plannedPoints));
+ const demoDuration=prepared?.durationMinutes??Math.max(40,Math.round((demoDistance/740*60+35)/5)*5);
+ const demoFlight:Flight={...DEMO,origin:demoOrigin,destination:demoDestination,
+  request_code:publicDemo&&prepared?(prepared.flightNumber||'SIMBRIEF OFP'):'AV-DEMO-001',
+  registration:publicDemo&&prepared?(prepared.registration||'Nicht hinterlegt'):DEMO.registration,
+  estimated_block_minutes:demoDuration};
  const flight=mode==='demo'?demoFlight:drafts.find(x=>x.id===selected);
- const origin=flight?AIRPORTS[flight.origin?.toUpperCase()]:undefined;
- const destination=flight?AIRPORTS[flight.destination?.toUpperCase()]:undefined;
- const distance=origin&&destination?routeLength(origin,destination):null;
+ const origin=mode==='demo'?{...demoA,name:AIRPORTS[demoOrigin]?.name||'SimBrief Abflug'}:flight?AIRPORTS[flight.origin?.toUpperCase()]:undefined;
+ const destination=mode==='demo'?{...demoB,name:AIRPORTS[demoDestination]?.name||'SimBrief Ziel'}:flight?AIRPORTS[flight.destination?.toUpperCase()]:undefined;
+ const waypoints=mode==='demo'&&publicDemo&&prepared?prepared.fixes:undefined;
+ const distance=origin&&destination?routeDistance(flightPath(origin,destination,waypoints)):null;
  const remaining=mode==='demo'?Math.round(demoDuration*(1-progress/100)):null;
  const elapsed=Math.round(demoDuration*progress/100);
  const telemetry=simulatedTelemetry(progress);
@@ -258,26 +252,14 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
    <span className={styles.beta}>PASSENGER DISPLAY · BETA</span>
   </section>
   <div className={styles.modeBar} role="group" aria-label="Datenquelle">
-   <button type="button" className={mode==='demo'?styles.modeActive:styles.mode} onClick={()=>{setMode('demo');setPlaying(false);}}><Play size={15}/>Demo-Flug</button>
+   <button type="button" className={mode==='demo'?styles.modeActive:styles.mode} onClick={()=>{setMode('demo');setPlaying(false);}}><Play size={15}/>{publicDemo&&prepared?'SimBrief-Route · Demo-Wiedergabe':'Demo-Flug'}</button>
    {!publicDemo&&<button type="button" className={mode==='dispatch'?styles.modeActive:styles.mode} onClick={()=>{setMode('dispatch');setPlaying(false);}}><ArrowLeftRight size={15}/>NEXT-Dispositionsentwürfe</button>}
    <span className={styles.liveStatus}><CloudOff size={15}/> SimConnect nicht verbunden</span>
   </div>
-  {mode==='demo'&&<div className={styles.demoRouteBox}>
-   <div className={styles.demoRouteHeading}><strong>Demoflug planen</strong><span>Frei wählbare Strecke · reine Beispielwerte</span></div>
-   <div className={styles.routeSelectors}>
-    <label>Startflughafen<select aria-label="Startflughafen Demo" value={demoOrigin} onChange={e=>selectRoute(e.target.value,e.target.value===demoDestination?demoOrigin:demoDestination)}>
-     {AIRPORT_OPTIONS.map(([code,airport])=><option key={code} value={code}>{code} · {airport.name}</option>)}
-    </select></label>
-    <button className={styles.swapButton} type="button" title="Start und Ziel tauschen" aria-label="Start und Ziel tauschen" onClick={()=>selectRoute(demoDestination,demoOrigin)}><ArrowLeftRight size={17}/></button>
-    <label>Zielflughafen<select aria-label="Zielflughafen Demo" value={demoDestination} onChange={e=>selectRoute(e.target.value===demoOrigin?demoDestination:demoOrigin,e.target.value)}>
-     {AIRPORT_OPTIONS.map(([code,airport])=><option key={code} value={code}>{code} · {airport.name}</option>)}
-    </select></label>
-   </div>
-   <div className={styles.presetRow}>
-    <div className={styles.routePresets}>{DEMO_PRESETS.map(p=><button type="button" key={p.label} className={p.origin===demoOrigin&&p.destination===demoDestination?styles.presetActive:styles.preset} onClick={()=>selectRoute(p.origin,p.destination)}>{p.label}</button>)}</div>
-    {publicDemo&&<button type="button" className={styles.routeLinkButton} onClick={()=>void copyDemoLink()}><ClipboardCopy size={14}/> Demolink kopieren</button>}
-   </div>
-   {copyStatus&&<span className={styles.copyStatus} role="status">{copyStatus}</span>}
+  {mode==='demo'&&<div className={styles.preparedStatus}>
+   <div><strong>{publicDemo&&prepared?'SimBrief-Flugplan geladen':'Noch kein SimBrief-Flugplan hinterlegt'}</strong>
+   <span>{publicDemo&&prepared?prepared.origin+' → '+prepared.destination+' · '+prepared.fixes.length+' Wegpunkte · nur geplante Route':'Platzhalterstrecke EDAZ → LFMN · keine Flugplandaten'}</span></div>
+   <a href="/passenger-demo/setup" className={styles.routeLinkButton}>Flug in SimBrief vorbereiten / importieren</a>
   </div>}
   {mode==='dispatch'&&<div className={styles.selector}>
    <label htmlFor="passenger-flight">Gespeicherter Flugplan <select id="passenger-flight" value={selected} disabled={state!=='ready'||drafts.length===0} onChange={e=>setSelected(e.target.value)}>
@@ -290,17 +272,17 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
   <div className={fullscreen?styles.fullscreen:styles.display}>
    <div className={styles.displayHeader}>
     <div className={styles.brand}><span className={styles.brandIcon}>A</span><span><strong>AERVELYS</strong><small>PRIVATE AVIATION</small></span></div>
-    <div className={styles.flightId}><span>{mode==='demo'?'ILLUSTRATION / DEMO':'DISPATCH DRAFT / PLANNING ONLY'}</span><strong>{flight?.request_code||'KEIN FLUG GEWÄHLT'}</strong></div>
+    <div className={styles.flightId}><span>{mode==='demo'&&publicDemo&&prepared?'SIMBRIEF ROUTE / DEMO PLAYBACK':mode==='demo'?'ILLUSTRATION / DEMO':'DISPATCH DRAFT / PLANNING ONLY'}</span><strong>{flight?.request_code||'KEIN FLUG GEWÄHLT'}</strong></div>
    </div>
    <div className={styles.routeHeader}>
     <div><small>DEPARTURE</small><strong>{flight?.origin||'—'}</strong><span>{flight?safeName(flight.origin):'—'}</span></div>
     <div className={styles.travel}><Plane size={23}/><span>ROUTE PREVIEW</span></div>
     <div className={styles.arrival}><small>ARRIVAL</small><strong>{flight?.destination||'—'}</strong><span>{flight?safeName(flight.destination):'—'}</span></div>
    </div>
-   <MapPanel origin={origin} destination={destination} demo={mode==='demo'} progress={progress} fullscreen={fullscreen} onFullscreen={()=>setFullscreen(v=>!v)}/>
+   <MapPanel origin={origin} destination={destination} originCode={flight?.origin} destinationCode={flight?.destination} waypoints={waypoints} demo={mode==='demo'} progress={progress} fullscreen={fullscreen} onFullscreen={()=>setFullscreen(v=>!v)}/>
    <div className={styles.flightStats}>
     <div><small>FLUGZEUG</small><strong>{flight?.registration||'—'}</strong></div>
-    <div><small>DISTANZ (LUFTLINIE)</small><strong>{distance!==null?distance.toLocaleString('de-DE')+' km':'—'}</strong></div>
+    <div><small>{waypoints?.length?'ROUTENLÄNGE (SIMBRIEF)':'DISTANZ (LUFTLINIE)'}</small><strong>{distance!==null?distance.toLocaleString('de-DE')+' km':'—'}</strong></div>
     <div><small>{mode==='demo'?'SIMULIERTE RESTZEIT':'BLOCKZEIT (ENTWURF)'}</small><strong>{mode==='demo'?remaining+' min':flight?.estimated_block_minutes!=null?flight.estimated_block_minutes+' min':'—'}</strong></div>
     <div><small>{mode==='demo'?'SIM · HÖHE / SPEED':'HÖHE / SPEED'}</small><strong>{mode==='demo'?telemetry.altitude.toLocaleString('de-DE')+' ft · '+telemetry.speed+' kt':'— / —'}</strong></div>
    </div>
@@ -317,6 +299,6 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
    {mode==='dispatch'&&flight&&<div className={styles.dispatchNotice}><Clock3 size={15}/> Geplanter Abflug: {shortDate(flight.requested_departure)} · {flight.planning_status} · Keine Live-Position oder Flugfreigabe</div>}
    <div className={styles.disclaimer}><ShieldAlert size={15}/> Dieser Bildschirm stellt keine flugbetriebliche Freigabe dar. Für Live-Tracking sind ein gekoppelter MSFS-Connector und geprüfte Telemetrie erforderlich.</div>
   </div>
-  <div className={styles.footerNote}>Die Darstellung nutzt OpenStreetMap-Kacheln für die gerade sichtbare Karte. Bei größerer oder öffentlicher Nutzung ist ein geeigneter Tile-Provider erforderlich. {publicDemo?'Diese Demo ist vollständig von NEXT-Dispositionsdaten getrennt, stellt keine RPC-Anfragen und benötigt keinen Supabase-Zugang.':'Die Flugplanliste wird nur mit bestehenden NEXT-Berechtigungen gelesen; es werden keine Flüge angelegt oder verändert.'}</div>
+  <div className={styles.footerNote}>Kartendaten © OpenStreetMap-Mitwirkende. {publicDemo?'Der vorbereitete SimBrief-Plan wird ausschließlich lokal in diesem Browser gelesen. Es findet keine Synchronisierung auf weitere Geräte statt. Flugbewegung und Werte sind Demo-Animation, keine MSFS-Telemetrie.':'Die Flugplanliste wird nur mit bestehenden NEXT-Berechtigungen gelesen; es werden keine Flüge angelegt oder verändert.'}</div>
  </div>;
 }
