@@ -2,7 +2,7 @@
 
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
-import {ArrowLeftRight,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
+import {ArrowLeftRight,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RadioTower,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
 import styles from './PassengerExperience.module.css';
 import PassengerSections from './PassengerSections';
 import {readPreparedPlan,type PassengerPlan,type RouteFix} from '../lib/passengerPlan';
