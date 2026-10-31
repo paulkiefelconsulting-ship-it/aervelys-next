@@ -3,6 +3,7 @@ import {ArrowRight,CheckCircle2,Clock3,CloudOff,FileUp,LockKeyhole,MapPinned,Pla
 import type {PassengerPlan} from '../lib/passengerPlan';
 import styles from './PassengerSections.module.css';
 import CabinSimulation from './CabinSimulation';
+import BridgeSnapshotInspector from './BridgeSnapshotInspector';
 import type {CabinPhase} from '../lib/cabinSimulation';
 
 type CabinFlight={
@@ -98,12 +99,13 @@ export default function PassengerSections({section,flight,originName,destination
     <span className={styles.eyebrow}>03 / LIVE TELEMETRY</span>
     <h3>MSFS 2024</h3>
     <span className={styles.off}><CloudOff size={15}/> SimConnect nicht verbunden</span>
-    <p>Die lokale Windows-Bridge und das sichere Pairing fehlen noch. Bis dahin gibt es keine echte Position, Geschwindigkeit, Flughöhe oder automatische Flugphasenerkennung.</p>
+    <p>Eine erste Windows-SimConnect-Bridge ist als Quellprojekt angelegt und gibt Flugphasen sowie echte Messwerte lokal auf dem Simulator-PC aus. Die sichere Live-Verbindung zu NEXT und die Flugzuordnung fehlen noch.</p>
    </article>
   </div>
   <div className={styles.flowline}>
    <div>SimBrief OFP <small>vorab geplant</small></div><ArrowRight size={18}/><div>AERVELYS NEXT <small>Flugzuordnung geplant</small></div><ArrowRight size={18}/><div>Passagierdisplay <small>lesende Anzeige</small></div>
   </div>
-  <div className={styles.connectionNotice}><ShieldAlert size={18}/><p>Diese Ansicht ist kein Netzwerk- oder Verbindungsmonitor für reale Flugzeuge. Lokal importierte Pläne bleiben im selben Browser gespeichert. Die Verbindung zu NEXT sowie die SimConnect-Telemetrie werden später mit Zugriffsprüfung, Gerätezuordnung und sicherer Datenübertragung ergänzt.</p></div>
+  <BridgeSnapshotInspector/>
+  <div className={styles.connectionNotice}><ShieldAlert size={18}/><p>Es erfolgt noch keine Live-Übertragung aus MSFS an NEXT. Die lokale Bridge schreibt nur eine Momentaufnahme auf den Simulator-PC. SimBrief-Pläne bleiben im selben Browser. Für echte Kopplung braucht es Gerätepaarung, Flugzuordnung, Zugriffsprüfung und sichere Datenübertragung.</p></div>
  </div>;
 }
