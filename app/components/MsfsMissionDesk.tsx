@@ -89,7 +89,7 @@ export default function MsfsMissionDesk(){
     <div className={styles.statusCard}>
      <div className={styles.statusTitle}><CloudOff size={19}/><strong>SIM BRIDGE</strong></div>
      <span className={styles.offline}>Nicht eingerichtet</span>
-     <small>Der Windows-Connector muss erst entwickelt, installiert und sicher gekoppelt werden.</small>
+     <small>Lokaler SimConnect-Reader und Phasendetektor liegen als Quellcode vor. Windows-Test, sichere Kopplung und Live-Übertragung fehlen noch.</small>
     </div>
     <div className={styles.statusCard}>
      <div className={styles.statusTitle}><RadioTower size={19}/><strong>ACARS & TELEMETRIE</strong></div>
