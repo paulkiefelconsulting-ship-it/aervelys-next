@@ -133,7 +133,7 @@ function MapPanel({origin,destination,demo,progress,fullscreen,onFullscreen}:{or
  </div>;
 }
 
-export default function PassengerExperience(){
+export default function PassengerExperience({publicDemo=false}:{publicDemo?:boolean}){
  const [mode,setMode]=useState<'demo'|'dispatch'>('demo');
  const [drafts,setDrafts]=useState<Flight[]>([]);
  const [selected,setSelected]=useState('');
@@ -153,7 +153,7 @@ export default function PassengerExperience(){
    setDrafts(rows);setSelected(old=>rows.some(row=>row.id===old)?old:rows[0]?.id||'');setState('ready');
   }catch{setMessage('Flugplanentwürfe konnten nicht gelesen werden. Anmeldung und Berechtigungen prüfen.');setState('error');}
  },[]);
- useEffect(()=>{void refresh();},[refresh]);
+ useEffect(()=>{if(!publicDemo)void refresh();},[refresh,publicDemo]);
  useEffect(()=>{if(!playing||mode!=='demo')return;const id=window.setInterval(()=>setProgress(p=>p>=100?(setPlaying(false),100):Math.min(100,p+1)),750);return()=>window.clearInterval(id);},[playing,mode]);
  const flight=mode==='demo'?DEMO:drafts.find(x=>x.id===selected);
  const origin=flight?AIRPORTS[flight.origin?.toUpperCase()]:undefined;
@@ -162,12 +162,12 @@ export default function PassengerExperience(){
  const remaining=mode==='demo'?Math.round(110*(1-progress/100)):null;
  return <div className={styles.screen}>
   <section className={styles.intro}>
-   <div><div className="eyebrow">AERVELYS NEXT / DIGITAL CABIN</div><h2>Passenger Experience</h2><p>Interaktive Fluginformationskarte für Chartergäste und Simulatorflüge. Geschützte NEXT-Integration im ersten Ausbauschritt.</p></div>
+   <div><div className="eyebrow">AERVELYS NEXT / DIGITAL CABIN</div><h2>Passenger Experience</h2><p>{publicDemo?'Öffentliche Demo der Passagierkarte – ohne Konto und ausschließlich mit fiktiven Flugdaten.':'Interaktive Fluginformationskarte für Chartergäste und Simulatorflüge. Geschützte NEXT-Integration im ersten Ausbauschritt.'}</p></div>
    <span className={styles.beta}>PASSENGER DISPLAY · BETA</span>
   </section>
   <div className={styles.modeBar} role="group" aria-label="Datenquelle">
    <button type="button" className={mode==='demo'?styles.modeActive:styles.mode} onClick={()=>{setMode('demo');setPlaying(false);}}><Play size={15}/>Demo-Flug</button>
-   <button type="button" className={mode==='dispatch'?styles.modeActive:styles.mode} onClick={()=>{setMode('dispatch');setPlaying(false);}}><ArrowLeftRight size={15}/>NEXT-Dispositionsentwürfe</button>
+   {!publicDemo&&<button type="button" className={mode==='dispatch'?styles.modeActive:styles.mode} onClick={()=>{setMode('dispatch');setPlaying(false);}}><ArrowLeftRight size={15}/>NEXT-Dispositionsentwürfe</button>}
    <span className={styles.liveStatus}><CloudOff size={15}/> SimConnect nicht verbunden</span>
   </div>
   {mode==='dispatch'&&<div className={styles.selector}>
@@ -203,6 +203,6 @@ export default function PassengerExperience(){
    {mode==='dispatch'&&flight&&<div className={styles.dispatchNotice}><Clock3 size={15}/> Geplanter Abflug: {shortDate(flight.requested_departure)} · {flight.planning_status} · Keine Live-Position oder Flugfreigabe</div>}
    <div className={styles.disclaimer}><ShieldAlert size={15}/> Dieser Bildschirm stellt keine flugbetriebliche Freigabe dar. Für Live-Tracking sind ein gekoppelter MSFS-Connector und geprüfte Telemetrie erforderlich.</div>
   </div>
-  <div className={styles.footerNote}>Die Darstellung nutzt OpenStreetMap-Kacheln für die gerade sichtbare Karte. Bei größerer oder öffentlicher Nutzung ist ein geeigneter Tile-Provider erforderlich. Die Flugplanliste wird nur mit bestehenden NEXT-Berechtigungen gelesen; es werden keine Flüge angelegt oder verändert.</div>
+  <div className={styles.footerNote}>Die Darstellung nutzt OpenStreetMap-Kacheln für die gerade sichtbare Karte. Bei größerer oder öffentlicher Nutzung ist ein geeigneter Tile-Provider erforderlich. {publicDemo?'Diese Demo ist vollständig von NEXT-Dispositionsdaten getrennt, stellt keine RPC-Anfragen und benötigt keinen Supabase-Zugang.':'Die Flugplanliste wird nur mit bestehenden NEXT-Berechtigungen gelesen; es werden keine Flüge angelegt oder verändert.'}</div>
  </div>;
 }
