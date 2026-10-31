@@ -122,3 +122,9 @@
 .routeLinkButton{border:1px solid #367ba0;background:#12354c;color:#cff2ff;padding:9px 12px;cursor:pointer;border-radius:8px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .routeLinkButton:hover{background:#215575}
 .copyStatus{color:#8edaca;font-size:11px;line-height:1.4;font-weight:700}
+
+.preparedStatus{display:flex;gap:14px;justify-content:space-between;align-items:center;flex-wrap:wrap;background:#102637;border:1px solid #2a5772;border-radius:12px;padding:17px}
+.preparedStatus>div{display:grid;gap:6px}
+.preparedStatus strong{color:#d7f5ff;font-size:13px}
+.preparedStatus span{color:#95bfd1;font-size:12px;line-height:1.5}
+@media(max-width:700px){.preparedStatus{align-items:stretch}.preparedStatus>a{justify-content:center}}
