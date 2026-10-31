@@ -9,6 +9,7 @@ import AgentDecisionGates from './AgentDecisionGates';
 import AgentCaseCoordinator from './AgentCaseCoordinator';
 import VirtualHandoffInbox from './VirtualHandoffInbox';
 import VirtualAgentDialogues from './VirtualAgentDialogues';
+import VirtualAgentDecisionDesk from './VirtualAgentDecisionDesk';
 import VirtualRotationTiming from './VirtualRotationTiming';
 
 type Plan={request_id:string;request_code:string;registration:string|null;aircraft_type:string|null;pic:string|null;sic:string|null;
@@ -147,6 +148,7 @@ export default function VirtualAirlineAgents(){
       </article>)}
     </div>
    </div>
+   <VirtualAgentDecisionDesk/>
    <VirtualAgentDialogues/>
    <VirtualHandoffInbox/>
    <AgentCaseCoordinator/>
