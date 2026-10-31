@@ -123,6 +123,8 @@ function MapPanel({origin,destination,demo,progress,fullscreen,onFullscreen}:{or
  const points=origin&&destination?Array.from({length:81},(_,i)=>greatCircle(origin,destination,i/80)):[];
  const projected=points.map(project);
  const route=projected.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
+ const passed=demo?projected.slice(0,Math.max(1,Math.round(clamp(progress,0,100)/100*(projected.length-1))+1)):[];
+ const completedRoute=passed.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
  const originXY=origin&&project(origin),destinationXY=destination&&project(destination);
  const plane=demo&&points.length?project(greatCircle(origin!,destination!,progress/100)):null;
  const prev=demo&&points.length?project(greatCircle(origin!,destination!,clamp(progress/100-0.008,0,1))):null;
@@ -138,7 +140,7 @@ function MapPanel({origin,destination,demo,progress,fullscreen,onFullscreen}:{or
  >
   <div className={styles.tileLayer}>{tiles}</div>
   <svg className={styles.mapOverlay} viewBox={'0 0 '+size.w+' '+size.h} aria-hidden="true">
-   {route&&<><path d={route} className={styles.routeHalo}/><path d={route} className={styles.routeLine}/></>}
+   {route&&<><path d={route} className={styles.routeHalo}/><path d={route} className={styles.routeLine}/>{completedRoute&&<path d={completedRoute} className={styles.routeCompleted}/>}</>}
   </svg>
   {originXY&&<div className={styles.mapMarker} style={{left:originXY.x,top:originXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{origin&&Object.entries(AIRPORTS).find(([,v])=>v===origin)?.[0]}</strong><small>{origin?.name}</small></div></div>}
   {destinationXY&&<div className={styles.mapMarker} style={{left:destinationXY.x,top:destinationXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{destination&&Object.entries(AIRPORTS).find(([,v])=>v===destination)?.[0]}</strong><small>{destination?.name}</small></div></div>}
