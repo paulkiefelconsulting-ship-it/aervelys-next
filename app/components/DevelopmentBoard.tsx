@@ -16,7 +16,7 @@ const workstreams:Workstream[]=[
 {title:'CEO-Dashboard',phase:'partial',existing:'Login, Live-Kennzahlen, Firmen-Navigation und proaktives CEO-Mitarbeiterpostfach für simulierte Weiterbildungswünsche',next:'Weitere operative Managementansichten'},
 {title:'Sicherheit & Benutzerverwaltung',phase:'partial',existing:'Aktiver CEO-Zugang, rollenbasierte Supabase-RPCs und gesperrte Freigabe-Aufgaben mit Audit-Verlauf',next:'Benutzerverwaltung, vollständiger Sicherheits-Audit und durchgängige Rechte- und Session-Tests'},
 {title:'Infrastruktur & Deployment',phase:'partial',existing:'GitHub, Supabase und Vercel mit erfolgreichem Build',next:'Build-Tests im CI und kontinuierliches Monitoring'},
-{title:'MSFS 2024',phase:'planned',existing:'Als eigenständiger Bereich vorgesehen',next:'Ereignisempfang und sichere Simulator-Synchronisation'}
+{title:'MSFS 2024',phase:'partial',existing:'Mission Desk mit geschütztem lesendem Dispatch-Zugriff, Entwurfsbriefing und klarer Offline-/Bridge-Statusanzeige; noch kein SimConnect oder ACARS-Ereignisempfang',next:'Lokalen Windows-SimConnect-Connector, sicheres Geräte-Pairing, Flugphasen und überprüften Flugbericht implementieren'}
 ];
 const phaseInfo={backend:{text:'Backend vorhanden',color:'backend'},partial:{text:'Web-Ausbau läuft',color:'partial'},planned:{text:'Geplant',color:'planned'}};
 export default function DevelopmentBoard(){
