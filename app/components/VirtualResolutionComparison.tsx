@@ -6,7 +6,8 @@ import {ArrowLeftRight,CalendarClock,RefreshCw,ShieldAlert,UsersRound} from 'luc
 import styles from './VirtualResolutionComparison.module.css';
 
 type Option={
- id:number;decision_id:number;request_id:string;
+ id:number;decision_id:number;request_id:string;request_code:string;
+ origin_icao:string;destination_icao:string;passengers:number;
  variant_key:'keep_plan'|'switch_aircraft'|'delay_24h';
  label:string;aircraft_registration:string|null;aircraft_type:string|null;
  proposed_departure:string;simulated_floor_eur:number|null;positioning_component_eur:number|null;
@@ -128,7 +129,7 @@ export default function VirtualResolutionComparison(){
      <select id="sim-resolution-case" value={current[0]?.decision_id||0}
        onChange={e=>setSelected(Number(e.target.value))}>
       {grouped.map(o=><option key={o.decision_id} value={o.decision_id}>
-       SIM-Fall #{o.decision_id}
+       {o.request_code} · {o.origin_icao}–{o.destination_icao}
       </option>)}
      </select>
     </div>
