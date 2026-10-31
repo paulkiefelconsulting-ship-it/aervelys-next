@@ -72,3 +72,48 @@
 .footerNote{font-size:11px;line-height:1.7;color:#8293a7;padding:0 5px}
 @media(max-width:760px){.intro{align-items:flex-start;flex-direction:column}.intro h2{font-size:24px}.beta{align-self:flex-start}.modeBar{display:grid;grid-template-columns:1fr 1fr}.mode,.modeActive{font-size:11px;padding:11px 8px}.liveStatus{grid-column:1/-1;margin-left:0}.displayHeader{padding:17px 15px 10px}.routeHeader{padding:16px 17px;gap:8px}.routeHeader strong{font-size:29px}.routeHeader span{font-size:10px}.travel{min-width:40px}.travel:before,.travel:after{max-width:25px}.map{height:390px}.mapCaption{max-width:200px;font-size:9px}.flightStats{grid-template-columns:1fr 1fr}.flightStats>div{padding:14px;border-bottom:1px solid #284358}.flightStats strong{font-size:13px}.flightStats>div:nth-child(2){border-right:0}.flightStats>div:nth-last-child(-n+2){border-bottom:0}.selector{flex-direction:column;align-items:stretch}.playback{flex-wrap:wrap;padding:15px}.playback input{order:3;flex-basis:100%}.playback span{margin-left:auto}.disclaimer,.dispatchNotice{padding:14px 15px}.brand strong{font-size:14px}.flightId strong{font-size:12px}.flightId span{font-size:8px}.fullscreen{inset:0;border-radius:0}}
 @media(max-width:430px){.pinText small{display:none}.pinText{padding:5px}.routeHeader strong{font-size:24px}.brand small{font-size:8px}.flightId span{max-width:120px}.map{height:330px}}
+
+/* Passenger Experience V0.2: route builder and illustrative flight information */
+.demoRouteBox{display:grid;gap:13px;border:1px solid var(--pe-line);background:#111f30;border-radius:14px;padding:18px}
+.demoRouteHeading{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.demoRouteHeading strong{font-size:14px;color:#e3f7ff}
+.demoRouteHeading span{font-size:11px;color:#85aec5}
+.routeSelectors{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:12px}
+.routeSelectors label{display:grid;gap:8px;min-width:0;font-size:11px;color:#8eafc3;font-weight:800}
+.routeSelectors select{width:100%;min-width:0;background:#0a1826;border:1px solid #315573;color:#e3f6ff;padding:12px;border-radius:9px;font-size:12px}
+.routeSelectors select:focus-visible,.speedLabel select:focus-visible{outline:2px solid #7ad1f6}
+.swapButton{border:1px solid #3b7897;border-radius:9px;background:#193c53;display:grid;place-items:center;color:#a6e5ff;cursor:pointer;width:42px;height:42px}
+.swapButton:hover{background:#245776}
+.routePresets{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.preset,.presetActive{border:1px solid #345168;background:#0a1c2d;border-radius:999px;color:#b8d1e1;padding:8px 13px;font-size:11px;font-weight:700;cursor:pointer}
+.presetActive{background:#165273;border-color:#52b8e5;color:#effbff}
+.preset:hover{border-color:#7dc8e6;color:#fff}
+.simPanel{background:#0e2030}
+.simMeta{display:flex;align-items:center;gap:13px;flex-wrap:wrap;padding:14px 24px 0;color:#a5cadf;font-size:11px}
+.simMeta>span:not(:last-child){padding-right:13px;border-right:1px solid #2a4860}
+.simPhase{color:#a4f2e2!important;font-weight:800;display:flex;align-items:center;gap:7px;letter-spacing:1px}
+.simPanel .playback{padding-top:14px;padding-bottom:12px}
+.simPanel .playback .progressLabel{margin-left:0;min-width:36px;text-align:right}
+.speedLabel{display:flex;align-items:center;gap:9px;color:#98bbce;font-size:11px;white-space:nowrap}
+.speedLabel select{background:#102f47;color:#daf4ff;border:1px solid #2d6585;border-radius:7px;padding:7px 10px;font-size:12px}
+.simDisclaimer{display:block;color:#7b9cad;font-size:10px;line-height:1.6;padding:0 24px 16px}
+.routeCompleted{stroke:#1e88be;stroke-width:4;fill:none;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 3px rgba(20,109,164,.35))}
+@media(max-width:760px){
+ .demoRouteBox{padding:13px}
+ .routeSelectors{gap:7px}
+ .routeSelectors select{padding:11px 8px;font-size:11px}
+ .swapButton{width:33px;height:40px}
+ .simMeta{padding:13px 15px 0;gap:9px}
+ .simMeta>span:not(:last-child){padding-right:9px}
+ .simPanel .playback{align-items:center;gap:10px}
+ .speedLabel{order:4}
+ .simPanel .playback input{order:2;flex-basis:auto;min-width:45px}
+ .simPanel .playback .progressLabel{order:3}
+ .simDisclaimer{padding:0 15px 16px}
+}
+@media(max-width:400px){
+ .routeSelectors{grid-template-columns:1fr auto}
+ .routeSelectors label:last-child{grid-column:1/-1;grid-row:2}
+ .swapButton{grid-column:2;grid-row:1}
+ .simMeta>span{border:0!important;padding:0!important}
+}
