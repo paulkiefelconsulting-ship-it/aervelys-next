@@ -53,3 +53,8 @@
 .connectionNotice p{font-size:12px;line-height:1.7;color:#a6bbc8;margin:0}
 @media(max-width:980px){.connectionGrid{grid-template-columns:1fr 1fr}.connectionGrid .connectionCard:last-child{grid-column:1/-1}.connectionCard p{min-height:0}.cabinFacts{grid-template-columns:1fr 1fr}.cabinFacts>div:nth-child(2){border-right:0}.cabinFacts>div:nth-child(-n+2){border-bottom:1px solid #27495c}}
 @media(max-width:700px){.cabinBrand{padding:22px 20px}.monogram{width:53px;height:53px;font-size:31px;border-radius:11px}.journeyPanel{margin:0 12px 12px;padding:16px}.journeyRoute{grid-template-columns:1fr .55fr 1fr;gap:5px;margin:20px 0}.journeyRoute strong{font-size:27px}.journeyRoute span{font-size:10px}.journeyTop{font-size:9px}.journeyCenter span{font-size:9px}.progressLabels{font-size:9px}.cabinFacts{margin:0 12px 12px}.cabinFacts>div{padding:13px}.cabinFacts span{font-size:10px}.cabinFacts strong{font-size:13px}.cabinBottom{padding:19px;align-items:stretch;flex-direction:column}.primaryButton{width:100%}.integration{padding:18px}.connectionGrid{grid-template-columns:1fr}.connectionGrid .connectionCard:last-child{grid-column:auto}.flowline{gap:8px}.flowline>div{font-size:11px}.flowline svg{width:12px}.progressLabels span:first-child,.progressLabels span:last-child{max-width:85px}}
+
+.cabinPlayback{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:15px 26px;background:#0e2b3d;border-top:1px solid #2a5067}
+.cabinPlayback button{background:#1b739a;color:#e5faff;border:1px solid #50b9df;border-radius:9px;padding:11px 17px;cursor:pointer;font-size:12px;font-weight:800}
+.cabinPlayback button:hover{background:#288bb2}
+.cabinPlayback span{font-size:11px;color:#9fbfd0}
