@@ -5,6 +5,8 @@ import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  // Public, static, demo-only passenger display. No OPS session or RPC is exposed.
+  if (path === "/passenger-demo") return NextResponse.next();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
