@@ -1,0 +1,25 @@
+name: MSFS local phase detector tests
+
+on:
+  push:
+    branches: [main, "feature/**"]
+    paths:
+      - "bridge/msfs2024/**"
+      - ".github/workflows/msfs-bridge-tests.yml"
+  pull_request:
+    paths:
+      - "bridge/msfs2024/**"
+      - ".github/workflows/msfs-bridge-tests.yml"
+
+jobs:
+  phase-detector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run offline phase detector tests
+        run: python -m unittest discover bridge/msfs2024/tests -v
