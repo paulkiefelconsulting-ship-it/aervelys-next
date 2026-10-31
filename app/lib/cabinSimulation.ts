@@ -75,10 +75,11 @@ function tick(state:CabinState,phase:CabinPhase):CabinState{
   if(next){
    const index=guests.findIndex(g=>g.id===next.id);
    guests[index]={...next,wc:5,wcCount:next.wcCount+1,wcVisitEnd:minute+4,comfort:clamp(next.comfort+4)};
-   events=[{minute,label:next.label+' nutzt die Bordtoilette (4 Min.)',kind:'passenger'},...events];
+   events=[{minute,label:next.label+' nutzt die Bordtoilette (4 Min.)',kind:'passenger' as const},...events];
   }
  }
- const nextState={...state,minute,guests,events:events.slice(0,35)};
+ const requests=state.requests.map(r=>r.type==='wc'&&r.status==='open'&&guests.some(g=>g.id===r.guestId&&g.wcVisitEnd!==null&&g.wcVisitEnd>minute)?{...r,status:'done' as const,completedAt:minute}:r);
+ const nextState={...state,minute,guests,requests,events:events.slice(0,35)};
  return addRequests(nextState);
 }
 export function advanceCabin(s:CabinState,targetMinute:number,phase:CabinPhase){
@@ -121,5 +122,5 @@ export function performCabinService(s:CabinState,kind:ServiceKind,phase:CabinPha
    (['meal','snack'].includes(kind)&&['meal','snack'].includes(r.type)))?
   {...r,status:'done' as const,completedAt:s.minute}:r);
  return {state:{...s,guests,requests,
-   events:[{minute:s.minute,label:guest.label+' · '+SERVICE_NAMES[kind]+' durchgeführt',kind:'service'},...s.events].slice(0,35)}};
+   events:[{minute:s.minute,label:guest.label+' · '+SERVICE_NAMES[kind]+' durchgeführt',kind:'service' as const},...s.events].slice(0,35)}};
 }
