@@ -117,3 +117,8 @@
  .swapButton{grid-column:2;grid-row:1}
  .simMeta>span{border:0!important;padding:0!important}
 }
+
+.presetRow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.routeLinkButton{border:1px solid #367ba0;background:#12354c;color:#cff2ff;padding:9px 12px;cursor:pointer;border-radius:8px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.routeLinkButton:hover{background:#215575}
+.copyStatus{color:#8edaca;font-size:11px;line-height:1.4;font-weight:700}
