@@ -2,7 +2,7 @@
 
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
-import {ArrowLeftRight,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
+import {ArrowLeftRight,ClipboardCopy,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
 import styles from './PassengerExperience.module.css';
 
 type Geo={lat:number;lon:number;name:string};
@@ -162,10 +162,28 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
  const [demoOrigin,setDemoOrigin]=useState('EDAZ');
  const [demoDestination,setDemoDestination]=useState('LFMN');
  const [playbackSpeed,setPlaybackSpeed]=useState(1);
+ const [copyStatus,setCopyStatus]=useState('');
  const selectRoute=(origin:string,destination:string)=>{
-  if(origin===destination)return;
-  setDemoOrigin(origin);setDemoDestination(destination);setProgress(0);setPlaying(false);
+  if(origin===destination||!AIRPORTS[origin]||!AIRPORTS[destination])return;
+  setDemoOrigin(origin);setDemoDestination(destination);setProgress(0);setPlaying(false);setCopyStatus('');
+  if(publicDemo){
+   const url=new URL(window.location.href);
+   url.searchParams.set('from',origin);url.searchParams.set('to',destination);
+   window.history.replaceState(window.history.state,'',url.pathname+url.search);
+  }
  };
+ useEffect(()=>{
+  if(!publicDemo)return;
+  const params=new URLSearchParams(window.location.search);
+  const from=params.get('from')?.toUpperCase(),to=params.get('to')?.toUpperCase();
+  if(from&&to&&from!==to&&AIRPORTS[from]&&AIRPORTS[to])selectRoute(from,to);
+  // Only read the initial query. Subsequent routes are handled by the selectors.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[publicDemo]);
+ async function copyDemoLink(){
+  try{await navigator.clipboard.writeText(window.location.href);setCopyStatus('Link kopiert');}
+  catch{setCopyStatus('Link konnte nicht kopiert werden');}
+ }
  const [drafts,setDrafts]=useState<Flight[]>([]);
  const [selected,setSelected]=useState('');
  const [state,setState]=useState<'loading'|'ready'|'error'>('loading');
@@ -218,7 +236,11 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
      {AIRPORT_OPTIONS.map(([code,airport])=><option key={code} value={code}>{code} · {airport.name}</option>)}
     </select></label>
    </div>
-   <div className={styles.routePresets}>{DEMO_PRESETS.map(p=><button type="button" key={p.label} className={p.origin===demoOrigin&&p.destination===demoDestination?styles.presetActive:styles.preset} onClick={()=>selectRoute(p.origin,p.destination)}>{p.label}</button>)}</div>
+   <div className={styles.presetRow}>
+    <div className={styles.routePresets}>{DEMO_PRESETS.map(p=><button type="button" key={p.label} className={p.origin===demoOrigin&&p.destination===demoDestination?styles.presetActive:styles.preset} onClick={()=>selectRoute(p.origin,p.destination)}>{p.label}</button>)}</div>
+    {publicDemo&&<button type="button" className={styles.routeLinkButton} onClick={()=>void copyDemoLink()}><ClipboardCopy size={14}/> Demolink kopieren</button>}
+   </div>
+   {copyStatus&&<span className={styles.copyStatus} role="status">{copyStatus}</span>}
   </div>}
   {mode==='dispatch'&&<div className={styles.selector}>
    <label htmlFor="passenger-flight">Gespeicherter Flugplan <select id="passenger-flight" value={selected} disabled={state!=='ready'||drafts.length===0} onChange={e=>setSelected(e.target.value)}>
