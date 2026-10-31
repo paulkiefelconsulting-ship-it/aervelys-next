@@ -2,6 +2,8 @@
 import {ArrowRight,CheckCircle2,Clock3,CloudOff,FileUp,LockKeyhole,MapPinned,Plane,RadioTower,ShieldAlert} from 'lucide-react';
 import type {PassengerPlan} from '../lib/passengerPlan';
 import styles from './PassengerSections.module.css';
+import CabinSimulation from './CabinSimulation';
+import type {CabinPhase} from '../lib/cabinSimulation';
 
 type CabinFlight={
  origin:string;destination:string;registration:string|null;request_code:string;
@@ -13,7 +15,7 @@ type Props={
  distance:number|null;progress:number;remaining:number|null;
  prepared:PassengerPlan|null;publicDemo:boolean;
  dispatchState:'loading'|'ready'|'error';draftCount:number;
- onOpenMap:()=>void;
+ onOpenMap:()=>void;playing:boolean;onToggle:()=>void;
 };
 function phase(progress:number){
  if(progress<=0)return 'FLUG VORBEREITET';
@@ -29,7 +31,16 @@ function formatMinutes(minutes:number|null){
  const h=Math.floor(minutes/60),m=Math.round(minutes%60);
  return h? h+' Std. '+m+' Min.':m+' Min.';
 }
-export default function PassengerSections({section,flight,originName,destinationName,distance,progress,remaining,prepared,publicDemo,dispatchState,draftCount,onOpenMap}:Props){
+function cabinPhase(progress:number):CabinPhase{
+ if(progress<=0)return 'parked';
+ if(progress<5)return 'takeoff';
+ if(progress<18)return 'climb';
+ if(progress<75)return 'cruise';
+ if(progress<94)return 'descent';
+ if(progress<99)return 'approach';
+ return 'landing';
+}
+export default function PassengerSections({section,flight,originName,destinationName,distance,progress,remaining,prepared,publicDemo,dispatchState,draftCount,onOpenMap,playing,onToggle}:Props){
  const isImported=Boolean(publicDemo&&prepared);
  if(section==='cabin')return <div className={styles.cabin}>
   <div className={styles.cabinBrand}>
@@ -60,6 +71,8 @@ export default function PassengerSections({section,flight,originName,destination
    <button type="button" onClick={onOpenMap} className={styles.primaryButton}><MapPinned size={17}/> Flugkarte ansehen <ArrowRight size={16}/></button>
   </div>
   <div className={styles.disclaimer}><ShieldAlert size={15}/> Diese Kabinenansicht ist eine Simulation. Flugfortschritt und Restzeit basieren nicht auf Live-Telemetrie, Wetter- oder Flugzeugdaten.</div>
+  {publicDemo&&<div className={styles.cabinPlayback}><button type="button" onClick={onToggle}>{playing?'Demo-Flug pausieren':'Demo-Flug starten'}</button><span>Flugfortschritt und Kabinenbedürfnisse laufen gemeinsam.</span></div>}
+  <CabinSimulation key={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} elapsedMinutes={Math.round((flight?.estimated_block_minutes||115)*progress/100)} phase={cabinPhase(progress)} flightKey={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} playing={playing} onToggle={onToggle} publicDemo={publicDemo}/>
  </div>;
 
  return <div className={styles.integration}>
