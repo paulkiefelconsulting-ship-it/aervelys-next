@@ -4,6 +4,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
 import {ArrowLeftRight,ClipboardCopy,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
 import styles from './PassengerExperience.module.css';
+import {readPreparedPlan,PLAN_STORAGE_KEY,type PassengerPlan,type RouteFix} from '../lib/passengerPlan';
 
 type Geo={lat:number;lon:number;name:string};
 type Point={lat:number;lon:number};
@@ -83,8 +84,37 @@ function routeLength(a:Point,b:Point){
  const h=Math.sin(dLat/2)**2+Math.cos(radians(a.lat))*Math.cos(radians(b.lat))*Math.sin(dLon/2)**2;
  return Math.round(6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h)));
 }
-function viewForRoute(a:Point,b:Point,width:number,height:number):MapView{
- const pts=Array.from({length:65},(_,i)=>greatCircle(a,b,i/64));
+function flightPath(a:Point,b:Point,via:Point[]=[]):Point[]{
+ const stops=[a,...via,b];
+ const list:Point[]=[stops[0]];
+ for(let i=1;i<stops.length;i++){
+  const prev=stops[i-1],next=stops[i];
+  const segments=Math.max(1,Math.min(24,Math.ceil(routeLength(prev,next)/180)));
+  for(let j=1;j<=segments;j++)list.push(greatCircle(prev,next,j/segments));
+ }
+ return list;
+}
+function routeDistance(points:Point[]):number{
+ let distance=0;
+ for(let i=1;i<points.length;i++)distance+=routeLength(points[i-1],points[i]);
+ return Math.round(distance);
+}
+function positionAt(points:Point[],fraction:number):Point|null{
+ if(!points.length)return null;
+ if(points.length===1)return points[0];
+ const legs=points.slice(1).map((pt,i)=>routeLength(points[i],pt));
+ const total=legs.reduce((sum,d)=>sum+d,0);
+ if(total<=0)return points[0];
+ let remaining=clamp(fraction,0,1)*total;
+ for(let i=0;i<legs.length;i++){
+  if(remaining<=legs[i]||i===legs.length-1)
+   return greatCircle(points[i],points[i+1],legs[i]?remaining/legs[i]:1);
+  remaining-=legs[i];
+ }
+ return points.at(-1)!;
+}
+function viewForRoute(a:Point,b:Point,width:number,height:number,via:Point[]=[]):MapView{
+ const pts=flightPath(a,b,via);
  const xx=pts.map(p=>dxWrap(lonX(p.lon),lonX(a.lon)));
  const yy=pts.map(p=>latY(p.lat));
  const xMin=Math.min(...xx),xMax=Math.max(...xx),yMin=Math.min(...yy),yMax=Math.max(...yy);
@@ -94,7 +124,7 @@ function viewForRoute(a:Point,b:Point,width:number,height:number):MapView{
 }
 function shortDate(value:string){if(!value)return 'Nicht hinterlegt';const date=new Date(value);return Number.isNaN(date.getTime())?'Nicht hinterlegt':date.toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'});}
 function safeName(code:string){return AIRPORTS[code]?.name||'Koordinaten unbekannt';}
-function MapPanel({origin,destination,demo,progress,fullscreen,onFullscreen}:{origin:Geo|undefined;destination:Geo|undefined;demo:boolean;progress:number;fullscreen:boolean;onFullscreen:()=>void}){
+function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,progress,fullscreen,onFullscreen}:{origin:Geo|undefined;destination:Geo|undefined;originCode?:string;destinationCode?:string;waypoints?:RouteFix[];demo:boolean;progress:number;fullscreen:boolean;onFullscreen:()=>void}){
  const ref=useRef<HTMLDivElement|null>(null);
  const start=useRef<{x:number;y:number;view:MapView}|null>(null);
  const [size,setSize]=useState({w:860,h:470});
@@ -105,8 +135,8 @@ function MapPanel({origin,destination,demo,progress,fullscreen,onFullscreen}:{or
   measure();const observer=new ResizeObserver(measure);observer.observe(node);return()=>observer.disconnect();
  },[fullscreen]);
  useEffect(()=>{
-  if(origin&&destination)setView(viewForRoute(origin,destination,size.w,size.h));
- },[origin?.lat,origin?.lon,destination?.lat,destination?.lon,size.w,size.h]);
+  if(origin&&destination)setView(viewForRoute(origin,destination,size.w,size.h,waypoints));
+ },[origin?.lat,origin?.lon,destination?.lat,destination?.lon,waypoints,size.w,size.h]);
  const n=2**view.zoom;
  const centerX=lonX(view.lon)*n*256,centerY=latY(view.lat)*n*256;
  const project=(p:Point)=>({
@@ -120,15 +150,18 @@ function MapPanel({origin,destination,demo,progress,fullscreen,onFullscreen}:{or
  for(let x=firstX;x<=lastX;x++)for(let y=firstY;y<=lastY;y++){
   tiles.push(<img key={view.zoom+'-'+x+'-'+y} src={TILE_URL+view.zoom+'/'+((x%n+n)%n)+'/'+y+'.png'} alt="" draggable={false} className={styles.tile} style={{left:x*256-centerX+size.w/2,top:y*256-centerY+size.h/2}}/>);
  }
- const points=origin&&destination?Array.from({length:81},(_,i)=>greatCircle(origin,destination,i/80)):[];
+ const points=origin&&destination?flightPath(origin,destination,waypoints):[];
  const projected=points.map(project);
  const route=projected.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
  const passed=demo?projected.slice(0,Math.max(1,Math.round(clamp(progress,0,100)/100*(projected.length-1))+1)):[];
  const completedRoute=passed.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
  const originXY=origin&&project(origin),destinationXY=destination&&project(destination);
- const plane=demo&&points.length?project(greatCircle(origin!,destination!,progress/100)):null;
- const prev=demo&&points.length?project(greatCircle(origin!,destination!,clamp(progress/100-0.008,0,1))):null;
- const next=demo&&points.length?project(greatCircle(origin!,destination!,clamp(progress/100+0.008,0,1))):null;
+ const planePoint=demo&&points.length?positionAt(points,progress/100):null;
+ const plane=planePoint?project(planePoint):null;
+ const previousPoint=demo?positionAt(points,clamp(progress/100-0.005,0,1)):null;
+ const nextPoint=demo?positionAt(points,clamp(progress/100+0.005,0,1)):null;
+ const prev=previousPoint?project(previousPoint):null;
+ const next=nextPoint?project(nextPoint):null;
  const heading=plane&&prev&&next?Math.atan2(next.y-prev.y,next.x-prev.x)*180/Math.PI+45:0;
  function zoom(delta:number){setView(old=>({...old,zoom:clamp(old.zoom+delta,2,8)}));}
  return <div className={styles.map} ref={ref}
@@ -141,15 +174,19 @@ function MapPanel({origin,destination,demo,progress,fullscreen,onFullscreen}:{or
   <div className={styles.tileLayer}>{tiles}</div>
   <svg className={styles.mapOverlay} viewBox={'0 0 '+size.w+' '+size.h} aria-hidden="true">
    {route&&<><path d={route} className={styles.routeHalo}/><path d={route} className={styles.routeLine}/>{completedRoute&&<path d={completedRoute} className={styles.routeCompleted}/>}</>}
+   {waypoints&&waypoints.length>0&&waypoints.filter((_,i)=>i%Math.max(1,Math.ceil(waypoints.length/35))===0).map((fix,i)=>{
+    const p=project(fix);
+    return <circle key={i} cx={p.x} cy={p.y} r={3} fill="#e7fcff" stroke="#145d85" strokeWidth={1.6}><title>{fix.ident}</title></circle>;
+   })}
   </svg>
-  {originXY&&<div className={styles.mapMarker} style={{left:originXY.x,top:originXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{origin&&Object.entries(AIRPORTS).find(([,v])=>v===origin)?.[0]}</strong><small>{origin?.name}</small></div></div>}
-  {destinationXY&&<div className={styles.mapMarker} style={{left:destinationXY.x,top:destinationXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{destination&&Object.entries(AIRPORTS).find(([,v])=>v===destination)?.[0]}</strong><small>{destination?.name}</small></div></div>}
+  {originXY&&<div className={styles.mapMarker} style={{left:originXY.x,top:originXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{originCode}</strong><small>{origin?.name}</small></div></div>}
+  {destinationXY&&<div className={styles.mapMarker} style={{left:destinationXY.x,top:destinationXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{destinationCode}</strong><small>{destination?.name}</small></div></div>}
   {plane&&<div className={styles.planePin} style={{left:plane.x,top:plane.y}}><Plane size={23} style={{transform:'rotate('+heading+'deg)'}}/></div>}
-  <div className={styles.mapCaption}>{demo?'DEMO-ANIMATION · KEINE TELEMETRIE':'GEPLANTE ROUTE · KEIN LIVE-TRACKING'}</div>
+  <div className={styles.mapCaption}>{waypoints?.length?'SIMBRIEF-WEGPUNKTE · NICHT LIVE':demo?'DEMO-ANIMATION · KEINE TELEMETRIE':'GEPLANTE ROUTE · KEIN LIVE-TRACKING'}</div>
   <div className={styles.mapTools} onPointerDown={e=>e.stopPropagation()}>
    <button type="button" onClick={()=>zoom(1)} aria-label="Karte vergrößern"><ZoomIn size={17}/></button>
    <button type="button" onClick={()=>zoom(-1)} aria-label="Karte verkleinern"><ZoomOut size={17}/></button>
-   <button type="button" onClick={()=>{if(origin&&destination)setView(viewForRoute(origin,destination,size.w,size.h));}} aria-label="Route zentrieren"><Route size={17}/></button>
+   <button type="button" onClick={()=>{if(origin&&destination)setView(viewForRoute(origin,destination,size.w,size.h,waypoints));}} aria-label="Route zentrieren"><Route size={17}/></button>
    <button type="button" onClick={onFullscreen} aria-label={fullscreen?'Vollbild schließen':'Karte im Vollbild'}><Expand size={17}/></button>
   </div>
   {!origin||!destination?<div className={styles.noCoords}><MapPin size={22}/><strong>Route nicht auf der Karte verfügbar</strong><span>Für mindestens einen ICAO-Code fehlen derzeit Koordinaten. Die Dispatch-Daten bleiben sichtbar.</span></div>:null}
