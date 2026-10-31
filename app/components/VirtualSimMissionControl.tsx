@@ -243,8 +243,8 @@ export default function VirtualSimMissionControl(){
          <Plane size={15}/> Nächste Phase: {next[1]}</button>}
         {mission.phase==='arrived'&&<button type="button" className="ops-refresh"
          disabled={busy} onClick={()=>void action('debrief')}><CheckCircle2 size={15}/> SIM-Debrief erstellen</button>}
-        <button type="button" className="ops-refresh" disabled={busy}
-         onClick={()=>void action('pause')}><Pause size={15}/> Simulationsuhr pausieren</button>
+        {mission.phase!=='arrived'&&<button type="button" className="ops-refresh" disabled={busy}
+         onClick={()=>void action('pause')}><Pause size={15}/> Simulationsuhr pausieren</button>}
         {mission.phase!=='arrived'&&<>
          <button type="button" className="ops-refresh" disabled={busy}
           onClick={()=>void action('clock','10')}><Clock3 size={15}/> +10 Min</button>
