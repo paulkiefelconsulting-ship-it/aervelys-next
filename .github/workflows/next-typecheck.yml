@@ -8,6 +8,7 @@ on:
     paths:
       - "app/**"
       - "tests/liveFlightProgress.test.mjs"
+      - "tests/bridgeLinkHealth.test.mjs"
       - "package.json"
       - ".github/workflows/next-typecheck.yml"
 permissions:
@@ -26,4 +27,4 @@ jobs:
       - name: Run strict TypeScript check
         run: npx tsc --noEmit
       - name: Test SimBrief live distance and ETA projection
-        run: node --experimental-strip-types --test tests/liveFlightProgress.test.mjs
+        run: node --experimental-strip-types --test tests/liveFlightProgress.test.mjs tests/bridgeLinkHealth.test.mjs
