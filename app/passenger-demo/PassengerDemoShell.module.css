@@ -1,0 +1,16 @@
+.page{position:relative;min-height:100vh;overflow:hidden;background:linear-gradient(180deg,#080f19,#0b1520 42%,#080f18);color:#f2f7fc;padding:0 clamp(14px,3vw,44px) 15px}
+.ambient{pointer-events:none;position:absolute;inset:-300px -150px auto;max-height:850px;height:850px;background:radial-gradient(ellipse at 14% 15%,rgba(26,91,115,.18),transparent 45%),radial-gradient(ellipse at 89% 18%,rgba(66,99,149,.12),transparent 38%);opacity:.8}
+.container{position:relative;max-width:1550px;margin:auto}
+.header{min-height:91px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0 22px;margin-bottom:19px;border-bottom:1px solid rgba(144,185,203,.13)}
+.brand{display:flex;align-items:center;gap:13px;text-decoration:none;color:#f0faff}
+.brandSymbol{display:grid;place-items:center;font-weight:900;font-size:24px;height:43px;width:43px;border:1px solid rgba(153,232,217,.34);border-radius:11px;color:#b9f4e3;background:linear-gradient(137deg,#1b5965,#132d40);transform:skew(-5deg)}
+.brand strong{display:block;font:800 17px Manrope,'DM Sans',Arial,sans-serif;letter-spacing:3px}
+.brand small{display:block;letter-spacing:2px;color:#7a9eac;font-size:9px;margin-top:5px;font-weight:800}
+.nav{display:flex;gap:18px;align-items:center}
+.preview{display:flex;align-items:center;gap:8px;color:#9ddfce;letter-spacing:1.3px;font-weight:800;font-size:10px}
+.preview span{width:6px;height:6px;border-radius:50%;background:#83ead0;box-shadow:0 0 0 4px rgba(131,234,208,.08)}
+.setupLink{border-radius:9px;border:1px solid rgba(135,194,207,.28);background:#142735;padding:12px 15px;display:flex;align-items:center;gap:9px;color:#c4edf2;text-decoration:none;font-size:11px;font-weight:800}
+.setupLink:hover{border-color:#8cdfcf;background:#203a47}
+.footer{border-top:1px solid rgba(144,185,203,.13);margin-top:12px;padding:22px 0 28px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:#66869a;font-size:10px;letter-spacing:.3px}
+.footer>span:last-child{display:flex;align-items:center;gap:7px}
+@media(max-width:670px){.header{min-height:74px;margin-bottom:15px;align-items:flex-start;flex-direction:column;gap:14px}.nav{width:100%;justify-content:space-between;gap:12px}.setupLink{padding:10px 9px;font-size:10px}.brand strong{font-size:15px}.footer{font-size:9px;line-height:1.6}}
