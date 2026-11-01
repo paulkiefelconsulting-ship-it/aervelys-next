@@ -31,43 +31,47 @@ export function parseBridgeSnapshot(raw:string,now:number):BridgeSnapshot {
  return value as BridgeSnapshot;
 }
 export function useLocalBridge(){
- const [handle,setHandle]=useState<FileSystemFileHandle|null>(null);
+ const [directory,setDirectory]=useState<FileSystemDirectoryHandle|null>(null);
  const [snapshot,setSnapshot]=useState<BridgeSnapshot|null>(null);
  const [error,setError]=useState('');
  const [connectedAt,setConnectedAt]=useState<number|null>(null);
  const [clock,setClock]=useState(0);
  const lastSeen=useRef<string>('');
- const connected=handle!==null;
+ const connected=directory!==null;
  const isLive=connected&&snapshot!==null;
  const connect=useCallback(async()=>{
-  const picker=(window as Window & {showOpenFilePicker?:(
-   options?:{multiple?:boolean;types?:{description:string;accept:Record<string,string[]>}[]}
-  )=>Promise<FileSystemFileHandle[]>}).showOpenFilePicker;
+  const picker=(window as Window & {showDirectoryPicker?:(
+   options?:{mode?:'read'|'readwrite'}
+  )=>Promise<FileSystemDirectoryHandle>}).showDirectoryPicker;
   if(typeof picker!=='function'){
-   setError('Dein Browser unterstützt die sichere Dateianbindung nicht. Bitte Edge oder Chrome am MSFS-PC verwenden.');
+   setError('Die sichere Ordnerverbindung wird hier nicht unterstützt. Verwende Edge oder Chrome am MSFS-PC.');
    return;
   }
   try{
-   const result=await picker({multiple:false,types:[{description:'AERVELYS Telemetrie',accept:{'application/json':['.json']}}]});
-   if(!result[0])return;
+   // Selecting one dedicated non-system directory avoids Chrome's AppData
+   // restriction. Reacquire telemetry.json by its filename on each poll:
+   // the Windows bridge atomically replaces the file once per second.
+   const selected=await picker({mode:'read'});
+   await selected.getFileHandle('telemetry.json');
    setError('Verbinde lokale Bridge …');setSnapshot(null);setConnectedAt(null);lastSeen.current='';
-   setHandle(result[0]);
+   setDirectory(selected);
   }catch(err){
    if(err instanceof Error&&err.name==='AbortError')return;
-   setError(err instanceof Error?err.message:'Datei konnte nicht geöffnet werden.');
+   setError(err instanceof Error&&err.name==='NotFoundError'?'Im gewählten Ordner fehlt telemetry.json. Öffne den Datenordner über die Bridge und wähle genau diesen Ordner aus.':err instanceof Error?err.message:'Datenordner konnte nicht geöffnet werden.');
   }
  },[]);
  const disconnect=useCallback(()=>{
-  setHandle(null);setSnapshot(null);setError('');setConnectedAt(null);lastSeen.current='';
+  setDirectory(null);setSnapshot(null);setError('');setConnectedAt(null);lastSeen.current='';
  },[]);
  useEffect(()=>{
-  if(!handle)return;
+  if(!directory)return;
   let closed=false;let reading=false;
   async function check(){
    if(closed||reading)return;
    reading=true;
    try{
-    const file=await handle!.getFile();
+    const fileHandle=await directory!.getFileHandle('telemetry.json');
+    const file=await fileHandle.getFile();
     const value=parseBridgeSnapshot(await file.text(),Date.now());
     if(closed)return;
     setSnapshot(value);setError('');
@@ -86,7 +90,7 @@ export function useLocalBridge(){
   void check();
   const id=window.setInterval(()=>void check(),1000);
   return()=>{closed=true;window.clearInterval(id);};
- },[handle]);
+ },[directory]);
  const elapsedMinutes=useMemo(()=>connectedAt&&isLive?Math.max(0,Math.floor((clock-connectedAt)/60_000)):0,[connectedAt,isLive,clock]);
  return {connect,disconnect,snapshot,connected,isLive,error,elapsedMinutes};
 }
