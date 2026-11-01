@@ -40,7 +40,7 @@ export function analyseMsfsEvidence(raw:AcarsRawSample[],truncated=false):Flight
  let aircraft:string|null=null,lastObserved=-Infinity;
  let cleanParked=0,shutdown=0,coldStart=false,shutdownConfirmed=false;
  let engineAvailable=false;
- let everAirborne=false;
+ let everAirborne=false,startedAirborne=false;
  for(const entry of ordered){
   const s=entry.sample;
   const at=date(entry.observed_at);
@@ -101,7 +101,10 @@ export function analyseMsfsEvidence(raw:AcarsRawSample[],truncated=false):Flight
   }else shutdown=0;
   if(stable===null){
    if(candidate===ground)consecutive++;else{candidate=ground;consecutive=1;}
-   if(consecutive>=2){stable=ground;candidate=null;consecutive=0;}
+   if(consecutive>=2){
+    stable=ground;candidate=null;consecutive=0;
+    if(!ground){everAirborne=true;startedAirborne=true;}
+   }
    continue;
   }
   if(stable===ground){candidate=null;consecutive=0;continue;}
@@ -127,6 +130,7 @@ export function analyseMsfsEvidence(raw:AcarsRawSample[],truncated=false):Flight
  if(!ordered.length)warnings.push('Keine Simulator-Messwerte vorhanden.');
  if(!engineAvailable)warnings.push('Triebwerkszustand fehlt – Cold-and-Dark-Nachweis nicht möglich.');
  if(!coldStart)warnings.push('Kein bestätigter Start aus Parkposition mit abgeschalteten Triebwerken.');
+ if(startedAirborne)warnings.push('Aufzeichnung begann bereits in der Luft – Checkride nicht vollständig.');
  if(!shutdownConfirmed)warnings.push('Kein bestätigter Shutdown am Flugende.');
  if(interruptions)warnings.push(interruptions+' Telemetrie-Unterbrechung(en) oder Positionssprung/Sprünge.');
  if(aircraftChanges)warnings.push('Flugzeugwechsel während der Sitzung erkannt.');
