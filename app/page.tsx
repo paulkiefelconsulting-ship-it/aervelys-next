@@ -69,7 +69,7 @@ function switchTheme(){const next=theme==='dark'?'light':'dark';setTheme(next);
 const selectedGroup=navGroups.find(g=>g.items.includes(tab))?.title||'WORKSPACE';
 
 const visible=shownFleet.filter((a:AircraftRow)=>(a.registration+' '+a.type).toLowerCase().includes(filter.toLowerCase()));
-return <div className="shell" data-theme={theme}><aside className={menu?'side open':'side'} aria-label="AERVELYS Navigation">
+return <div className="shell" data-ui="modern" data-theme={theme}><aside className={menu?'side open':'side'} aria-label="AERVELYS Navigation">
  <div className="brand"><div className="brand-mark" aria-hidden="true">A</div><div><strong>AERVELYS</strong><small>NEXT / CONTROL CENTER</small></div><button type="button" className="side-close" aria-label="Menü schließen" onClick={()=>setMenu(false)}><X size={17}/></button></div>
  <label className="nav-search"><Command size={15}/><input ref={navSearchRef} type="search" value={navQuery} onChange={e=>setNavQuery(e.target.value)} placeholder="Bereich suchen ..." aria-label="Module durchsuchen"/><kbd>⌘ K</kbd></label>
  <nav aria-label="Module">{navGroups.map(g=>{
