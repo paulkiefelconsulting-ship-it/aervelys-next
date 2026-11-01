@@ -1,0 +1,69 @@
+name: AERVELYS NEXT Windows Desktop
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-windows.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    name: Build Windows x64 installer
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - name: Checkout approved repository source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Set up Python for self-contained icon generation
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate original Windows app icon
+        run: python scripts/make-icon.py
+      - name: Test syntax and navigation security without Electron
+        run: |
+          node --check main.cjs
+          node --check security.cjs
+          npm test
+      - name: Install pinned Electron and packaging tools
+        run: npm install --no-audit --no-fund
+      - name: Package AERVELYS NEXT Windows installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run build:win
+      - name: Check installer output and record build metadata
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path dist -Filter 'AERVELYS-NEXT-Setup-*.exe' -File
+          if ($exe.Count -lt 1) { throw "No Windows installer generated" }
+          Get-FileHash -Algorithm SHA256 $exe[0].FullName | Format-List
+          "### AERVELYS NEXT Desktop" >> $env:GITHUB_STEP_SUMMARY
+          "- Unsigned Windows x64 NSIS installer: $($exe[0].Name)" >> $env:GITHUB_STEP_SUMMARY
+          "- SHA256: $((Get-FileHash -Algorithm SHA256 $exe[0].FullName).Hash)" >> $env:GITHUB_STEP_SUMMARY
+          "- First release requires internet; MSFS native bridge is not bundled yet." >> $env:GITHUB_STEP_SUMMARY
+      - name: Upload installable Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: AERVELYS-NEXT-Windows-Setup
+          path: desktop/dist/AERVELYS-NEXT-Setup-*.exe
+          if-no-files-found: error
+          retention-days: 14
