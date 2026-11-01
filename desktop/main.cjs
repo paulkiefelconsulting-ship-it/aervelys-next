@@ -9,6 +9,7 @@ const {existsSync,readFileSync,writeFileSync,mkdirSync} = require('node:fs');
 
 const {HOME, isInternal, isExternalAllowed} = require('./security.cjs');
 const localStore=require('./localStore.cjs');
+const pilots=require('./pilotProfiles.cjs');
 const {findSdk,sourceDirectory,compileBridge,startBridge,stopBridge} = require('./nativeBridge.cjs');
 const PARTITION = 'persist:aervelys-next-desktop';
 let mainWindow = null;
@@ -243,15 +244,55 @@ if (!app.requestSingleInstanceLock()) {
     const appDataDir=()=>app.getPath('appData');
     ipcMain.handle('local:snapshot',event=>{
       localOnly(event);
-      return {state:localStore.readState(homeDir()),telemetry:localStore.lastTelemetry(appDataDir())};
+      const index=pilots.list(homeDir());
+      const active=pilots.selected(homeDir());
+      return {state:active?.state||null,selectedPilot:active?.meta||null,
+        pilots:index.pilots,activeId:index.activeId,
+        telemetry:localStore.lastTelemetry(appDataDir())};
+    });
+    ipcMain.handle('local:pilotCreate',(event,data)=>{
+      localOnly(event);
+      return pilots.create(homeDir(),data);
+    });
+    ipcMain.handle('local:pilotSelect',(event,id)=>{
+      localOnly(event);
+      return pilots.select(homeDir(),id);
     });
     ipcMain.handle('local:renamePilot',(event,name)=>{
       localOnly(event);
-      return localStore.setPilotName(homeDir(),name);
+      return pilots.updateName(homeDir(),name);
     });
     ipcMain.handle('local:addMission',(event,payload)=>{
       localOnly(event);
-      return localStore.addMission(homeDir(),payload);
+      return pilots.addMission(homeDir(),payload);
+    });
+    ipcMain.handle('local:backup',async event=>{
+      localOnly(event);
+      const result=await dialog.showSaveDialog(mainWindow,{
+        title:'AERVELYS SIM-Karrieren sichern',
+        defaultPath:'AERVELYS-NEXT-Piloten-Backup.json',
+        filters:[{name:'AERVELYS JSON Backup',extensions:['json']}]
+      });
+      if(result.canceled||!result.filePath)return {cancelled:true};
+      const data=JSON.stringify(pilots.exportData(homeDir()),null,2);
+      // User explicitly chose export destination; backup contains private pilot data.
+      const fs=require('node:fs');
+      fs.writeFileSync(result.filePath,data,{encoding:'utf8',flag:'wx'});
+      return {ok:true};
+    });
+    ipcMain.handle('local:restore',async event=>{
+      localOnly(event);
+      const answer=await dialog.showOpenDialog(mainWindow,{
+        title:'AERVELYS SIM-Karrieren aus Backup wiederherstellen',
+        properties:['openFile'],
+        filters:[{name:'AERVELYS JSON Backup',extensions:['json']}]
+      });
+      if(answer.canceled||!answer.filePaths.length)return {cancelled:true};
+      const fs=require('node:fs');
+      const filename=answer.filePaths[0];
+      if(fs.statSync(filename).size>8*1024*1024)throw Error('Backup-Datei zu groß.');
+      const raw=JSON.parse(fs.readFileSync(filename,'utf8'));
+      return pilots.importData(homeDir(),raw);
     });
     ipcMain.handle('local:startBridge',async event=>{
       localOnly(event);
