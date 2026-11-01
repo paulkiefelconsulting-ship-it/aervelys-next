@@ -2,14 +2,95 @@
 
 // AERVELYS NEXT Desktop – secure, first-party window around the existing NEXT platform.
 // This application does not embed or redistribute any SkyBridge code or assets.
-const {app, BrowserWindow, Menu, shell, session} = require('electron');
+const {app, BrowserWindow, Menu, shell, session, dialog} = require('electron');
 const {join} = require('node:path');
-const {existsSync} = require('node:fs');
+const {existsSync,readFileSync,writeFileSync,mkdirSync} = require('node:fs');
 
 const {HOME, isInternal, isExternalAllowed} = require('./security.cjs');
+const {findSdk,sourceDirectory,compileBridge,startBridge,stopBridge} = require('./nativeBridge.cjs');
 const PARTITION = 'persist:aervelys-next-desktop';
 let mainWindow = null;
 let loadingOffline = false;
+let bridgeProcess = null;
+let startingBridge = false;
+
+function sdkPreferenceFile() {
+  return join(app.getPath('userData'),'simbridge-sdk-root.txt');
+}
+function savedSdkRoot() {
+  try {return readFileSync(sdkPreferenceFile(),'utf8').trim();} catch {return '';}
+}
+async function chooseSdkRoot() {
+  const selected=await dialog.showOpenDialog(mainWindow||undefined,{
+    title:'Microsoft Flight Simulator 2024 SDK-Hauptordner auswählen',
+    properties:['openDirectory']
+  });
+  if(selected.canceled || !selected.filePaths.length)return null;
+  const root=selected.filePaths[0];
+  if(!findSdk(root,{MSFS_SDK:'',MSFS2024_SDK:''}) ||
+     !findSdk(root,{MSFS_SDK:'',MSFS2024_SDK:''}).file.startsWith(root)){
+    await dialog.showMessageBox(mainWindow||undefined,{
+      type:'warning',title:'SDK nicht erkannt',
+      message:'In diesem Ordner wurde keine SimConnect Managed-Assembly gefunden.',
+      detail:'Erwartet: SimConnect SDK\\lib\\managed\\Microsoft.FlightSimulator.SimConnect.dll'
+    });
+    return null;
+  }
+  mkdirSync(app.getPath('userData'),{recursive:true});
+  writeFileSync(sdkPreferenceFile(),root+'\n','utf8');
+  return root;
+}
+async function launchNativeBridge() {
+  if(startingBridge)return;
+  if(bridgeProcess && bridgeProcess.exitCode===null && !bridgeProcess.killed){
+    await dialog.showMessageBox(mainWindow||undefined,{
+      type:'info',title:'AERVELYS SIM BRIDGE',message:'Die Bridge wurde bereits aus NEXT gestartet.',
+      detail:'Öffne in AERVELYS NEXT den Bereich MSFS-Integration, um den Gerätestatus zu sehen.'
+    });
+    return;
+  }
+  startingBridge=true;
+  try {
+    let root=savedSdkRoot();
+    let sdk=findSdk(root);
+    if(!sdk) {
+      const answer=await dialog.showMessageBox(mainWindow||undefined,{
+        type:'info',buttons:['SDK-Ordner auswählen','Abbrechen'],defaultId:0,cancelId:1,
+        title:'MSFS-Bridge vorbereiten',
+        message:'Für die native MSFS 2024 Bridge wird das Microsoft Flight Simulator SDK benötigt.',
+        detail:'AERVELYS liefert keine Microsoft-SimConnect-DLLs aus. Die Bridge wird lokal aus unserem eigenen Code und deinem installierten SDK erzeugt.'
+      });
+      if(answer.response!==0)return;
+      root=await chooseSdkRoot();
+      if(!root)return;
+      sdk=findSdk(root,{MSFS_SDK:'',MSFS2024_SDK:''});
+    }
+    const sourceDir=sourceDirectory(app.isPackaged,process.resourcesPath,
+      join(__dirname,'..'));
+    const targetDir=join(app.getPath('userData'),'Bridge');
+    const result=await compileBridge({
+      sourceDir,buildDir:targetDir,configuredRoot:sdk.root,
+      env:{MSFS2024_SDK:'',MSFS_SDK:''}
+    });
+    bridgeProcess=await startBridge(result.exe);
+    bridgeProcess.on('exit',()=>{bridgeProcess=null;});
+    await dialog.showMessageBox(mainWindow||undefined,{
+      type:'info',title:'AERVELYS SIM BRIDGE gestartet',
+      message:'Die lokale MSFS-Bridge wurde gestartet.',
+      detail:'Falls der PC noch nicht gekoppelt ist, erscheint ein Fenster für den NEXT-Kopplungscode. Öffne danach NEXT → MSFS-Integration. Eine echte SimConnect-Verbindung muss im laufenden MSFS 2024 getestet werden.'
+    });
+  }catch(error){
+    await dialog.showMessageBox(mainWindow||undefined,{
+      type:'error',title:'Bridge konnte nicht gestartet werden',
+      message:'Die native SIM-Bridge wurde nicht gestartet.',
+      detail:String(error?.message||error).slice(0,1000)
+    });
+  }finally{startingBridge=false;}
+}
+function stopNativeBridge(){
+  if(bridgeProcess){stopBridge(bridgeProcess);bridgeProcess=null;}
+}
+
 
 function openTrustedExternal(raw) {
   if (!isExternalAllowed(raw)) return;
@@ -46,6 +127,16 @@ function makeMenu() {
       submenu: [
         {label: 'Erneut verbinden',accelerator: 'CmdOrCtrl+R',click: () => connect()},
         {label: 'Seite neu laden',accelerator: 'F5',click: () => connect()}
+      ]
+    },
+    {
+      label:'Simulator',
+      submenu:[
+        {label:'MSFS 2024 Bridge starten / einrichten',click:()=>{void launchNativeBridge();}},
+        {label:'Bridge beenden',click:()=>stopNativeBridge()},
+        {type:'separator'},
+        {label:'MSFS SDK-Ordner auswählen',click:()=>{void chooseSdkRoot();}},
+        {label:'NEXT Command Center öffnen',click:()=>connect()}
       ]
     },
     {
@@ -168,6 +259,7 @@ if (!app.requestSingleInstanceLock()) {
   }).catch(() => app.quit());
 }
 
+app.on('before-quit',stopNativeBridge);
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
