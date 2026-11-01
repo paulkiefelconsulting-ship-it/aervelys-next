@@ -73,7 +73,7 @@ export default function VirtualSimBridgePairing({requestId,lifecycle,phase,sessi
   const text=['# AERVELYS NEXT – nur öffentliche Supabase-Verbindungswerte',
    '$env:AERVELYS_SUPABASE_URL = "'+url+'"',
    '$env:AERVELYS_SUPABASE_ANON_KEY = "'+key+'"',
-   'python bridge/msfs2024/run_paired.py --initial-phase '+(phase==='planning'?'boarding':phase),
+   'python bridge/msfs2024/run_paired.py --initial-phase '+(['boarding','taxi_out','takeoff','climb','cruise','descent','approach','landing','taxi_in'].includes(phase)?phase:'boarding'),
    '# Der geheime Kopplungscode wird verdeckt im Terminal abgefragt.'].join('\n');
   try{await navigator.clipboard.writeText(text);setNotice('PowerShell-Verbindungsdaten kopiert. Der geheime Code ist NICHT darin enthalten.');}
   catch{setError('PowerShell-Anleitung konnte nicht kopiert werden.');}
@@ -90,7 +90,7 @@ export default function VirtualSimBridgePairing({requestId,lifecycle,phase,sessi
    </span>
   </div>
   <div className={styles.guard}><ShieldAlert size={16}/>
-   <span>Telemetrie bleibt **nicht verifiziert**. Nur nach einer echten Installation und Testverbindung am Windows-PC kann ein Geräteheartbeat eintreffen. Ohne Kopplung bleiben alle Phasen manuell.</span></div>
+   <span>Telemetrie bleibt unbestätigte SIM-Messung. Nur nach einer echten Installation und Testverbindung am Windows-PC kann ein Geräteheartbeat eintreffen. Ohne Kopplung bleiben alle Phasen manuell.</span></div>
   <div className={styles.info}>
    <span><strong>Status:</strong> {active?'Kopplung zeitlich gültig':'Nicht gekoppelt'}</span>
    <span><strong>Letztes Signal:</strong> {fmt(session?.last_seen_at||null)}</span>
