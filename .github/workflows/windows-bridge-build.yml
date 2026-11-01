@@ -33,6 +33,7 @@ jobs:
           $config = "$exe.config"
           if (Test-Path $config) { Copy-Item $config dist/ }
           Copy-Item "tools/simconnect-bridge/README.md" "dist/README.txt"
+          Copy-Item "tools/simconnect-bridge/Install-und-Starten.cmd" "dist/Install-und-Starten.cmd"
           Compress-Archive -Path dist/* -DestinationPath AERVELYS-Flight-Bridge-Windows-x64.zip -Force
       - name: Upload Windows Bridge ZIP (without Microsoft SDK DLLs)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
