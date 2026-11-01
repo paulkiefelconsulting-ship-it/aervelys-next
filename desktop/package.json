@@ -1,7 +1,7 @@
 {
   "name": "aervelys-next-desktop",
-  "version": "0.1.0",
-  "description": "AERVELYS NEXT Desktop – private virtual business aviation operations",
+  "version": "0.2.0",
+  "description": "AERVELYS NEXT Desktop – native MSFS 2024 companion bootstrap and airline management",
   "private": true,
   "author": "AERVELYS NEXT",
   "license": "UNLICENSED",
@@ -30,7 +30,8 @@
       "offline.html",
       "assets/icon.png",
       "assets/icon.ico",
-      "package.json"
+      "package.json",
+      "nativeBridge.cjs"
     ],
     "win": {
       "target": [
@@ -51,6 +52,15 @@
       "createStartMenuShortcut": true,
       "shortcutName": "AERVELYS NEXT",
       "deleteAppDataOnUninstall": false
-    }
+    },
+    "extraResources": [
+      {
+        "from": "../bridge/Aervelys.SimBridge",
+        "to": "simbridge-src",
+        "filter": [
+          "**/*.cs"
+        ]
+      }
+    ]
   }
 }
