@@ -68,7 +68,7 @@ export default function MsfsBridgePanel(){
     <button type="button" style={btn} onClick={()=>void refresh()}><RefreshCw size={15}/> Status aktualisieren</button>
    </div>
    {message&&<p role="status" style={{fontSize:12,color:'var(--muted)'}}>{message}</p>}
-   {!devices.length&&<p style={{fontSize:12,color:'var(--muted)',display:'flex',alignItems:'center',gap:8}}><Unplug size={17}/> Noch keine Bridge gekoppelt – keine Live-Daten.</p>}
+   {!devices.length&&<p style={{fontSize:12,color:'var(--muted)',display:'flex',alignItems:'center',gap:8}}><Unplug size={17}/> Noch keine Cloud-Bridge gekoppelt. Die lokale telemetry.json kann unabhängig davon oben im Chrome-Datei-Anschluss angezeigt werden.</p>}
    {devices.map(d=><article key={d.id} style={field}>
     <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
      <strong style={{fontSize:13}}>{d.device_name}</strong>
