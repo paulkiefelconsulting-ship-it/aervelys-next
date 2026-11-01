@@ -51,7 +51,7 @@ test('local simulator recorder ignores invalid files and has no demo telemetry',
 });
 test('Windows installer includes offline cockpit and preload',()=>{
  const pkg=require('../package.json');
- assert.equal(pkg.version,'0.4.0');
- for(const file of ['local.html','local.css','local.js','localStore.cjs','preload.cjs','pilotProfiles.cjs'])
+ assert.equal(pkg.version,'0.5.0');
+ for(const file of ['local.html','local.css','local.js','localStore.cjs','preload.cjs','pilotProfiles.cjs','offlineMarket.cjs'])
   assert.ok(pkg.build.files.includes(file),file);
 });

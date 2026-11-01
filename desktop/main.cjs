@@ -10,6 +10,7 @@ const {existsSync,readFileSync,writeFileSync,mkdirSync} = require('node:fs');
 const {HOME, isInternal, isExternalAllowed} = require('./security.cjs');
 const localStore=require('./localStore.cjs');
 const pilots=require('./pilotProfiles.cjs');
+const offlineMarket=require('./offlineMarket.cjs');
 const {findSdk,sourceDirectory,compileBridge,startBridge,stopBridge} = require('./nativeBridge.cjs');
 const PARTITION = 'persist:aervelys-next-desktop';
 let mainWindow = null;
@@ -265,6 +266,26 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.handle('local:addMission',(event,payload)=>{
       localOnly(event);
       return pilots.addMission(homeDir(),payload);
+    });
+    ipcMain.handle('local:marketList',event=>{
+      localOnly(event);
+      return offlineMarket.list(homeDir());
+    });
+    ipcMain.handle('local:marketAccept',(event,id)=>{
+      localOnly(event);
+      return offlineMarket.accept(homeDir(),id);
+    });
+    ipcMain.handle('local:marketRefresh',event=>{
+      localOnly(event);
+      return offlineMarket.regenerate(homeDir());
+    });
+    ipcMain.handle('local:marketCancel',(event,id)=>{
+      localOnly(event);
+      return offlineMarket.cancel(homeDir(),id);
+    });
+    ipcMain.handle('local:trainingPlan',(event,type)=>{
+      localOnly(event);
+      return offlineMarket.planTypeCheck(homeDir(),type);
     });
     ipcMain.handle('local:backup',async event=>{
       localOnly(event);

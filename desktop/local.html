@@ -91,7 +91,7 @@
  </header>
  <div class="content">
  <section id="home" class="view active">
-  <div class="heading"><div class="eyebrow">WELCOME TO AERVELYS NEXT</div><h1>Dein lokaler Aviation Command Center.</h1><p>Eine eigenständige Desktop-Basis. Deine lokale Karriere und Simulatoraufzeichnungen funktionieren auch ohne Vercel und ohne Internet.</p></div>
+  <div class="heading"><div class="eyebrow">WELCOME TO AERVELYS NEXT</div><h1>Dein lokales Aviation Command Center.</h1><p>Eine eigenständige Desktop-Basis. Deine lokale Karriere und Simulatoraufzeichnungen funktionieren auch ohne Vercel und ohne Internet.</p></div>
   <div class="hero"><div><div class="eyebrow">LOCAL PILOT PROFILE</div><h2>Willkommen, <span id="pilotHero">Pilot</span></h2><p>Homebase <b id="baseHero">EDAZ</b> · Eigener SIM-Spielstand auf diesem Computer</p></div><div class="hero-letter">A</div></div>
   <div class="stats">
    <article><span>LOKALE MISSIONEN</span><b id="statMissions">0</b><small>Unabhängig von NEXT Cloud</small></article>
@@ -106,6 +106,28 @@
  </section>
  <section id="missions" class="view">
   <div class="heading"><div class="eyebrow">LOCAL DISPATCH</div><h1>Charter & Trips</h1><p>Lege eigene SIM-Flugaufträge oder Checkrides an. Sie bleiben lokal gespeichert und werden nicht ohne MSFS-Nachweis als abgeschlossen markiert.</p></div>
+  <article class="panel market-panel">
+   <div class="panel-title market-header">
+    <div><div class="eyebrow">OFFLINE FLIGHT CONTRACT MARKET</div>
+     <h3>Charter Board <span class="sim-label">SIMULIERT · NICHT LIVE</span></h3>
+     <p class="hint">Eigenständige fiktive Angebote – ohne Internet. Vergütungen sind SIM-Spielwerte, keine echten Charterpreise oder Währungsumrechnungen.</p>
+    </div>
+    <button id="regenerateMarket" type="button" class="secondary">Neue Angebote generieren</button>
+   </div>
+   <div class="market-filters">
+    <label>Auftragsart<select id="marketSector">
+     <option value="ALL">Alle Kategorien</option><option value="FERRY">Ferry</option>
+     <option value="CHARTER">Charter</option><option value="VIP">VIP</option>
+     <option value="MEDEVAC">Medevac</option>
+    </select></label>
+    <label>Verfügbarkeit<select id="marketEligibility"><option value="ALL">Alle Angebote</option>
+     <option value="ELIGIBLE">Für meinen Piloten zugänglich</option>
+     <option value="LOCKED">Gesperrte Angebote</option></select></label>
+    <div id="marketCount" class="muted">Aufträge werden geladen</div>
+   </div>
+   <div id="marketOffers" class="market-offers" aria-live="polite"><p class="muted">Markt lädt…</p></div>
+   <p class="hint">Akzeptierte Missionen werden im lokalen Spielstand gespeichert. Keine Auszahlung, Ratingfreigabe oder Flugbuchung ohne spätere ACARS-Prüfung.</p>
+  </article>
   <article class="panel form-panel"><h3>Neue Mission planen</h3>
    <form id="missionForm">
     <div class="form-grid"><label>Missionstyp<select name="kind"><option value="charter">Charter / Ferry</option><option value="checkride">Training / Checkride</option></select></label>
@@ -131,13 +153,22 @@
   <div class="heading"><div class="eyebrow">PILOT CAREER</div><h1>Karriere & Training</h1><p>Lokales Pilotenprofil mit eigenständigen Checkride-Missionen. Flugstunden und Zertifikate werden erst nach einer validierten Flugprüfung geführt.</p></div>
   <div class="cols">
    <article class="panel"><h3>Pilotenprofil</h3><div id="pilotDetails" class="muted"></div><form id="profileForm"><label>Name<input id="pilotInput" maxlength="70" minlength="2" required></label><div class="form-actions"><button class="primary" type="submit">Lokal speichern</button></div></form></article>
-   <article class="panel"><h3>Qualifikationen</h3><p class="muted">Noch keine lokal verifizierten Type Ratings.</p><p class="hint">Eine SkyBridge-Berechtigung wird nicht automatisch in AERVELYS übertragen.</p></article>
+   <article class="panel"><h3>Type Ratings & Checkrides</h3>
+    <p class="muted">Im Charter Board werden Jets ohne passendes SIM-Type-Rating gesperrt. Hier kannst du einen Trainingsauftrag anlegen.</p>
+    <div class="rating-options" id="ratingOptions">
+     <button type="button" data-training="E55P" class="secondary">Phenom 100/300</button>
+     <button type="button" data-training="CJ4" class="secondary">Citation CJ4</button>
+     <button type="button" data-training="PC24" class="secondary">Pilatus PC-24</button>
+     <button type="button" data-training="SF50" class="secondary">Vision Jet SF50</button>
+    </div>
+    <p class="hint" id="ratingStatus">Noch keine bestätigten Type Ratings. Ein Trainingsauftrag erteilt kein Rating. Zuerst müssen zwei Starts/Landungen und die Flugzeug-/Flugplatzdaten zuverlässig überprüft werden.</p>
+   </article>
   </div>
  </section>
  <section id="company" class="view">
   <div class="heading"><div class="eyebrow">BUSINESS AIRLINE</div><h1>AERVELYS Unternehmenszentrale</h1><p>Die lokale Airline-Basis ist von unserer bestehenden NEXT-Cloud-Firma getrennt. Für einen gemeinsamen Bestand brauchen wir später eine geprüfte Synchronisation.</p></div>
   <div class="cols">
-   <article class="panel"><h3>Lokale Airline</h3><p class="muted">AERVELYS · Heimatbasis EDAZ</p><p class="hint">Kein Flugzeugbestand, Personal oder Firmenkonto aus der Cloud importiert.</p></article>
+   <article class="panel"><h3>Lokale Airline</h3><div class="account-balance" id="companyBalance">—</div><p class="hint">SIM-Budget · keine automatisch gebuchten Flüge</p><p class="muted">AERVELYS · Heimatbasis EDAZ</p><p class="hint">Kein Flugzeugbestand, Personal oder Firmenkonto aus der Cloud importiert.</p></article>
    <article class="panel"><h3>NEXT Cloud – optional</h3><p class="muted">Die laufende virtuelle Airline mit KI-Kunden und Personal bleibt zunächst über die Cloud verfügbar.</p><button id="openCloud" class="secondary">NEXT Cloud im Browser öffnen</button><p class="hint">Für die lokale Desktop-Anwendung ist kein Internetzugang erforderlich.</p></article>
   </div>
  </section>

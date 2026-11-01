@@ -1,3 +1,33 @@
+# AERVELYS NEXT Desktop 0.5 – Offline Charter Board Alpha
+
+## What was added
+
+- A real, **offline-only simulated charter board** with 16 self-contained local example offers. These are generated inside AERVELYS NEXT; they are not live contracts, real-time availability, real charter rates, or copied SkyBridge contracts.
+- Filter by category and eligibility; regenerate the offer values for a fresh game market without contacting a server.
+- Routes include EDAZ to regional Germany and nearby European destinations. Payouts are explicitly fictional SIM amounts denominated in the pilot's selected game currency; there is no live exchange rate conversion.
+- A local job can be accepted once, stored only under the selected pilot's career ID, and cancelled without a fee. At most one accepted job is active.
+- Career prerequisites affect access. CPL and Frozen ATPL can accept simulated commercial SEP jobs; PPL can plan noncommercial ferry jobs only. Jet offers remain locked until a future reliably verified simulation rating system is available.
+- A planned Phenom 100/300, CJ4, PC-24 or SF50 checkride can be created from Pilot & Training. The mission asks for two takeoffs and two landings at EDAZ, but is **only a plan** — there is still no automatic rating issuance.
+- The home screen shows the accepted job; SIM company account shows the same unchanged starting balance. No fake settlements or unverified flight-hours are credited.
+- Existing profiles and manual missions are kept. The career state format remains backwards-compatible, with optional new \`marketCycle\` and \`source:'local_market'\` fields.
+
+## Still missing
+
+- Genuine SimConnect end-to-end validation against a running MSFS 2024 aircraft
+- Cold start and landing verification linked to a chosen mission
+- Training certificate issuance with proper integrity controls
+- Fuel and handling invoices, complete bank ledger and variable operating cost calculation
+- A worldwide procedural market, timed contract expiry and dynamic market economy
+- Offline AI customer negotiation, fleet purchasing, employees and corporate operations
+
+## Install and test
+
+Download Windows Setup 0.5 from the GitHub Actions **AERVELYS NEXT Windows Desktop** workflow. Test with your existing offline CPL profile: go to Charter & Trips, choose an eligible SEP contract, accept it, restart the app, and confirm that it is still in your profile. Check that the 90,000 EUR initial SIM budget does not change before a verified flight. Type ratings are still locked, and a planned Phenom checkride will not issue a certificate.
+
+This build still ships an unsigned Windows installer and requires the official SDK on the local PC for live SimConnect recording. Back up pilots before upgrading.
+
+---
+
 # AERVELYS NEXT Desktop 0.4 — Multiple local pilots
 
 This release introduces a true **offline pilot selection / pilot career onboarding** flow inspired by the *workflow* of SkyBridge, without copying its proprietary code, graphics or data.
