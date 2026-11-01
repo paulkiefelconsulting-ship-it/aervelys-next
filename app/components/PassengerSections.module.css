@@ -108,3 +108,8 @@
 .connectionNotice{background:#122431;border-color:rgba(164,193,213,.15)}
 @media(max-width:760px){.cabinBrand{padding:25px 20px}.monogram{height:59px;width:59px;font-size:33px}.journeyPanel{margin:0 13px 13px;padding:19px}.journeyRoute{margin:24px 0}.journeyRoute strong{font-size:30px}.cabinFacts{margin:0 13px 13px}.cabinFacts>div{padding:16px}.cabinBottom{padding:20px}.cabinPlayback{padding:15px;align-items:stretch}.cabinPlayback button{width:100%}.integration{padding:20px}.connectionCard p{min-height:0}}
 @media(prefers-reduced-motion:reduce){.connectionCard{transition:none}}
+
+.cabinLiveStatus{display:flex;align-items:center;flex-wrap:wrap;gap:9px 19px;margin:0 24px 18px;padding:17px 20px;background:linear-gradient(105deg,rgba(20,93,92,.2),rgba(9,35,47,.85));border:1px solid rgba(123,219,206,.29);border-radius:13px}
+.cabinLiveStatus span{display:flex;align-items:center;gap:8px;color:#c5e6e7;font-size:11px;line-height:1.4}
+.cabinLiveStatus span:first-child{color:#a1f7d9;font-weight:800}
+@media(max-width:720px){.cabinLiveStatus{margin:0 13px 13px;padding:14px}.cabinLiveStatus span{font-size:10px}}
