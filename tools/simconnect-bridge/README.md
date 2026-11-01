@@ -20,11 +20,14 @@ Die zwei Microsoft-SDK-Dateien sind **nicht im GitHub-Paket enthalten**. Ihre ex
 
 1. Öffne AERVELYS NEXT Passenger Experience auf **demselben Windows-PC** in Microsoft Edge oder Google Chrome.
 2. Gehe zu **03 · Flight Connect / Integration**.
-3. Klicke auf **Mit Bridge verbinden** und wähle die lokale Datei aus:
-   **%LOCALAPPDATA%\AERVELYS\bridge\telemetry.json**
-   Im Bridge-Fenster gibt es einen Knopf **Telemetrie-Ordner öffnen**.
-4. Der Browser liest diese explizit freigegebene Datei ungefähr jede Sekunde. **Sie wird nicht hochgeladen.** Bei aktuellen Messungen erscheinen Position und Flugphase als MSFS LIVE.
-5. Die Flugkarte verwendet die tatsächliche MSFS-Position. Die Kabinensimulation nutzt die erkannte Phase für die Servicefreigabe.
+3. Klicke in der **neuen Bridge** auf **Live-Datenordner öffnen**. Das öffnet den normalen Benutzerordner
+   **%USERPROFILE%\AERVELYS\FlightBridge**. Dort muss bei erfolgreicher SimConnect-Verbindung die Datei **telemetry.json** vorhanden sein.
+4. Klicke in AERVELYS NEXT auf **Live-Ordner verbinden**. Wähle in Edge/Chrome **genau diesen Ordner** aus (nicht die JSON-Datei und nicht AppData), und gewähre den Zugriff.
+5. Der Browser sucht innerhalb dieses freigegebenen Ordners jede Sekunde erneut nach **telemetry.json**. Dies funktioniert auch dann, wenn die Bridge die Datei atomar ersetzt; die Daten werden nicht durch AERVELYS ins Netz hochgeladen.
+6. Bei aktuellen Messungen erscheinen Position und Flugphase als **MSFS LIVE**.
+7. Die Flugkarte verwendet die tatsächliche MSFS-Position. Die Kabinensimulation nutzt die erkannte Phase für die Servicefreigabe.
+
+Chromium blockiert den Zugriff auf geschützte Ordner wie AppData. Verwende daher **die neue Bridge-EXE und die zugehörige neue AERVELYS-NEXT-Testversion**. Die alte Bridge schreibt weiterhin unter AppData und ist für die neue Ordnerverbindung ungeeignet. Der neue Ordner liegt standardmäßig im lokalen Benutzerprofil außerhalb des OneDrive-Dokumentenordners; falls dein System eigene Synchronisationsregeln hat, prüfe diese bitte für Standortdaten.
 
 Die SimBrief-Route bleibt ein geplanter Flugweg. Für ein **anderes** Tablet/Smartphone fehlen weiterhin die sichere serverseitige Geräte- und Flugzuordnung sowie eine authentifizierte Live-Übertragung. Firefox und mobile Browser unterstützen eventuell keinen automatischen Dateizugriff.
 
@@ -43,7 +46,7 @@ Kompilieren (wenn Visual Studio/.NET Framework 4.8 Targeting Pack installiert si
 ## Sicherheit und Grenzen
 
 - Keine offenen Netzwerk-Ports, kein cloudbasierter Telemetrie-Upload und kein Zugriff auf OPS-Kundendaten.
-- Lokale Datei: **%LOCALAPPDATA%\AERVELYS\bridge\telemetry.json**.
+- Lokale Datei: **%USERPROFILE%\AERVELYS\FlightBridge\telemetry.json**.
 - Die Browseranzeige verwirft Messungen, deren Zeitstempel älter als 10 Sekunden ist.
 - Die Flugphasen werden anhand SimConnect-Messwerten **heuristisch** erkannt, nicht vom Simulator als fertige Phasen gemeldet.
 - Der Windows-Build und die Phasentests ersetzen **keinen echten Flugtest** mit MSFS 2024. Besonders Go-around, Touch-and-go, Flugzeug-Add-ons und On-Ground-Messungen müssen getestet werden.
