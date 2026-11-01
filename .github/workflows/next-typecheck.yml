@@ -3,9 +3,11 @@ on:
   push:
     branches:
       - "feature/executable-sim-agent-queue-20261031"
+      - "feature/passenger-experience-map"
   pull_request:
     paths:
       - "app/**"
+      - "tests/liveFlightProgress.test.mjs"
       - "package.json"
       - ".github/workflows/next-typecheck.yml"
 permissions:
@@ -23,3 +25,5 @@ jobs:
         run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund
       - name: Run strict TypeScript check
         run: npx tsc --noEmit
+      - name: Test SimBrief live distance and ETA projection
+        run: node --experimental-strip-types --test tests/liveFlightProgress.test.mjs
