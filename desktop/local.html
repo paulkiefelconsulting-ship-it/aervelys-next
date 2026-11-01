@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<title>AERVELYS NEXT · Local Operations</title>
+<link rel="stylesheet" href="local.css">
+<script src="local.js" defer></script>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+ <div class="brand"><div class="brand-mark">A</div><div><strong>AERVELYS <span>NEXT</span></strong><small>LOCAL OPERATIONS</small></div></div>
+ <div class="side-heading">COMMAND CENTER</div>
+ <nav id="nav" aria-label="Navigation">
+  <button class="nav-item active" data-view="home"><span>◈</span> Übersicht</button>
+  <button class="nav-item" data-view="missions"><span>✈</span> Charter & Trips</button>
+  <button class="nav-item" data-view="acars"><span>◉</span> Live Tracking & ACARS</button>
+  <button class="nav-item" data-view="career"><span>✧</span> Pilot & Training</button>
+  <button class="nav-item" data-view="company"><span>▤</span> Airline & Finanzen</button>
+ </nav>
+ <div class="sidebar-bottom"><span class="status-dot"></span> Lokaler Betrieb · kein Login nötig <small>Alle lokalen SIM-Daten bleiben auf diesem PC.</small></div>
+</aside>
+<main class="main">
+ <header class="topbar">
+  <div class="breadcrumbs">AERVELYS / <span id="crumb">COMMAND CENTER</span></div>
+  <div class="top-right"><span class="chip success">OFFLINE-FIRST</span><span class="chip" id="simStatus">SIM OFFLINE</span><span id="clock"></span></div>
+ </header>
+ <div class="content">
+ <section id="home" class="view active">
+  <div class="heading"><div class="eyebrow">WELCOME TO AERVELYS NEXT</div><h1>Dein lokaler Aviation Command Center.</h1><p>Eine eigenständige Desktop-Basis. Deine lokale Karriere und Simulatoraufzeichnungen funktionieren auch ohne Vercel und ohne Internet.</p></div>
+  <div class="hero"><div><div class="eyebrow">LOCAL PILOT PROFILE</div><h2>Willkommen, <span id="pilotHero">Pilot</span></h2><p>Homebase <b id="baseHero">EDAZ</b> · Eigener SIM-Spielstand auf diesem Computer</p></div><div class="hero-letter">A</div></div>
+  <div class="stats">
+   <article><span>LOKALE MISSIONEN</span><b id="statMissions">0</b><small>Unabhängig von NEXT Cloud</small></article>
+   <article><span>ABGESCHLOSSENE FLÜGE</span><b>0</b><small>Verifizierung noch in Arbeit</small></article>
+   <article><span>SIMCONNECT</span><b id="statSim">OFFLINE</b><small>Telemetrie statt Demodaten</small></article>
+   <article><span>FINANZDATEN</span><b>—</b><small>Keine erfundenen Umsätze</small></article>
+  </div>
+  <div class="cols">
+   <article class="panel"><div class="panel-title"><h3>Nächste Mission</h3><button id="goMissions" class="link">Alle Missionen</button></div><div id="nextMission" class="empty">Noch keine lokale Mission angelegt.</div></article>
+   <article class="panel"><div class="panel-title"><h3>Simulator-Anbindung</h3><span class="chip" id="simChip">NICHT VERBUNDEN</span></div><p id="simSummary" class="muted">Noch keine lokalen MSFS-Messwerte.</p><button id="bridgeHome" class="primary">SimConnect Bridge starten</button><p class="hint">Benötigt das Microsoft MSFS-2024-SDK auf deinem PC. Noch nicht im Simulator getestet.</p></article>
+  </div>
+ </section>
+ <section id="missions" class="view">
+  <div class="heading"><div class="eyebrow">LOCAL DISPATCH</div><h1>Charter & Trips</h1><p>Lege eigene SIM-Flugaufträge oder Checkrides an. Sie bleiben lokal gespeichert und werden nicht ohne MSFS-Nachweis als abgeschlossen markiert.</p></div>
+  <article class="panel form-panel"><h3>Neue Mission planen</h3>
+   <form id="missionForm">
+    <div class="form-grid"><label>Missionstyp<select name="kind"><option value="charter">Charter / Ferry</option><option value="checkride">Training / Checkride</option></select></label>
+     <label>Start (ICAO)<input name="departure" value="EDAZ" maxlength="4" required></label>
+     <label>Ziel (ICAO)<input name="destination" placeholder="EDAZ" maxlength="4" required></label>
+     <label>Flugzeug<input name="aircraft" placeholder="z. B. Phenom 300" maxlength="80" required></label></div>
+    <div class="form-actions"><button class="primary" type="submit">Mission lokal speichern</button><small>Keine automatische Annahme von Cloud-Chartern.</small></div>
+   </form>
+  </article>
+  <article class="panel"><div class="panel-title"><h3>Meine lokalen Aufträge</h3><span id="missionCount" class="muted">0 gespeichert</span></div><div id="missionsList" class="empty">Noch keine Missionen vorhanden.</div></article>
+ </section>
+ <section id="acars" class="view">
+  <div class="heading"><div class="eyebrow">FLIGHT OPERATIONS</div><h1>Live Tracking & ACARS</h1><p>Positions- und Flugphasendaten kommen ausschließlich aus der eigenen lokalen SimConnect-Bridge. Keine Demo-Telemetrie.</p></div>
+  <div class="stats">
+   <article><span>VERBINDUNG</span><b id="acarsConnection">OFFLINE</b><small>Letzter Empfang max. 20 s</small></article>
+   <article><span>FLUGPHASE</span><b id="acarsPhase">—</b><small>Aus SimConnect-Messwerten</small></article>
+   <article><span>FLUGHÖHE</span><b id="acarsAltitude">—</b><small>ft MSL</small></article>
+   <article><span>GROUND SPEED</span><b id="acarsSpeed">—</b><small>kt</small></article>
+  </div>
+  <article class="panel"><div class="panel-title"><h3>Letzter Simulator-Datensatz</h3><span class="chip">LOKAL</span></div><div id="telemetryDetail" class="empty">Warte auf Simulator-Telemetrie.</div><div class="actions"><button id="startBridge" class="primary">Bridge starten</button><button id="stopBridge" class="secondary">Bridge beenden</button></div><p class="hint">Momentan wird nur aufgezeichnet; ein automatischer Flugabschluss oder ein ausgestelltes Type Rating ist noch nicht enthalten.</p></article>
+ </section>
+ <section id="career" class="view">
+  <div class="heading"><div class="eyebrow">PILOT CAREER</div><h1>Karriere & Training</h1><p>Lokales Pilotenprofil mit eigenständigen Checkride-Missionen. Flugstunden und Zertifikate werden erst nach einer validierten Flugprüfung geführt.</p></div>
+  <div class="cols">
+   <article class="panel"><h3>Pilotenprofil</h3><form id="profileForm"><label>Name<input id="pilotInput" maxlength="70" minlength="2" required></label><div class="form-actions"><button class="primary" type="submit">Lokal speichern</button></div></form></article>
+   <article class="panel"><h3>Qualifikationen</h3><p class="muted">Noch keine lokal verifizierten Type Ratings.</p><p class="hint">Eine SkyBridge-Berechtigung wird nicht automatisch in AERVELYS übertragen.</p></article>
+  </div>
+ </section>
+ <section id="company" class="view">
+  <div class="heading"><div class="eyebrow">BUSINESS AIRLINE</div><h1>AERVELYS Unternehmenszentrale</h1><p>Die lokale Airline-Basis ist von unserer bestehenden NEXT-Cloud-Firma getrennt. Für einen gemeinsamen Bestand brauchen wir später eine geprüfte Synchronisation.</p></div>
+  <div class="cols">
+   <article class="panel"><h3>Lokale Airline</h3><p class="muted">AERVELYS · Heimatbasis EDAZ</p><p class="hint">Kein Flugzeugbestand, Personal oder Firmenkonto aus der Cloud importiert.</p></article>
+   <article class="panel"><h3>NEXT Cloud – optional</h3><p class="muted">Die laufende virtuelle Airline mit KI-Kunden und Personal bleibt zunächst über die Cloud verfügbar.</p><button id="openCloud" class="secondary">NEXT Cloud im Browser öffnen</button><p class="hint">Für die lokale Desktop-Anwendung ist kein Internetzugang erforderlich.</p></article>
+  </div>
+ </section>
+ <div id="toast" role="status" aria-live="polite"></div>
+ </div>
+</main>
+</div>
+</body></html>
