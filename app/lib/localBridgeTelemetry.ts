@@ -45,7 +45,7 @@ export const localBridgeFields:{field:LocalBridgeField;label:string;units:LocalB
 ];
 function mappedNumber(objects:RecordValue[],mapping:LocalBridgeFieldOverride|undefined,
   units:LocalBridgeUnit[],min:number,max:number):number|null{
- if(!mapping||!/^[a-zA-Z][\\w.-]{0,63}$/.test(mapping.key)||!units.includes(mapping.unit))
+ if(!mapping||!/^[a-zA-Z][\w.-]{0,63}$/.test(mapping.key)||!units.includes(mapping.unit))
   return null;
  const source=pick(objects,[mapping.key]);
  const num=finite(source,-1000000,1000000);
