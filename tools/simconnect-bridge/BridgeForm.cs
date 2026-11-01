@@ -49,9 +49,12 @@ namespace Aervelys.SimConnectBridge
             Width = 640; Height = 385; MinimumSize = new Size(520, 330);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.FromArgb(11, 24, 37); ForeColor = Color.White;
+            // Chrome/Edge prevent File System Access from reading protected
+            // AppData directories. Use a dedicated, non-system folder in
+            // the user's local profile (not Documents/OneDrive by default).
             _outputFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "AERVELYS", "bridge");
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "AERVELYS", "FlightBridge");
             Directory.CreateDirectory(_outputFolder);
             _outputFile = Path.Combine(_outputFolder, "telemetry.json");
 
@@ -70,7 +73,7 @@ namespace Aervelys.SimConnectBridge
 
             var buttons = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 94, FlowDirection = FlowDirection.LeftToRight, AutoScroll = true };
             layout.Controls.Add(buttons);
-            var open = new Button { Text = "Telemetrie-Ordner öffnen", Width = 230, Height = 38 };
+            var open = new Button { Text = "Live-Datenordner öffnen", Width = 230, Height = 38 };
             open.Click += (s, e) => Process.Start("explorer.exe", _outputFolder);
             buttons.Controls.Add(open);
             var retry = new Button { Text = "Erneut verbinden", Width = 155, Height = 38 };
@@ -266,7 +269,7 @@ namespace Aervelys.SimConnectBridge
                     (uint)0, (uint)0, (uint)0);
                 _lastDataUtc = DateTime.UtcNow;
                 _status.Text = "Verbunden · warte auf Flugzeugdaten";
-                _info.Text = "MSFS-2024-SimConnect verbunden. Es werden ausschließlich lokale Daten geschrieben.";
+                _info.Text = "MSFS verbunden. Im Browser den Ordner AERVELYS\\FlightBridge unter deinem Benutzerprofil freigeben (nicht AppData).";
             }
             catch (Exception ex)
             {
