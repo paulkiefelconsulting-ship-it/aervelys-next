@@ -96,7 +96,8 @@ function render(data){
  if(!state.missions.length)list.textContent='Noch keine Missionen. Plane einen Trainingsflug oder Charterauftrag.';
  else state.missions.slice(0,100).forEach(m=>row(list,m));
  const live=!!feed.connected;
- ['simStatus','statSim','simChip','acarsConnection'].forEach(id=>text(id,live?'LIVE':'OFFLINE'));
+ text('simStatus',live?'SIM LIVE':'SIM OFFLINE');
+ ['statSim','simChip','acarsConnection'].forEach(id=>text(id,live?'LIVE':'OFFLINE'));
  text('simSummary',live?'Lokale MSFS-Messwerte werden empfangen.':'Keine aktuelle SimConnect-Telemetrie.');
  const last=feed.latest;
  text('acarsPhase',last?.phase||'—');
