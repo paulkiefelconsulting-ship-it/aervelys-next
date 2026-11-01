@@ -52,3 +52,51 @@ Keine API-Schlüssel, Passwörter oder personenbezogenen Passagierdaten werden v
 5. Erst danach „SimConnect verbunden“ oder „automatisch erkannte Flugphasen“ in NEXT anzeigen.
 
 Quellen: [Offizielle SimConnect-SDK-Dokumentation](https://docs.flightsimulator.com/msfs2024/retail/programming-apis/simconnect/simconnect-sdk/), [Microsoft SimvarWatcher](https://docs.flightsimulator.com/msfs2024/retail/samples-tutorials/samples/visualstudio/simvarwatcher/), [Python-SimConnect (Drittanbieter)](https://github.com/odwdinc/Python-SimConnect).
+
+
+## Missionsgebundene MSFS-Bridge: erster Live-Übertragungsweg
+
+Der lokale Reader kann über HTTPS nur eine aktive virtuelle Mission erreichen.
+Der gesamte Zustand ist weiterhin ausdrücklich SIM-only und keine operative
+Luftfahrzeugfreigabe. Die Windows-Laufzeitverbindung ist noch nicht erprobt.
+
+### Bedienfolge
+1. Im AERVELYS NEXT Browser: SIM-Flugbetrieb & Kabine öffnen.
+2. Eine virtuelle Charteranfrage auswählen, die eigene SimBrief-Route
+   einfügen, Trainingsmission anlegen und Boarding-Simulation starten.
+3. Als CEO auf "Mission koppeln (90 Min)" klicken; einmaligen Code kopieren.
+4. Über "Windows-Befehl kopieren" die PowerShell-Zeilen mit öffentlichen
+   Projektwerten (Supabase-URL und Anon-Key) in Windows einfügen.
+5. Lokale Abhängigkeiten installieren, dann aus dem Repositoryordner starten:
+       python bridge/msfs2024/run_paired.py --initial-phase boarding
+6. Den geheimen Code im verdeckten Prompt einfügen. Der Code wird nicht im
+   Kommandoverlauf gespeichert; er wird nicht in die Logs geschrieben.
+7. Geräteheartbeat im Web-Cockpit prüfen; nach dem Test "Gerät trennen".
+
+Die Phase beim Start des Readers muss mit dem aktuellen SIM-Missionsstand
+übereinstimmen; wenn der Flug bereits läuft, --initial-phase entsprechend
+setzen. Neustart benötigt einen neuen Paarungscode.
+
+### Technische Sicherheitsgrenzen
+- Der Kopplungscode besteht aus 96 Hex-Zeichen mit kryptografisch
+  zufälligen UUID-Anteilen; in der Datenbank wird nur SHA-256 gespeichert.
+- Gültigkeitsfenster 10–180 Minuten, UI-Standard 90 Minuten.
+- Ein neuer Code widerruft bestehende Kopplungen der Mission.
+- Eingehende Werte haben streng steigende Sequenzen und mindestens
+  500 ms Abstand; Dubletten, falsche Codes, ungültige Flugphasen,
+  falsche SimVar-Messwerte sowie beendete Missionen werden zurückgewiesen.
+- Es sind ausdrücklich keine realen Flug-, Crew-, Flotten- oder
+  Firmenbuchungen zulässig.
+- Eine eingetroffene Telemetrienachricht belegt NUR die erreichbare Bridge.
+  Sie beweist nicht, dass ein echter MSFS-Flug erfolgreich verbunden ist.
+- Das Projekt erfordert keine privaten Service-Role-Schlüssel im Windows-PC.
+- Keine automatische Wiederholung nach unklaren Netzwerkfehlern, da
+  andernfalls Flugphasen versehentlich mehrfach übertragen werden könnten.
+
+### Offene Schritte
+Das Python-Paket SimConnect stammt von einem Drittanbieter (AGPL),
+dessen MSFS-2024-Kompatibilität noch unter Windows geprüft werden muss.
+Dauerhaft sollte ein unterstützter C#/.NET-Connector mit offizieller
+Microsoft-SimConnect-API eingesetzt werden. Auch dynamische SimRate,
+Szenario-Neuladen, mehrere Triebwerke, Touch-and-Go und sichere
+Gerätewiederverbindung sind noch nicht abschließend getestet.
