@@ -281,11 +281,16 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
     </div>
    </div>
    <div className={styles.heroJourney}>
-    <div className={styles.heroJourneyHead}><span>CURRENT JOURNEY</span><span className={styles.heroDemoBadge}><span/> {playing?'DEMO LÄUFT':'SIMULATION'}</span></div>
+    <div className={styles.heroJourneyHead}><span>CURRENT JOURNEY</span><span className={styles.heroDemoBadge}><span/> {bridge.isLive?'MSFS LIVE':playing?'DEMO LÄUFT':'SIMULATION'}</span></div>
     <div className={styles.heroCodes}><div><small>FROM</small><strong>{flight?.origin||'—'}</strong><span>{origin?.name||'—'}</span></div><div className={styles.heroPlane}><Plane size={22}/></div><div><small>TO</small><strong>{flight?.destination||'—'}</strong><span>{destination?.name||'—'}</span></div></div>
-    <div className={styles.heroProgressHead}><span>{bridge.snapshot?BRIDGE_PHASE_LABELS[bridge.snapshot.phase]:mode==='demo'?flightPhase(progress):'DISPATCH ENTWURF'}</span><strong>{bridge.isLive?'LIVE':mode==='demo'?progress+'%':'—'}</strong></div>
-    <div className={styles.heroProgress} role="progressbar" aria-label="Simulierter Flugfortschritt" aria-valuenow={mode==='demo'?progress:0} aria-valuemin={0} aria-valuemax={100}><span style={{width:(mode==='demo'?progress:0)+'%'}}/></div>
-    <div className={styles.heroJourneyFoot}><span><Clock3 size={14}/> {bridge.isLive?'LIVE-HÖHE '+Math.round(bridge.snapshot!.telemetry.altitudeFt).toLocaleString('de-DE')+' FT':remaining!==null?remaining+' MIN RESTZEIT (DEMO)':'KEINE LIVE-ZEIT'}</span><span>{bridge.isLive?<><CheckCircle2 size={14}/> MSFS LIVE</>:<><CloudOff size={14}/> MSFS OFFLINE</>}</span></div>
+    <div className={styles.heroProgressHead}><span>{liveStatus}</span><strong>{shownProgress!==null?shownProgress+'%':'—'}</strong></div>
+    <div className={styles.heroProgress} role="progressbar" aria-label={bridge.isLive?"Geschätzter Streckenfortschritt":"Simulierter Flugfortschritt"} aria-valuenow={shownProgress??undefined} aria-valuetext={shownProgress===null?"Routenfortschritt nicht verfügbar":undefined} aria-valuemin={0} aria-valuemax={100}><span style={{width:(shownProgress??0)+'%'}}/></div>
+    <div className={styles.heroJourneyFoot}><span><Clock3 size={14}/> {bridge.isLive?(liveMetrics?.remainingKm!=null?liveMetrics.remainingKm+' KM BIS ZIEL':'LIVE-HÖHE '+Math.round(bridge.snapshot!.telemetry.altitudeFt).toLocaleString('de-DE')+' FT'):remaining!==null?remaining+' MIN RESTZEIT (DEMO)':'KEINE LIVE-ZEIT'}</span><span>{bridge.isLive?<><CheckCircle2 size={14}/> MSFS LIVE</>:<><CloudOff size={14}/> MSFS OFFLINE</>}</span></div>
+    {bridge.isLive&&<div className={styles.liveSummary}>
+     <span><strong>{etaClock??'—'}</strong><small>ETA LOKAL · GS-SCHÄTZUNG</small></span>
+     <span><strong>{liveMetrics?.remainingKm!=null?liveMetrics.remainingKm+' km':'—'}</strong><small>RESTSTRECKE · SIMBRIEF</small></span>
+     <span><strong>{bridge.elapsedMinutes} min</strong><small>{bridge.elapsedBasis==='takeoff'?'SEIT ERKANNTEM START':'SEIT LIVE-VERBINDUNG'}</small></span>
+    </div>}
     {mode==='demo'&&!bridge.isLive&&<button type="button" className={styles.heroPlayback} onClick={()=>{if(progress>=100){setProgress(0);setPlaying(true);}else setPlaying(v=>!v);}}>{playing?<Pause size={16}/>:<Play size={16}/>} {playing?'Simulation pausieren':'Demo-Flug starten'}</button>}
    </div>
   </section>
