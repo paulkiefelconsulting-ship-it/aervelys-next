@@ -50,7 +50,7 @@ export function useLocalBridge(){
   try{
    // Selecting one dedicated non-system directory avoids Chrome's AppData
    // restriction. Reacquire telemetry.json by its filename on each poll:
-   // the Windows bridge atomically replaces the file once per second.
+   // the Windows bridge updates the same telemetry file once per second.
    const selected=await picker({mode:'read'});
    await selected.getFileHandle('telemetry.json');
    setError('Verbinde lokale Bridge …');setSnapshot(null);setConnectedAt(null);lastSeen.current='';
