@@ -11,6 +11,7 @@
     <RootNamespace>Aervelys.SimConnectBridge</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="PhaseTestRunner.cs" />
     <Reference Include="System.Web.Extensions"/>
   </ItemGroup>
 </Project>
