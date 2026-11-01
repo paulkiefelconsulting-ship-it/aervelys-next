@@ -260,3 +260,14 @@
 @media(max-width:960px){.intro{grid-template-columns:1fr;padding:30px;gap:23px}.heroJourney{max-width:700px;width:100%}.intro h2{font-size:44px}.areaTab,.areaActive{flex-direction:column;align-items:center;text-align:center;gap:8px}.tabNumber{position:absolute;top:10px;left:11px}.areaTab span:not(.tabNumber),.areaActive span:not(.tabNumber){text-align:center}.sectionHeader{margin-top:2px}}
 @media(max-width:660px){.intro{padding:22px 18px;border-radius:17px;min-height:0}.intro h2{font-size:38px;letter-spacing:-1.5px;margin:17px 0}.heroEyebrow{font-size:9px}.heroVersion{display:none}.heroJourney{padding:17px}.heroActions{margin-top:20px}.heroPrimary,.heroSecondary{width:100%}.areaTabs{gap:6px}.areaTab,.areaActive{padding:15px 5px;min-height:104px;border-radius:11px}.areaTab>svg:not(.tabArrow),.areaActive>svg:not(.tabArrow){padding:7px;width:32px;height:32px}.areaTab strong,.areaActive strong{font-size:10px}.areaTab small,.areaActive small{font-size:9px}.sectionHeader h3{font-size:18px}.sectionStatus{font-size:9px}.preparedStatus{flex-wrap:wrap;padding:14px}.preparedText{flex-basis:calc(100% - 65px)}.routeLinkButton{width:100%;justify-content:center}.map{height:380px}.displayHeader{padding:17px 15px 10px}.routeHeader{padding:11px 15px 20px}.routeHeader strong{font-size:28px}.flightStats>div{padding:13px}.flightStats strong{font-size:13px}.mapCaption{max-width:220px}.tabArrow{display:none}}
 @media(prefers-reduced-motion:reduce){.areaTab,.areaActive,.heroProgress span{transition:none}}
+
+/* Live MSFS + SimBrief positioning */
+.liveSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:18px;padding-top:15px;border-top:1px solid rgba(135,195,204,.19)}
+.liveSummary>span{display:flex;flex-direction:column;gap:5px;min-width:0}
+.liveSummary strong{color:#a1f6dd;font:800 16px Manrope,Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.liveSummary small{color:#9db6c8;font-size:9px;letter-spacing:.7px;line-height:1.4}
+.liveFlightPanel{display:flex;flex-wrap:wrap;align-items:center;gap:13px 21px;padding:18px 24px;background:linear-gradient(125deg,rgba(15,69,72,.45),rgba(10,31,46,.93));border-top:1px solid rgba(137,216,211,.21)}
+.liveFlightPanel>span{display:inline-flex;align-items:center;gap:7px;color:#b3e1e8;font-size:12px;font-weight:700}
+.liveFlightPanel>span:first-child{color:#9ff1d6}
+.liveFlightPanel>small{display:block;width:100%;color:#8aaabc;font-size:10px;line-height:1.6}
+@media(max-width:680px){.liveSummary{gap:6px}.liveSummary strong{font-size:12px}.liveSummary small{font-size:8px}.liveFlightPanel{padding:14px}.liveFlightPanel>span{font-size:11px}}
