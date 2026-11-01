@@ -8,6 +8,7 @@ import styles from './VirtualSimMissionControl.module.css';
 import VirtualSimBridgePairing from './VirtualSimBridgePairing';
 import SimFlightInstruments,{type SimSample} from './SimFlightInstruments';
 import MsfsCharterSessionLink from './MsfsCharterSessionLink';
+import SimCabinDirector from './SimCabinDirector';
 
 type RequestRow={
  request_id:string;request_code:string;origin_icao:string;destination_icao:string;
@@ -184,7 +185,7 @@ export default function VirtualSimMissionControl(){
    </button>
   </div>
   <div className={styles.safety}><ShieldAlert size={18}/>
-   <span><strong>Nur Airline-Simulation.</strong> Keine echten Buchungen, Flugzeug-/Crew-Freigaben oder Positionierungsänderungen. MSFS 2024 und SimConnect sind derzeit nicht verbunden; jede Phasenmeldung stammt aus der manuellen Trainingssimulation. Route wird ausschließlich aus deiner Eingabe übernommen.</span>
+   <span><strong>Nur Airline-Simulation.</strong> Keine echten Buchungen, Flugzeug-/Crew-Freigaben oder Positionierungsänderungen. Die SIM-Phasen können manuell oder über die separat gekoppelte lokale Trainings-Bridge geführt werden; keine operativ verifizierten Flugdaten. Route wird ausschließlich aus deiner Eingabe übernommen.</span>
   </div>
   {error&&<p className={styles.error} role="alert">{error}</p>}
   {notice&&<p className={styles.notice} role="status">{notice}</p>}
@@ -262,7 +263,7 @@ export default function VirtualSimMissionControl(){
       <p className={styles.bridgeTag}>Flugphasen stammen aus einer gekoppelten lokalen Bridge – nicht als operative Telemetrie verifiziert.</p>}
      {bridgeStreamActive&&<p className={styles.bridgeTag}>Ein aktueller Geräteheartbeat steuert die SIM-Flugphasen. Manuelle Phasenschritte und Zeitsprünge sind bis zum Trennen beziehungsweise Verbindungsverlust gesperrt.</p>}
      <div className={styles.phaseBox}>
-      <div className={styles.sectionHeader}><h4>Flugphasen</h4><small>Manuelle Eingabe · keine automatische MSFS-Erkennung</small></div>
+      <div className={styles.sectionHeader}><h4>Flugphasen</h4><small>{bridgeStreamActive?'Gekoppelte Trainings-Bridge · unbestätigte SIM-Telemetrie':'Manuelle Eingabe · keine bestätigte Cloud-Steuerung'}</small></div>
       <div className={styles.phaseTimeline}>
        {phases.map(([code,label],i)=><span key={code}
         className={i<phaseIndex?styles.past:i===phaseIndex?styles.current:''}>
@@ -291,6 +292,9 @@ export default function VirtualSimMissionControl(){
         disabled={busy} onClick={()=>void action('resume')}><Play size={15}/> Simulation fortsetzen</button>}
       </div>
      </div>
+     <SimCabinDirector passengers={passengers} events={events} phase={mission.phase}
+      lifecycle={mission.lifecycle} busy={busy} onSelectPassenger={setSeatIndex}
+      onService={async(service,seat)=>{await action('service',service,seat);}}/>
      <div className={styles.cabin}>
       <div className={styles.sectionHeader}><h4><Armchair size={17}/> Passagierkabine</h4>
        <small>Bedürfnisse wachsen mit der simulierten Zeit · Service nur in Boarding/Cruise</small></div>
