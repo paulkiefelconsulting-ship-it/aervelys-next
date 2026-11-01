@@ -95,11 +95,12 @@ export function adjustCabin(s:CabinState,temperature:number,turbulence:CabinStat
  return {...s,temperature:nextTemperature,turbulence,
   events:changed?[{minute:s.minute,label:'Turbulenz: '+turbulence+' · Servicebeschränkung angepasst',kind:'safety' as const},...s.events].slice(0,35):s.events};
 }
-export function performCabinService(s:CabinState,kind:ServiceKind,phase:CabinPhase):{state:CabinState;error?:string}{
+export function performCabinService(s:CabinState,kind:ServiceKind,phase:CabinPhase,targetGuestId?:string):{state:CabinState;error?:string}{
  if(!canMoveInCabin(phase,s.turbulence))return {state:s,error:'Service gesperrt: Anschnallzeichen / kritische Flugphase oder Turbulenz.'};
  if(['coffee','meal'].includes(kind)&&!canProvideHotFood(phase,s.turbulence))return {state:s,error:'Heißgetränke und Speisen erst im stabilen Reiseflug.'};
- const candidate=s.requests.find(r=>r.status==='open'&&r.type===kind);
- const guest= candidate?s.guests.find(g=>g.id===candidate.guestId):
+ const candidate=s.requests.find(r=>r.status==='open'&&r.type===kind&&(!targetGuestId||r.guestId===targetGuestId));
+ const guest=targetGuestId?s.guests.find(g=>g.id===targetGuestId):
+  candidate?s.guests.find(g=>g.id===candidate.guestId):
   s.guests.filter(g=>g.wcVisitEnd===null).sort((a,b)=>
    kind==='wc'?b.wc-a.wc:kind==='meal'||kind==='snack'?b.hunger-a.hunger:b.thirst-a.thirst)[0];
  if(!guest)return {state:s,error:'Kein geeigneter Passagier für diesen Service.'};
@@ -123,4 +124,33 @@ export function performCabinService(s:CabinState,kind:ServiceKind,phase:CabinPha
   {...r,status:'done' as const,completedAt:s.minute}:r);
  return {state:{...s,guests,requests,
    events:[{minute:s.minute,label:guest.label+' · '+SERVICE_NAMES[kind]+' durchgeführt',kind:'service' as const},...s.events].slice(0,35)}};
+}
+
+/** Runs a deterministic, optional virtual crew. No real aircraft or passenger data.
+ * One queued drink/meal/snack service at most every seven simulated minutes;
+ * critical flight phases and turbulence block all automatic service.
+ */
+export function advanceCabinWithCrew(s:CabinState,targetMinute:number,phase:CabinPhase,autoCrew:boolean):CabinState{
+ const target=Math.min(1440,Math.max(0,Math.floor(targetMinute)));
+ if(target<s.minute)return s;
+ let state=s;
+ for(let i=0;i<Math.min(target-state.minute,360);i++){
+  state=tick(state,phase);
+  if(!autoCrew||state.minute%7!==0||!canMoveInCabin(phase,state.turbulence))continue;
+  const priority:ServiceKind[]=['meal','cold_drink','coffee','snack'];
+  const requests=state.requests.filter(r=>r.status==='open'&&r.type!=='wc').sort((a,b)=>{
+   const rankA=priority.indexOf(a.type),rankB=priority.indexOf(b.type);
+   return rankA!==rankB?rankA-rankB:a.createdAt-b.createdAt;
+  });
+  for(const request of requests){
+   const result=performCabinService(state,request.type,phase,request.guestId);
+   if(result.error)continue;
+   state={...result.state,events:[
+    {minute:state.minute,label:'AUTO-CREW · '+SERVICE_NAMES[request.type]+' abgeschlossen',kind:'service' as const},
+    ...result.state.events
+   ].slice(0,35)};
+   break;
+  }
+ }
+ return state;
 }
