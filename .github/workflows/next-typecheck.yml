@@ -36,6 +36,8 @@ jobs:
         run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund
       - name: Validate local MSFS telemetry conversion
         run: node scripts/test-local-telemetry.cjs
+      - name: Validate SIM cabin experience recommendations
+        run: node scripts/test-cabin-director.cjs
       - name: Strict TypeScript check
         run: npx tsc --noEmit
       - name: Production build check (no Vercel deployment)
