@@ -3,7 +3,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 
 export type BridgePhase='Unknown'|'Parked'|'TaxiOut'|'TakeoffRoll'|'Climb'|'Cruise'|'Descent'|'Approach'|'Landing'|'TaxiIn';
 export type BridgeSnapshot={
- schemaVersion:1;source:'msfs2024-simconnect-local';timestampUtc:string;phase:BridgePhase;
+ schemaVersion:1;source:'msfs2024-simconnect-local';timestampUtc:string;phase:BridgePhase;flightStartedAtUtc?:string|null;
  telemetry:{latitude:number;longitude:number;altitudeFt:number;aglFt:number;verticalSpeedFpm:number;groundSpeedKt:number;indicatedSpeedKt:number;onGround:boolean;parkingBrake:boolean};
 };
 const phases:BridgePhase[]=['Unknown','Parked','TaxiOut','TakeoffRoll','Climb','Cruise','Descent','Approach','Landing','TaxiIn'];
@@ -26,6 +26,12 @@ export function parseBridgeSnapshot(raw:string,now:number):BridgeSnapshot {
  }
  if(typeof data.onGround!=='boolean'||typeof data.parkingBrake!=='boolean'||
   Math.abs(data.latitude as number)>90||Math.abs(data.longitude as number)>180)throw Error('Bridge-Position oder Bodenstatus ungültig.');
+ if(obj.flightStartedAtUtc!==undefined&&obj.flightStartedAtUtc!==null){
+  if(typeof obj.flightStartedAtUtc!=='string'||!Number.isFinite(Date.parse(obj.flightStartedAtUtc))||
+   Date.parse(obj.flightStartedAtUtc)>Date.parse(obj.timestampUtc)+5_000||
+   Date.parse(obj.timestampUtc)-Date.parse(obj.flightStartedAtUtc)>48*3600_000)
+   throw Error('Ungültige oder unplausible Startzeit in der Bridge-Datei.');
+ }
  const age=now-Date.parse(obj.timestampUtc);
  if(!Number.isFinite(age)||age>10_000||age< -5_000)throw Error('Bridge-Snapshot veraltet oder die PC-Uhr stimmt nicht.');
  return value as BridgeSnapshot;
@@ -91,6 +97,14 @@ export function useLocalBridge(){
   const id=window.setInterval(()=>void check(),1000);
   return()=>{closed=true;window.clearInterval(id);};
  },[directory]);
- const elapsedMinutes=useMemo(()=>connectedAt&&isLive?Math.max(0,Math.floor((clock-connectedAt)/60_000)):0,[connectedAt,isLive,clock]);
- return {connect,disconnect,snapshot,connected,isLive,error,elapsedMinutes};
+ // Do not claim a real airborne duration if the bridge was connected mid-flight.
+ // For old bridge snapshots without flightStartedAtUtc use "since live link".
+ const hasObservedTakeoff=Boolean(snapshot?.flightStartedAtUtc);
+ const elapsedBasis=hasObservedTakeoff?'takeoff':'connection' as const;
+ const elapsedMinutes=useMemo(()=>{
+  if(!isLive||!snapshot)return 0;
+  const start=hasObservedTakeoff?Date.parse(snapshot.flightStartedAtUtc!):(connectedAt??clock);
+  return Math.max(0,Math.floor((Date.parse(snapshot.timestampUtc)-start)/60_000));
+ },[isLive,snapshot,hasObservedTakeoff,connectedAt,clock]);
+ return {connect,disconnect,snapshot,connected,isLive,error,elapsedMinutes,elapsedBasis};
 }
