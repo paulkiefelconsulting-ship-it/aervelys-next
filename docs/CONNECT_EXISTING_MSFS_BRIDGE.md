@@ -90,7 +90,7 @@ allein ist **noch kein** solcher angeschlossener Missionsclient.
   (über die neue NEXT-Diagnose sichtbar).
 - Ob `session_id` bei einem Neustart stabil und eindeutig ist.
 - Ob Koordinaten, Groundspeed, Höhen und Phase zuverlässig aktualisiert werden.
-- Ob die Bridge ISA / AGL / Vertikalrate / Bodenkontakt / Triebwerksstatus
+- Ob die Bridge IAS / AGL / Vertikalrate / Bodenkontakt / Triebwerksstatus
   bereitstellt und die Einheiten eindeutig sind.
 - Welcher gewählte SIM-Charterauftrag (`AV-SIM-…`) zu welcher Sitzung
   (`session_id`) gehört. **Diese Verknüpfung fehlt derzeit.**
