@@ -120,7 +120,7 @@ function viewForRoute(a:Point,b:Point,width:number,height:number,via:Point[]=[])
 }
 function shortDate(value:string){if(!value)return 'Nicht hinterlegt';const date=new Date(value);return Number.isNaN(date.getTime())?'Nicht hinterlegt':date.toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'});}
 function safeName(code:string){return AIRPORTS[code]?.name||'Koordinaten unbekannt';}
-function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,progress,livePoint,liveProgress,fullscreen,onFullscreen}:{origin:Geo|undefined;destination:Geo|undefined;originCode?:string;destinationCode?:string;waypoints?:RouteFix[];demo:boolean;progress:number;livePoint?:Point;liveProgress?:number|null;fullscreen:boolean;onFullscreen:()=>void}){
+function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,progress,livePoint,liveProgress,trackerPaused,fullscreen,onFullscreen}:{origin:Geo|undefined;destination:Geo|undefined;originCode?:string;destinationCode?:string;waypoints?:RouteFix[];demo:boolean;progress:number;livePoint?:Point;liveProgress?:number|null;trackerPaused?:boolean;fullscreen:boolean;onFullscreen:()=>void}){
  const ref=useRef<HTMLDivElement|null>(null);
  const start=useRef<{x:number;y:number;view:MapView}|null>(null);
  const [size,setSize]=useState({w:860,h:470});
@@ -190,7 +190,7 @@ function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,
   {originXY&&<div className={styles.mapMarker} style={{left:originXY.x,top:originXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{originCode}</strong><small>{origin?.name}</small></div></div>}
   {destinationXY&&<div className={styles.mapMarker} style={{left:destinationXY.x,top:destinationXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{destinationCode}</strong><small>{destination?.name}</small></div></div>}
   {plane&&<div className={styles.planePin} style={{left:plane.x,top:plane.y}}><Plane size={23} style={{transform:'rotate('+heading+'deg)'}}/></div>}
-  <div className={styles.mapCaption}>{livePoint?'MSFS LIVE · POSITION'+(liveProgress==null?' · KEIN ROUTENFORTSCHRITT':''):waypoints?.length?'SIMBRIEF-WEGPUNKTE · NICHT LIVE':demo?'DEMO-ANIMATION · KEINE TELEMETRIE':'GEPLANTE ROUTE · KEIN LIVE-TRACKING'}</div>
+  <div className={styles.mapCaption}>{livePoint?(trackerPaused?'MSFS-SIGNAL PAUSIERT · LETZTE POSITION':'MSFS LIVE · POSITION'+(liveProgress==null?' · KEIN ROUTENFORTSCHRITT':'')):waypoints?.length?'SIMBRIEF-WEGPUNKTE · NICHT LIVE':demo?'DEMO-ANIMATION · KEINE TELEMETRIE':'GEPLANTE ROUTE · KEIN LIVE-TRACKING'}</div>
   <div className={styles.mapTools} onPointerDown={e=>e.stopPropagation()}>
    <button type="button" onClick={()=>zoom(1)} aria-label="Karte vergrößern"><ZoomIn size={17}/></button>
    <button type="button" onClick={()=>zoom(-1)} aria-label="Karte verkleinern"><ZoomOut size={17}/></button>
@@ -235,7 +235,7 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
  useEffect(()=>{if(!publicDemo)void refresh();},[refresh,publicDemo]);
  useEffect(()=>{if(!playing||mode!=='demo')return;const id=window.setInterval(()=>setProgress(p=>Math.min(100,p+playbackSpeed)),750);return()=>window.clearInterval(id);},[playing,mode,playbackSpeed]);
  useEffect(()=>{if(progress>=100&&playing)setPlaying(false);},[progress,playing]);
- useEffect(()=>{if(bridge.isLive)setPlaying(false);},[bridge.isLive]);
+ useEffect(()=>{if(bridge.sessionActive)setPlaying(false);},[bridge.sessionActive]);
  const demoOrigin=publicDemo&&prepared?prepared.origin:'EDAZ';
  const demoDestination=publicDemo&&prepared?prepared.destination:'LFMN';
  const fromFix=publicDemo&&prepared?prepared.originPoint:null;
@@ -257,17 +257,19 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
  const remaining=mode==='demo'?Math.round(demoDuration*(1-progress/100)):null;
  const elapsed=Math.round(demoDuration*progress/100);
  const telemetry=simulatedTelemetry(progress);
- const liveMetrics:LiveRouteMetrics|null=bridge.isLive&&bridge.snapshot&&origin&&destination&&mode==='demo'&&prepared?
+ const tracking=bridge.sessionActive;
+ const trackerPaused=bridge.status==='interrupted';
+ const liveMetrics:LiveRouteMetrics|null=tracking&&bridge.snapshot&&origin&&destination&&mode==='demo'&&prepared?
   liveRouteProgress([origin,...prepared.fixes,destination],{
    lat:bridge.snapshot.telemetry.latitude,lon:bridge.snapshot.telemetry.longitude
   },bridge.snapshot.telemetry.groundSpeedKt,bridge.snapshot.timestampUtc,bridge.snapshot.telemetry.onGround):null;
- const liveProgress=bridge.isLive?liveMetrics?.progress??null:null;
- const shownProgress=bridge.isLive?liveProgress:mode==='demo'?progress:0;
- const shownRemaining=bridge.isLive?liveMetrics?.etaMinutes??null:remaining;
- const liveStatus=bridge.isLive?(liveMetrics?.status==='off-route'?'Abseits der SimBrief-Route':
+ const liveProgress=tracking?liveMetrics?.progress??null:null;
+ const shownProgress=tracking?liveProgress:mode==='demo'?progress:0;
+ const shownRemaining=tracking?liveMetrics?.etaMinutes??null:remaining;
+ const liveStatus=trackerPaused?'MSFS-VERBINDUNG UNTERBROCHEN · LETZTER STAND':tracking?(liveMetrics?.status==='off-route'?'Abseits der SimBrief-Route':
   liveProgress===null?'Live-Position ohne Routenabgleich':
   BRIDGE_PHASE_LABELS[bridge.snapshot!.phase]):mode==='demo'?flightPhase(progress):'DISPATCH ENTWURF';
- const etaClock=bridge.isLive&&liveMetrics?.etaAtUtc?
+ const etaClock=tracking&&liveMetrics?.etaAtUtc?
   new Date(liveMetrics.etaAtUtc).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):null;
  return <div className={styles.screen}>
   <section className={styles.intro}>
@@ -281,20 +283,20 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
     </div>
    </div>
    <div className={styles.heroJourney}>
-    <div className={styles.heroJourneyHead}><span>CURRENT JOURNEY</span><span className={styles.heroDemoBadge}><span/> {bridge.isLive?'MSFS LIVE':playing?'DEMO LÄUFT':'SIMULATION'}</span></div>
+    <div className={styles.heroJourneyHead}><span>CURRENT JOURNEY</span><span className={styles.heroDemoBadge}><span/> {trackerPaused?'TRACKER PAUSIERT':bridge.isLive?'MSFS LIVE':playing?'DEMO LÄUFT':'SIMULATION'}</span></div>
     <div className={styles.heroCodes}><div><small>FROM</small><strong>{flight?.origin||'—'}</strong><span>{origin?.name||'—'}</span></div><div className={styles.heroPlane}><Plane size={22}/></div><div><small>TO</small><strong>{flight?.destination||'—'}</strong><span>{destination?.name||'—'}</span></div></div>
     <div className={styles.heroProgressHead}><span>{liveStatus}</span><strong>{shownProgress!==null?shownProgress+'%':'—'}</strong></div>
-    <div className={styles.heroProgress} role="progressbar" aria-label={bridge.isLive?"Geschätzter Streckenfortschritt":"Simulierter Flugfortschritt"} aria-valuenow={shownProgress??undefined} aria-valuetext={shownProgress===null?"Routenfortschritt nicht verfügbar":undefined} aria-valuemin={0} aria-valuemax={100}><span style={{width:(shownProgress??0)+'%'}}/></div>
-    <div className={styles.heroJourneyFoot}><span><Clock3 size={14}/> {bridge.isLive?(liveMetrics?.remainingKm!=null?liveMetrics.remainingKm+' KM BIS ZIEL':'LIVE-HÖHE '+Math.round(bridge.snapshot!.telemetry.altitudeFt).toLocaleString('de-DE')+' FT'):remaining!==null?remaining+' MIN RESTZEIT (DEMO)':'KEINE LIVE-ZEIT'}</span><span>{bridge.isLive?<><CheckCircle2 size={14}/> MSFS LIVE</>:<><CloudOff size={14}/> MSFS OFFLINE</>}</span></div>
-    {bridge.isLive&&<div className={styles.liveSummary}>
+    <div className={styles.heroProgress} role="progressbar" aria-label={tracking?"Streckenfortschritt auf dem SimBrief-OFP":"Simulierter Flugfortschritt"} aria-valuenow={shownProgress??undefined} aria-valuetext={shownProgress===null?"Routenfortschritt nicht verfügbar":undefined} aria-valuemin={0} aria-valuemax={100}><span style={{width:(shownProgress??0)+'%'}}/></div>
+    <div className={styles.heroJourneyFoot}><span><Clock3 size={14}/> {tracking?(liveMetrics?.remainingKm!=null?liveMetrics.remainingKm+' KM BIS ZIEL':'LIVE-HÖHE '+Math.round(bridge.snapshot!.telemetry.altitudeFt).toLocaleString('de-DE')+' FT'):remaining!==null?remaining+' MIN RESTZEIT (DEMO)':'KEINE LIVE-ZEIT'}</span><span>{trackerPaused?<><CloudOff size={14}/> MSFS-SIGNAL PAUSIERT</>:bridge.isLive?<><CheckCircle2 size={14}/> MSFS LIVE</>:<><CloudOff size={14}/> MSFS OFFLINE</>}</span></div>
+    {tracking&&<div className={styles.liveSummary}>
      <span><strong>{etaClock??'—'}</strong><small>ETA LOKAL · GS-SCHÄTZUNG</small></span>
      <span><strong>{liveMetrics?.remainingKm!=null?liveMetrics.remainingKm+' km':'—'}</strong><small>RESTSTRECKE · SIMBRIEF</small></span>
      <span><strong>{bridge.elapsedMinutes} min</strong><small>{bridge.elapsedBasis==='takeoff'?'SEIT ERKANNTEM START':'SEIT LIVE-VERBINDUNG'}</small></span>
     </div>}
-    {mode==='demo'&&!bridge.isLive&&<button type="button" className={styles.heroPlayback} onClick={()=>{if(progress>=100){setProgress(0);setPlaying(true);}else setPlaying(v=>!v);}}>{playing?<Pause size={16}/>:<Play size={16}/>} {playing?'Simulation pausieren':'Demo-Flug starten'}</button>}
+    {mode==='demo'&&!tracking&&<button type="button" className={styles.heroPlayback} onClick={()=>{if(progress>=100){setProgress(0);setPlaying(true);}else setPlaying(v=>!v);}}>{playing?<Pause size={16}/>:<Play size={16}/>} {playing?'Simulation pausieren':'Demo-Flug starten'}</button>}
    </div>
   </section>
-  <div className={styles.sectionHeader}><div><span>EXPLORE THE EXPERIENCE</span><h3>Dein AERVELYS Cockpit</h3></div><span className={styles.sectionStatus}><CheckCircle2 size={15}/> {bridge.isLive?'MSFS LIVE · GÄSTE SIMULIERT':'DEMO-MODUS AKTIV'}</span></div>
+  <div className={styles.sectionHeader}><div><span>EXPLORE THE EXPERIENCE</span><h3>Dein AERVELYS Cockpit</h3></div><span className={styles.sectionStatus}><CheckCircle2 size={15}/> {trackerPaused?'MSFS-TRACKER PAUSIERT · KEINE DEMO-RÜCKSCHALTUNG':tracking?'MSFS-TRACKER · GÄSTE SIMULIERT':'DEMO-MODUS AKTIV'}</span></div>
   <div className={styles.areaTabs} role="tablist" aria-label="Bereiche der Passenger Experience">
    <button role="tab" type="button" aria-selected={area==='map'} className={area==='map'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('map');setFullscreen(false);}}><span className={styles.tabNumber}>01</span><MapPin size={20}/><span><strong>Flight Map</strong><small>Route & Flugfortschritt</small></span><ArrowUpRight className={styles.tabArrow} size={15}/></button>
    <button role="tab" type="button" aria-selected={area==='cabin'} className={area==='cabin'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('cabin');setFullscreen(false);}}><span className={styles.tabNumber}>02</span><Sparkles size={20}/><span><strong>Cabin Experience</strong><small>Gäste & Bordservice</small></span><ArrowUpRight className={styles.tabArrow} size={15}/></button>
@@ -302,9 +304,9 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
   </div>
   {area==='map'&&<>
   <div className={styles.modeBar} role="group" aria-label="Datenquelle">
-   <button type="button" className={mode==='demo'?styles.modeActive:styles.mode} onClick={()=>{setMode('demo');setPlaying(false);}}><Play size={15}/>{bridge.isLive?'SimBrief-Route · LIVE':publicDemo&&prepared?'SimBrief-Route · Demo-Wiedergabe':'Demo-Flug'}</button>
+   <button type="button" className={mode==='demo'?styles.modeActive:styles.mode} onClick={()=>{setMode('demo');setPlaying(false);}}><Play size={15}/>{trackerPaused?'SimBrief-Route · TRACKER PAUSIERT':tracking?'SimBrief-Route · LIVE':publicDemo&&prepared?'SimBrief-Route · Demo-Wiedergabe':'Demo-Flug'}</button>
    {!publicDemo&&<button type="button" className={mode==='dispatch'?styles.modeActive:styles.mode} onClick={()=>{setMode('dispatch');setPlaying(false);}}><ArrowLeftRight size={15}/>NEXT-Dispositionsentwürfe</button>}
-   <span className={styles.liveStatus}>{bridge.isLive?<><CheckCircle2 size={15}/> SimConnect lokal LIVE</>:<><CloudOff size={15}/> SimConnect nicht verbunden</>}</span>
+   <span className={styles.liveStatus}>{trackerPaused?<><CloudOff size={15}/> MSFS-Signal unterbrochen · letzter Messwert</>:bridge.isLive?<><CheckCircle2 size={15}/> SimConnect lokal LIVE</>:<><CloudOff size={15}/> SimConnect nicht verbunden</>}</span>
   </div>
   {mode==='demo'&&<div className={styles.preparedStatus}>
    <div className={styles.preparedIcon}>{publicDemo&&prepared?<CheckCircle2 size={20}/>:<FileUp size={20}/>}</div>
@@ -324,27 +326,27 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
   {area==='map'&&<div className={fullscreen?styles.fullscreen:styles.display}>
    <div className={styles.displayHeader}>
     <div className={styles.brand}><span className={styles.brandIcon}>A</span><span><strong>AERVELYS</strong><small>FLIGHT INFORMATION SYSTEM</small></span></div>
-    <div className={styles.flightId}><span>{bridge.isLive?'MSFS LIVE · SIMBRIEF OFP':mode==='demo'&&publicDemo&&prepared?'SIMBRIEF ROUTE · DEMO PLAYBACK':mode==='demo'?'FLIGHT PREVIEW · SIMULATED':'DISPATCH DRAFT · PLANNING ONLY'}</span><strong>{flight?.request_code||'KEIN FLUG GEWÄHLT'}</strong></div>
+    <div className={styles.flightId}><span>{trackerPaused?'MSFS-SIGNAL PAUSIERT · LETZTER STAND':tracking?'MSFS LIVE · SIMBRIEF OFP':mode==='demo'&&publicDemo&&prepared?'SIMBRIEF ROUTE · DEMO PLAYBACK':mode==='demo'?'FLIGHT PREVIEW · SIMULATED':'DISPATCH DRAFT · PLANNING ONLY'}</span><strong>{flight?.request_code||'KEIN FLUG GEWÄHLT'}</strong></div>
    </div>
    <div className={styles.routeHeader}>
     <div><small>DEPARTURE</small><strong>{flight?.origin||'—'}</strong><span>{flight?safeName(flight.origin):'—'}</span></div>
-    <div className={styles.travel}><Plane size={23}/><span>{bridge.isLive?'LIVE ROUTE TRACKING':'ROUTE PREVIEW'}</span></div>
+    <div className={styles.travel}><Plane size={23}/><span>{trackerPaused?'TRACKING PAUSIERT':tracking?'LIVE ROUTE TRACKING':'ROUTE PREVIEW'}</span></div>
     <div className={styles.arrival}><small>ARRIVAL</small><strong>{flight?.destination||'—'}</strong><span>{flight?safeName(flight.destination):'—'}</span></div>
    </div>
-   <MapPanel origin={origin} destination={destination} originCode={flight?.origin} destinationCode={flight?.destination} waypoints={waypoints} demo={mode==='demo'} progress={progress} livePoint={bridge.snapshot?{lat:bridge.snapshot.telemetry.latitude,lon:bridge.snapshot.telemetry.longitude}:undefined} liveProgress={liveProgress} fullscreen={fullscreen} onFullscreen={()=>setFullscreen(v=>!v)}/>
+   <MapPanel origin={origin} destination={destination} originCode={flight?.origin} destinationCode={flight?.destination} waypoints={waypoints} demo={mode==='demo'} progress={progress} livePoint={bridge.snapshot?{lat:bridge.snapshot.telemetry.latitude,lon:bridge.snapshot.telemetry.longitude}:undefined} liveProgress={liveProgress} trackerPaused={trackerPaused} fullscreen={fullscreen} onFullscreen={()=>setFullscreen(v=>!v)}/>
    <div className={styles.flightStats}>
     <div><small>FLUGZEUG</small><strong>{flight?.registration||'—'}</strong></div>
     <div><small>{waypoints?.length?'ROUTENLÄNGE (SIMBRIEF)':'DISTANZ (LUFTLINIE)'}</small><strong>{distance!==null?distance.toLocaleString('de-DE')+' km':'—'}</strong></div>
-    <div><small>{bridge.isLive?'ETA / RESTZEIT (GESCHÄTZT)':mode==='demo'?'SIMULIERTE RESTZEIT':'BLOCKZEIT (ENTWURF)'}</small><strong>{bridge.isLive?(etaClock?etaClock+' · '+liveMetrics!.etaMinutes+' min':'Nicht verfügbar'):mode==='demo'?remaining+' min':flight?.estimated_block_minutes!=null?flight.estimated_block_minutes+' min':'—'}</strong></div>
-    <div><small>{bridge.isLive?'MSFS LIVE · HÖHE / SPEED':mode==='demo'?'SIM · HÖHE / SPEED':'HÖHE / SPEED'}</small><strong>{bridge.snapshot?Math.round(bridge.snapshot.telemetry.altitudeFt).toLocaleString('de-DE')+' ft · '+Math.round(bridge.snapshot.telemetry.groundSpeedKt)+' kt':mode==='demo'?telemetry.altitude.toLocaleString('de-DE')+' ft · '+telemetry.speed+' kt':'— / —'}</strong></div>
+    <div><small>{trackerPaused?'LETZTE ETA (SIGNAL PAUSIERT)':tracking?'ETA / RESTZEIT (GESCHÄTZT)':mode==='demo'?'SIMULIERTE RESTZEIT':'BLOCKZEIT (ENTWURF)'}</small><strong>{tracking?(etaClock?etaClock+' · '+liveMetrics!.etaMinutes+' min':'Nicht verfügbar'):mode==='demo'?remaining+' min':flight?.estimated_block_minutes!=null?flight.estimated_block_minutes+' min':'—'}</strong></div>
+    <div><small>{trackerPaused?'LETZTE MESSUNG · HÖHE / SPEED':tracking?'MSFS LIVE · HÖHE / SPEED':mode==='demo'?'SIM · HÖHE / SPEED':'HÖHE / SPEED'}</small><strong>{bridge.snapshot?Math.round(bridge.snapshot.telemetry.altitudeFt).toLocaleString('de-DE')+' ft · '+Math.round(bridge.snapshot.telemetry.groundSpeedKt)+' kt':mode==='demo'?telemetry.altitude.toLocaleString('de-DE')+' ft · '+telemetry.speed+' kt':'— / —'}</strong></div>
    </div>
-   {bridge.isLive&&<div className={styles.liveFlightPanel}>
-     <span><CheckCircle2 size={15}/> {BRIDGE_PHASE_LABELS[bridge.snapshot!.phase]} · MSFS LIVE</span>
+   {tracking&&<div className={styles.liveFlightPanel}>
+     <span><CheckCircle2 size={15}/> {BRIDGE_PHASE_LABELS[bridge.snapshot!.phase]} · {trackerPaused?'VERBINDUNG PAUSIERT':'MSFS LIVE'}</span>
      <span>{liveProgress!==null?liveProgress+' % auf dem importierten SimBrief-OFP':'Kein zuverlässiger Streckenfortschritt'}</span>
      <span>{liveMetrics?.remainingKm!=null?liveMetrics.remainingKm+' km bis zum geplanten Ziel':'Live-Position nicht auf der SimBrief-Strecke zugeordnet'}</span>
      <small>{bridge.elapsedBasis==='takeoff'?'Kabinenzeit ab erfasstem Start':'Kabinenzeit seit Live-Verbindung (Start nicht beobachtet)'} · ETA aus momentaner Groundspeed; kein Wind-/ATC-/Anflugmodell.</small>
     </div>}
-    {mode==='demo'&&!bridge.isLive&&<div className={styles.simPanel}>
+    {mode==='demo'&&!tracking&&<div className={styles.simPanel}>
     <div className={styles.simMeta}><span className={styles.simPhase}><Plane size={14}/> {flightPhase(progress)}</span><span>Verstrichen: {elapsed} min</span><span>Verbleibend: {remaining} min</span><span>Dauer: ca. {demoDuration} min*</span></div>
     <div className={styles.playback}>
      <button type="button" onClick={()=>{if(progress>=100){setProgress(0);setPlaying(true);}else setPlaying(v=>!v);}} aria-label={playing?'Demo pausieren':'Demo starten'}>{playing?<Pause size={16}/>:<Play size={16}/>} {playing?'Pause':'Demo abspielen'}</button>
@@ -355,13 +357,13 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
     <small className={styles.simDisclaimer}>*Alle Zeiten, Flugphasen, Höhen und Geschwindigkeiten sind illustrativ, nicht aus MSFS gemessen und keine Flugplanung.</small>
    </div>}
    {mode==='dispatch'&&flight&&<div className={styles.dispatchNotice}><Clock3 size={15}/> Geplanter Abflug: {shortDate(flight.requested_departure)} · {flight.planning_status} · Keine Live-Position oder Flugfreigabe</div>}
-   <div className={styles.disclaimer}><ShieldAlert size={15}/> {bridge.isLive?'MSFS liefert echte Position und Flugphase; Routenfortschritt und ETA sind unverbindliche geometrische Schätzungen, keine flugbetriebliche Freigabe.':'Dieser Bildschirm stellt keine flugbetriebliche Freigabe dar. Für Live-Tracking sind ein gekoppelter MSFS-Connector und geprüfte Telemetrie erforderlich.'}</div>
+   <div className={styles.disclaimer}><ShieldAlert size={15}/> {tracking?'MSFS liefert echte Position und Flugphase; Routenfortschritt und ETA sind unverbindliche geometrische Schätzungen, keine flugbetriebliche Freigabe.':'Dieser Bildschirm stellt keine flugbetriebliche Freigabe dar. Für Live-Tracking sind ein gekoppelter MSFS-Connector und geprüfte Telemetrie erforderlich.'}</div>
   </div>}
   <div style={{display:area==='cabin'?'block':'none'}} aria-hidden={area!=='cabin'}>
-   <PassengerSections section="cabin" flight={flight??null} originName={origin?.name||'—'} destinationName={destination?.name||'—'} distance={distance} progress={shownProgress} remaining={shownRemaining} liveMetrics={liveMetrics} elapsedBasis={bridge.elapsedBasis} prepared={publicDemo?prepared:null} publicDemo={publicDemo} dispatchState={state} draftCount={drafts.length} onOpenMap={()=>setArea('map')} playing={playing} onToggle={()=>{if(progress>=100)setProgress(0);setPlaying(v=>progress>=100?true:!v);}} liveSnapshot={bridge.snapshot} bridgeConnected={bridge.connected} bridgeError={bridge.error} bridgeElapsed={bridge.elapsedMinutes} connectBridge={bridge.connect} disconnectBridge={bridge.disconnect}/>
+   <PassengerSections section="cabin" flight={flight??null} originName={origin?.name||'—'} destinationName={destination?.name||'—'} distance={distance} progress={shownProgress} remaining={shownRemaining} liveMetrics={liveMetrics} elapsedBasis={bridge.elapsedBasis} prepared={publicDemo?prepared:null} publicDemo={publicDemo} dispatchState={state} draftCount={drafts.length} onOpenMap={()=>setArea('map')} playing={playing} onToggle={()=>{if(progress>=100)setProgress(0);setPlaying(v=>progress>=100?true:!v);}} liveSnapshot={tracking?bridge.snapshot:null} bridgeStatus={bridge.status} bridgeConnected={bridge.connected} bridgeError={bridge.error} bridgeElapsed={bridge.elapsedMinutes} connectBridge={bridge.connect} disconnectBridge={bridge.disconnect}/>
   </div>
-  {area==='connection'&&<PassengerSections section="connection" flight={flight??null} originName={origin?.name||'—'} destinationName={destination?.name||'—'} distance={distance} progress={shownProgress} remaining={shownRemaining} liveMetrics={liveMetrics} elapsedBasis={bridge.elapsedBasis} prepared={publicDemo?prepared:null} publicDemo={publicDemo} dispatchState={state} draftCount={drafts.length} onOpenMap={()=>setArea('map')} playing={playing} onToggle={()=>{if(progress>=100)setProgress(0);setPlaying(v=>progress>=100?true:!v);}} liveSnapshot={bridge.snapshot} bridgeConnected={bridge.connected} bridgeError={bridge.error} bridgeElapsed={bridge.elapsedMinutes} connectBridge={bridge.connect} disconnectBridge={bridge.disconnect}/>}
+  {area==='connection'&&<PassengerSections section="connection" flight={flight??null} originName={origin?.name||'—'} destinationName={destination?.name||'—'} distance={distance} progress={shownProgress} remaining={shownRemaining} liveMetrics={liveMetrics} elapsedBasis={bridge.elapsedBasis} prepared={publicDemo?prepared:null} publicDemo={publicDemo} dispatchState={state} draftCount={drafts.length} onOpenMap={()=>setArea('map')} playing={playing} onToggle={()=>{if(progress>=100)setProgress(0);setPlaying(v=>progress>=100?true:!v);}} liveSnapshot={tracking?bridge.snapshot:null} bridgeStatus={bridge.status} bridgeConnected={bridge.connected} bridgeError={bridge.error} bridgeElapsed={bridge.elapsedMinutes} connectBridge={bridge.connect} disconnectBridge={bridge.disconnect}/>}
 
-  <div className={styles.footerNote}>Kartendaten © OpenStreetMap-Mitwirkende. {bridge.isLive?'MSFS-Messdaten stammen ausschließlich aus deiner lokalen Bridge. Die SimBrief-Route wird nur lokal im Browser gelesen, fiktive Gäste und Services bleiben simuliert.':publicDemo?'Der SimBrief-Plan bleibt in diesem Browser; ohne MSFS sind Flugbewegungen und Zeiten eine Demo-Animation.':'Die Flugplanliste wird nur mit bestehenden NEXT-Berechtigungen gelesen; es werden keine Flüge angelegt oder verändert.'}</div>
+  <div className={styles.footerNote}>Kartendaten © OpenStreetMap-Mitwirkende. {tracking?'MSFS-Messdaten stammen ausschließlich aus deiner lokalen Bridge. Die SimBrief-Route wird nur lokal im Browser gelesen, fiktive Gäste und Services bleiben simuliert.':publicDemo?'Der SimBrief-Plan bleibt in diesem Browser; ohne MSFS sind Flugbewegungen und Zeiten eine Demo-Animation.':'Die Flugplanliste wird nur mit bestehenden NEXT-Berechtigungen gelesen; es werden keine Flüge angelegt oder verändert.'}</div>
  </div>;
 }
