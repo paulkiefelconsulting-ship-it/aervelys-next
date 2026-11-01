@@ -38,3 +38,5 @@
 .error{border-color:#ad6464;color:#ecafaf}
 @media(max-width:850px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.heading{flex-direction:column}}
 @media(max-width:600px){.root{padding:15px}.grid{grid-template-columns:1fr}.toolbar{align-items:stretch}.toolbar select{width:100%}.routeBanner{padding:16px}.routeBanner h4{gap:9px}}
+
+.ofpTag{padding:9px 11px;border:1px solid var(--line);background:var(--panel);border-radius:8px;color:var(--brand);font-size:10px;line-height:1.5}
