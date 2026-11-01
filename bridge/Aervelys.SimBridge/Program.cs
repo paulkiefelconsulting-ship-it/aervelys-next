@@ -128,9 +128,15 @@ namespace Aervelys.SimBridge
     internal static class Program
     {
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
             Application.EnableVisualStyles();
+            // Offline-first mode has no account, no internet and no pairing code.
+            if (args != null && args.Length == 1 && args[0] == "--offline")
+            {
+                Application.Run(new SimBridgeWindow(null));
+                return;
+            }
             var settings = BridgeSettings.Load();
             if (settings == null)
             {
