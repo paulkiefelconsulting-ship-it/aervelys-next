@@ -6,6 +6,8 @@ import CabinSimulation from './CabinSimulation';
 import BridgeSnapshotInspector from './BridgeSnapshotInspector';
 import type {CabinPhase} from '../lib/cabinSimulation';
 import type {BridgeSnapshot} from '../lib/localBridge';
+import {BRIDGE_PHASE_LABELS} from '../lib/localBridge';
+import type {LiveRouteMetrics} from '../lib/liveFlightProgress';
 
 type CabinFlight={
  origin:string;destination:string;registration:string|null;request_code:string;
@@ -14,7 +16,7 @@ type CabinFlight={
 type Props={
  section:'cabin'|'connection';
  flight:CabinFlight|null;originName:string;destinationName:string;
- distance:number|null;progress:number;remaining:number|null;
+ distance:number|null;progress:number|null;remaining:number|null;liveMetrics:LiveRouteMetrics|null;elapsedBasis:'takeoff'|'connection';
  prepared:PassengerPlan|null;publicDemo:boolean;
  dispatchState:'loading'|'ready'|'error';draftCount:number;
  onOpenMap:()=>void;playing:boolean;onToggle:()=>void;
@@ -55,7 +57,7 @@ function bridgePhaseToCabin(phase:string):CabinPhase{
   default:return 'parked';
  }
 }
-export default function PassengerSections({section,flight,originName,destinationName,distance,progress,remaining,prepared,publicDemo,dispatchState,draftCount,onOpenMap,playing,onToggle,liveSnapshot,bridgeConnected,bridgeError,bridgeElapsed,connectBridge,disconnectBridge}:Props){
+export default function PassengerSections({section,flight,originName,destinationName,distance,progress,remaining,prepared,publicDemo,dispatchState,draftCount,onOpenMap,playing,onToggle,liveMetrics,elapsedBasis,liveSnapshot,bridgeConnected,bridgeError,bridgeElapsed,connectBridge,disconnectBridge}:Props){
  const isImported=Boolean(publicDemo&&prepared);
  if(section==='cabin')return <div className={styles.cabin}>
   <div className={styles.cabinBrand}>
@@ -64,30 +66,36 @@ export default function PassengerSections({section,flight,originName,destination
   </div>
   <div className={styles.journeyPanel}>
    <div className={styles.journeyTop}>
-    <span><Plane size={15}/> {isImported?'SIMBRIEF-FLUGPLAN · VORSCHAU':'PASSENGER EXPERIENCE · DEMO'}</span>
+    <span><Plane size={15}/> {liveSnapshot?'SIMBRIEF-PLAN · MSFS LIVE':isImported?'SIMBRIEF-FLUGPLAN · VORSCHAU':'PASSENGER EXPERIENCE · DEMO'}</span>
     <span>{flight?.request_code||'KEIN FLUGPLAN'}</span>
    </div>
    <div className={styles.journeyRoute}>
     <div><small>ABFLUG</small><strong>{flight?.origin||'—'}</strong><span>{originName}</span></div>
-    <div className={styles.journeyCenter}><div className={styles.journeyDash}><Plane size={25}/></div><span>{progress>0?phase(progress):'Vorgesehene Strecke'}</span></div>
+    <div className={styles.journeyCenter}><div className={styles.journeyDash}><Plane size={25}/></div><span>{liveSnapshot?BRIDGE_PHASE_LABELS[liveSnapshot.phase]:progress!==null&&progress>0?phase(progress):'Vorgesehene Strecke'}</span></div>
     <div className={styles.endAirport}><small>ANKUNFT</small><strong>{flight?.destination||'—'}</strong><span>{destinationName}</span></div>
    </div>
-   <div className={styles.progressBar} role="progressbar" aria-label="Illustrativer Flugfortschritt" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><div style={{width:progress+'%'}}/></div>
-   <div className={styles.progressLabels}><span>Geplante Abflugroute</span><span>{progress}% · Simulation</span><span>Geplantes Ziel</span></div>
+   <div className={styles.progressBar} role="progressbar" aria-label={liveSnapshot?'Live-Fortschritt auf dem SimBrief-OFP':'Illustrativer Flugfortschritt'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress??undefined} aria-valuetext={progress===null?'Routenfortschritt nicht verfügbar':undefined}><div style={{width:(progress??0)+'%'}}/></div>
+   <div className={styles.progressLabels}><span>Geplante Abflugroute</span><span>{liveSnapshot?(progress!==null?progress+' % · MSFS':'Live-Position · Route nicht zugeordnet'):(progress??0)+'% · Simulation'}</span><span>Geplantes Ziel</span></div>
   </div>
   <div className={styles.cabinFacts}>
    <div><span><Clock3 size={16}/> Geplante Flugdauer</span><strong>{formatMinutes(flight?.estimated_block_minutes??null)}</strong></div>
    <div><span><MapPinned size={16}/> Streckenlänge</span><strong>{distance!==null?distance.toLocaleString('de-DE')+' km':'—'}</strong></div>
    <div><span><Plane size={16}/> Flugzeug</span><strong>{flight?.registration||'Nicht hinterlegt'}</strong></div>
-   <div><span><Clock3 size={16}/> Restzeit (Demo)</span><strong>{remaining!==null?formatMinutes(remaining):'Keine Live-Daten'}</strong></div>
+   <div><span><Clock3 size={16}/> {liveSnapshot?'ETA / Restzeit (geschätzt)':'Restzeit (Demo)'}</span><strong>{remaining!==null?formatMinutes(remaining):liveSnapshot?'Nicht ermittelbar':'Keine Live-Daten'}</strong></div>
   </div>
-  <div className={styles.cabinBottom}>
+  {liveSnapshot&&<div className={styles.cabinLiveStatus}>
+    <span><CheckCircle2 size={16}/> {BRIDGE_PHASE_LABELS[liveSnapshot.phase]} · echte MSFS-Flugphase</span>
+    <span>{liveMetrics?.remainingKm!=null?liveMetrics.remainingKm+' km Reststrecke':'Live-Position ohne verlässlichen Routenabgleich'}</span>
+    <span>{liveMetrics?.etaAtUtc?new Date(liveMetrics.etaAtUtc).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr ETA (geschätzt)':'ETA nicht verfügbar'}</span>
+    <span>{elapsedBasis==='takeoff'?'Fluguhr ab erkanntem Start':'Kabinenzeit ab Live-Verbindung'}</span>
+   </div>}
+   <div className={styles.cabinBottom}>
    <div><div className={styles.eyebrow}>FLIGHT INFORMATION</div><h3>Deine Reise auf einen Blick</h3><p>{isImported?'Die dargestellte Strecke stammt aus dem von deinem Piloten vorbereiteten SimBrief-OFP mit '+prepared!.fixes.length+' Wegpunkten.':'Für diese Vorschau wurde noch kein SimBrief-Flugplan hinterlegt. Es wird eine Beispieldirektverbindung angezeigt.'}</p></div>
    <button type="button" onClick={onOpenMap} className={styles.primaryButton}><MapPinned size={17}/> Flugkarte ansehen <ArrowRight size={16}/></button>
   </div>
-  <div className={styles.disclaimer}><ShieldAlert size={15}/> {liveSnapshot?'Flugphase und Positionsmessung kommen von der lokalen SimConnect-Bridge. Alle Passagiere, Services und Zufriedenheitswerte bleiben simuliert.':'Diese Kabinenansicht ist eine Simulation. Flugfortschritt und Restzeit basieren nicht auf Live-Telemetrie, Wetter- oder Flugzeugdaten.'}</div>
+  <div className={styles.disclaimer}><ShieldAlert size={15}/> {liveSnapshot?'Position und Flugphase kommen aus der lokalen MSFS-Bridge; Reststrecke, Fortschritt und ETA sind unverbindliche Schätzungen auf dem SimBrief-Plan. Gäste und Service bleiben simuliert.':'Diese Kabinenansicht ist eine Simulation. Flugfortschritt und Restzeit basieren nicht auf Live-Telemetrie, Wetter- oder Flugzeugdaten.'}</div>
   {publicDemo&&!liveSnapshot&&<div className={styles.cabinPlayback}><button type="button" onClick={onToggle}>{playing?'Demo-Flug pausieren':'Demo-Flug starten'}</button><span>Flugfortschritt und Kabinenbedürfnisse laufen gemeinsam.</span></div>}
-  <CabinSimulation key={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} elapsedMinutes={liveSnapshot?bridgeElapsed:Math.round((flight?.estimated_block_minutes||115)*progress/100)} phase={liveSnapshot?bridgePhaseToCabin(liveSnapshot.phase):cabinPhase(progress)} flightKey={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} playing={playing} onToggle={onToggle} publicDemo={publicDemo}/>
+  <CabinSimulation key={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} elapsedMinutes={liveSnapshot?bridgeElapsed:Math.round((flight?.estimated_block_minutes||115)*progress/100)} phase={liveSnapshot?bridgePhaseToCabin(liveSnapshot.phase):cabinPhase(progress)} flightKey={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} playing={playing} onToggle={onToggle} publicDemo={publicDemo} livePhase={Boolean(liveSnapshot)} elapsedBasis={elapsedBasis}/>
  </div>;
 
  return <div className={styles.integration}>
