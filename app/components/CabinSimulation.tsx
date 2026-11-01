@@ -3,7 +3,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {Activity,Armchair,Check,ChevronRight,Clock3,Coffee,GlassWater,Heart,RefreshCw,ShieldAlert,Sparkles,Sun,Toilet,Utensils,Users} from 'lucide-react';
 import {adjustCabin,advanceCabinWithCrew,cabinSummary,guestSatisfaction,initialCabin,performCabinService,canMoveInCabin,canProvideHotFood,SERVICE_NAMES,type CabinPhase,type CabinState,type ServiceKind} from '../lib/cabinSimulation';
 import styles from './CabinSimulation.module.css';
-type Props={elapsedMinutes:number;phase:CabinPhase;flightKey:string;playing:boolean;onToggle:()=>void;publicDemo:boolean;livePhase:boolean;elapsedBasis:'takeoff'|'connection'};
+type Props={elapsedMinutes:number;phase:CabinPhase;flightKey:string;playing:boolean;onToggle:()=>void;publicDemo:boolean;livePhase:boolean;telemetryPaused:boolean;elapsedBasis:'takeoff'|'connection'};
 const services:{kind:ServiceKind;icon:typeof Coffee;label:string;caption:string}[]=[
  {kind:'cold_drink',icon:GlassWater,label:'Kaltgetränk',caption:'Wasser · Softdrinks'},
  {kind:'coffee',icon:Coffee,label:'Kaffee & Tee',caption:'Heißgetränke'},
@@ -13,22 +13,23 @@ const services:{kind:ServiceKind;icon:typeof Coffee;label:string;caption:string}
 ];
 const phaseNames:Record<CabinPhase,string>={parked:'Am Gate',taxi:'Taxi',takeoff:'Take-off',climb:'Climb',cruise:'Cruise',descent:'Descent',approach:'Approach',landing:'Landing'};
 const clock=(min:number)=>Math.floor(min/60)+'h '+String(min%60).padStart(2,'0')+'m';
-export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,onToggle,publicDemo,livePhase,elapsedBasis}:Props){
+export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,onToggle,publicDemo,livePhase,telemetryPaused,elapsedBasis}:Props){
  const [count,setCount]=useState(5);
  const [state,setState]=useState<CabinState>(()=>initialCabin(5));
  const [selectedId,setSelectedId]=useState('P01');
  const [autoCrew,setAutoCrew]=useState(true);
  const [status,setStatus]=useState('');
  useEffect(()=>{setState(initialCabin(count));setSelectedId('P01');setStatus('');},[flightKey,count]);
- useEffect(()=>{setState(current=>advanceCabinWithCrew(elapsedMinutes<current.minute?initialCabin(count):current,elapsedMinutes,phase,autoCrew));},[elapsedMinutes,phase,autoCrew,flightKey,count]);
+ useEffect(()=>{if(telemetryPaused)return;setState(current=>advanceCabinWithCrew(elapsedMinutes<current.minute?initialCabin(count):current,elapsedMinutes,phase,autoCrew));},[elapsedMinutes,phase,autoCrew,flightKey,count,telemetryPaused]);
  const summary=useMemo(()=>cabinSummary(state),[state]);
  const selected=state.guests.find(g=>g.id===selectedId)??state.guests[0];
  const selectedScore=selected?guestSatisfaction(selected,state.temperature,state.turbulence):0;
- const canMove=canMoveInCabin(phase,state.turbulence);
- const hotAllowed=canProvideHotFood(phase,state.turbulence);
+ const canMove=!telemetryPaused&&canMoveInCabin(phase,state.turbulence);
+ const hotAllowed=!telemetryPaused&&canProvideHotFood(phase,state.turbulence);
  const openRequests=state.requests.filter(r=>r.status==='open').sort((a,b)=>a.createdAt-b.createdAt);
  const mood=summary.satisfaction>=75?'Exzellent':summary.satisfaction>=55?'Ausgeglichen':'Service erforderlich';
  function serve(kind:ServiceKind){
+  if(telemetryPaused){setStatus('MSFS-Signal unterbrochen: Service bis zur Wiederverbindung pausiert.');return;}
   const next=performCabinService(state,kind,phase,selected?.id);
   if(next.error){setStatus(next.error);return;}
   setState(next.state);setStatus((selected?.label||'Gast')+' · '+SERVICE_NAMES[kind]+' abgeschlossen');
@@ -42,7 +43,7 @@ export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,
     <h3>Cabin Experience <span>Studio</span></h3>
     <p>Ein virtuelles Kabinenteam begleitet deinen Flug. Wünsche, Komfort und Service folgen {livePhase?'der von MSFS gemeldeten Flugphase und der verstrichenen Live-Zeit.':'der simulierten Flugzeit.'}</p>
    </div>
-   <div className={styles.headingPills}><span><Users size={14}/>{count} Gäste</span><span><Clock3 size={14}/> T+{clock(state.minute)} {livePhase?(elapsedBasis==='takeoff'?'ab Start':'ab Link'):''}</span><span className={styles.phasePill}>{phaseNames[phase]} · {livePhase?'MSFS LIVE':'Demo'}</span></div>
+   <div className={styles.headingPills}><span><Users size={14}/>{count} Gäste</span><span><Clock3 size={14}/> T+{clock(state.minute)} {livePhase?(elapsedBasis==='takeoff'?'ab Start':'ab Link'):''}</span><span className={styles.phasePill}>{phaseNames[phase]} · {telemetryPaused?'TRACKER PAUSIERT':livePhase?'MSFS LIVE':'Demo'}</span></div>
   </div>
 
   <div className={styles.overview}>
@@ -71,7 +72,7 @@ export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,
    <label><Activity size={15}/> Turbulenz <select aria-label="Turbulenz" value={state.turbulence} onChange={e=>environment(state.temperature,e.target.value as CabinState['turbulence'])}><option value="calm">Ruhig</option><option value="light">Leicht</option><option value="moderate">Mäßig</option><option value="severe">Stark</option></select></label>
    {publicDemo&&<button className={styles.reset} type="button" onClick={reset}><RefreshCw size={15}/> Reset</button>}
   </div>
-  {!canMove&&<div className={styles.warning}><ShieldAlert size={17}/><span>Cabin secure: {['takeoff','landing','taxi','approach','parked'].includes(phase)?'Kritische Flugphase – Service pausiert.':'Turbulenz – Service und WC vorübergehend gesperrt.'}</span></div>}
+  {!canMove&&<div className={styles.warning}><ShieldAlert size={17}/><span>{telemetryPaused?'MSFS-Signal unterbrochen. Kabinenzeit, Gäste und Service bleiben auf dem letzten gültigen Stand.':'Cabin secure: '+(['takeoff','landing','taxi','approach','parked'].includes(phase)?'Kritische Flugphase – Service pausiert.':'Turbulenz – Service und WC vorübergehend gesperrt.')}</span></div>}
 
   <div className={styles.columns}>
    <div className={styles.panel}>
@@ -108,6 +109,6 @@ export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,
    </div>
   </div>
   <div className={styles.timeline}><div className={styles.timelineTitle}><span><Activity size={15}/> LIVE CABIN LOG</span><small>Simulierte Ereignisse</small></div><div>{state.events.slice(0,7).map((event,i)=><div key={i}><time>{clock(event.minute)}</time><span className={styles.eventDot}/><p>{event.label}</p></div>)}</div></div>
-  <p className={styles.disclaimer}><ShieldAlert size={14}/> {livePhase?'Die Flugphase stammt aus MSFS; Gäste, Bedürfnisse und alle Bordservices sind rein simuliert. Die verstrichene Zeit beginnt '+(elapsedBasis==='takeoff'?'mit dem durch die Bridge beobachteten Start.':'erst mit der lokalen Live-Verbindung (Start nicht beobachtet).'):'Alle Gäste und Services sind simuliert. Auto-Crew verwendet vereinfachte Regeln und repräsentiert weder echte Crew noch reale Passagierdaten.'}</p>
+  <p className={styles.disclaimer}><ShieldAlert size={14}/> {livePhase?'Die Flugphase stammt aus MSFS'+(telemetryPaused?' (letzte Messung, Signal unterbrochen)':'')+'; Gäste, Bedürfnisse und alle Bordservices sind rein simuliert. Die verstrichene Zeit beginnt '+(elapsedBasis==='takeoff'?'mit dem durch die Bridge beobachteten Start.':'erst mit der lokalen Live-Verbindung (Start nicht beobachtet).'):'Alle Gäste und Services sind simuliert. Auto-Crew verwendet vereinfachte Regeln und repräsentiert weder echte Crew noch reale Passagierdaten.'}</p>
  </section>;
 }
