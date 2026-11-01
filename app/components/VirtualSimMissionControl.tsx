@@ -7,6 +7,7 @@ import {Activity,Armchair,CheckCircle2,Clock3,Coffee,Plane,RefreshCw,
 import styles from './VirtualSimMissionControl.module.css';
 import VirtualSimBridgePairing from './VirtualSimBridgePairing';
 import SimFlightInstruments,{type SimSample} from './SimFlightInstruments';
+import MsfsCharterSessionLink from './MsfsCharterSessionLink';
 
 type RequestRow={
  request_id:string;request_code:string;origin_icao:string;destination_icao:string;
@@ -238,6 +239,7 @@ export default function VirtualSimMissionControl(){
      <SimFlightInstruments sample={bridgeSession?.last_sample||null}
       recent={Boolean(bridgeSession?.heartbeat_recent)} lastSeen={bridgeSession?.last_seen_at||null}
       connectedPhase={bridgeSession?.last_phase||null}/>
+     {mission.lifecycle==='running'&&<MsfsCharterSessionLink key={requestId} onlyRequestId={requestId}/>}
      <div className={styles.metrics}>
       <div><strong>{mission.elapsed_minutes} min</strong><span>Simulierte Bordzeit</span></div>
       <div><strong>{avg===null?'—':avg.toFixed(1)+' / 100'}</strong><span>Ø Passagierzufriedenheit</span></div>
