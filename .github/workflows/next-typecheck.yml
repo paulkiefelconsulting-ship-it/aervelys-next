@@ -1,25 +1,40 @@
-name: Next.js typecheck
+name: AERVELYS NEXT release checks
 on:
-  push:
-    branches:
-      - "feature/executable-sim-agent-queue-20261031"
   pull_request:
+    branches: ["main"]
     paths:
       - "app/**"
+      - "bridge/**"
+      - "db/**"
       - "package.json"
+      - "next.config.ts"
       - ".github/workflows/next-typecheck.yml"
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  typecheck:
+  verify:
+    name: TypeScript and production build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Placeholder *public* config for build-time checks only.
+      # Never use production credentials or service-role keys in PR workflows.
+      NEXT_PUBLIC_SUPABASE_URL: "https://build-check.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "build-check-public-placeholder"
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Install dependencies for isolated typecheck
+      - name: Install dependencies
         run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund
-      - name: Run strict TypeScript check
+      - name: Strict TypeScript check
         run: npx tsc --noEmit
+      - name: Production build check (no Vercel deployment)
+        run: npm run build
