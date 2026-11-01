@@ -50,6 +50,18 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npm run build:win
+      - name: Verify original Bridge sources were packaged (no SDK DLLs)
+        shell: pwsh
+        run: |
+          $source = "dist/win-unpacked/resources/simbridge-src"
+          foreach($filename in @("Program.cs","PhaseClassifier.cs","SimBridgeWindow.cs")) {
+            if(-not (Test-Path (Join-Path $source $filename))) {
+              throw "Missing packaged Bridge source: $filename"
+            }
+          }
+          $sdkDlls = @(Get-ChildItem -Path "dist/win-unpacked/resources" -Recurse -File |
+            Where-Object { $_.Name -in @("SimConnect.dll","Microsoft.FlightSimulator.SimConnect.dll") })
+          if($sdkDlls.Count -gt 0) { throw "Microsoft SDK DLL found inside redistributed app" }
       - name: Check installer output and record build metadata
         shell: pwsh
         run: |
@@ -59,7 +71,7 @@ jobs:
           "### AERVELYS NEXT Desktop" >> $env:GITHUB_STEP_SUMMARY
           "- Unsigned Windows x64 NSIS installer: $($exe[0].Name)" >> $env:GITHUB_STEP_SUMMARY
           "- SHA256: $((Get-FileHash -Algorithm SHA256 $exe[0].FullName).Hash)" >> $env:GITHUB_STEP_SUMMARY
-          "- First release requires internet; MSFS native bridge is not bundled yet." >> $env:GITHUB_STEP_SUMMARY
+          "- Native AERVELYS Bridge source is bundled; first-run compilation needs the local MSFS 2024 SDK and .NET Framework buildtools. No Microsoft SDK DLLs redistributed." >> $env:GITHUB_STEP_SUMMARY
       - name: Upload installable Windows build
         uses: actions/upload-artifact@v4
         with:
