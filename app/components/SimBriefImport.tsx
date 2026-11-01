@@ -162,6 +162,11 @@ export default function SimBriefImport({requestId,origin,destination,airframes,o
     <strong>{i.registration}</strong>
     <span>{number.format(i.distance_nm)} NM · {i.block_minutes} Min</span>
     <small>{fmt(i.imported_at)} · ungeprüfter Pilotimport</small>
+    <button type="button" className="ops-refresh" onClick={async()=>{
+     try{await navigator.clipboard.writeText(i.route_text);
+      setNotice('SimBrief-Route in die Zwischenablage kopiert – für die SIM-Missionsplanung.');
+     }catch{setError('SimBrief-Route konnte nicht kopiert werden.');}
+    }}>Route kopieren</button>
    </div>)}
   </div>}
   <p className={styles.footer}>SimBrief gehört zu Navigraph. Es wird nur der letzte OFP des angegebenen Kontos abgerufen, keine Flugpläne erzeugt und keine Navigraph-Anmeldung gespeichert. Importierte Daten überschreiben weder Charterauftrag noch Flugzeugstatus, Crew oder Finanzen.</p>
