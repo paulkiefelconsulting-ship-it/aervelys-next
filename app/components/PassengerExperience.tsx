@@ -7,6 +7,7 @@ import styles from './PassengerExperience.module.css';
 import PassengerSections from './PassengerSections';
 import {readPreparedPlan,type PassengerPlan,type RouteFix} from '../lib/passengerPlan';
 import {useLocalBridge,BRIDGE_PHASE_LABELS} from '../lib/localBridge';
+import {liveRouteProgress,type LiveRouteMetrics} from '../lib/liveFlightProgress';
 
 type Geo={lat:number;lon:number;name:string};
 type Point={lat:number;lon:number};
@@ -119,7 +120,7 @@ function viewForRoute(a:Point,b:Point,width:number,height:number,via:Point[]=[])
 }
 function shortDate(value:string){if(!value)return 'Nicht hinterlegt';const date=new Date(value);return Number.isNaN(date.getTime())?'Nicht hinterlegt':date.toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'});}
 function safeName(code:string){return AIRPORTS[code]?.name||'Koordinaten unbekannt';}
-function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,progress,livePoint,fullscreen,onFullscreen}:{origin:Geo|undefined;destination:Geo|undefined;originCode?:string;destinationCode?:string;waypoints?:RouteFix[];demo:boolean;progress:number;livePoint?:Point;fullscreen:boolean;onFullscreen:()=>void}){
+function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,progress,livePoint,liveProgress,fullscreen,onFullscreen}:{origin:Geo|undefined;destination:Geo|undefined;originCode?:string;destinationCode?:string;waypoints?:RouteFix[];demo:boolean;progress:number;livePoint?:Point;liveProgress?:number|null;fullscreen:boolean;onFullscreen:()=>void}){
  const ref=useRef<HTMLDivElement|null>(null);
  const start=useRef<{x:number;y:number;view:MapView}|null>(null);
  const [size,setSize]=useState({w:860,h:470});
@@ -148,8 +149,20 @@ function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,
  const points=origin&&destination?flightPath(origin,destination,waypoints):[];
  const projected=points.map(project);
  const route=projected.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
- const passed=demo&&!livePoint?projected.slice(0,Math.max(1,Math.round(clamp(progress,0,100)/100*(projected.length-1))+1)):[];
- const completedRoute=passed.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
+ // Completed SimBrief route by flown distance, not by waypoint count.
+  const paintedPercent=livePoint?(liveProgress??null):(demo?progress:null);
+  const passed:Point[]=[];
+  if(paintedPercent!==null&&points.length){
+   let left=routeDistance(points)*clamp(paintedPercent,0,100)/100;
+   passed.push(points[0]);
+   for(let i=1;i<points.length;i++){
+    const leg=routeLength(points[i-1],points[i]);
+    if(left>=leg){passed.push(points[i]);left-=leg;}
+    else{if(leg>0)passed.push(greatCircle(points[i-1],points[i],left/leg));break;}
+   }
+  }
+  const passedProjected=passed.map(project);
+ const completedRoute=passedProjected.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
  const originXY=origin&&project(origin),destinationXY=destination&&project(destination);
  const planePoint=livePoint??(demo&&points.length?positionAt(points,progress/100):null);
  const plane=planePoint?project(planePoint):null;
@@ -177,7 +190,7 @@ function MapPanel({origin,destination,originCode,destinationCode,waypoints,demo,
   {originXY&&<div className={styles.mapMarker} style={{left:originXY.x,top:originXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{originCode}</strong><small>{origin?.name}</small></div></div>}
   {destinationXY&&<div className={styles.mapMarker} style={{left:destinationXY.x,top:destinationXY.y}}><span className={styles.pinDot}/><div className={styles.pinText}><strong>{destinationCode}</strong><small>{destination?.name}</small></div></div>}
   {plane&&<div className={styles.planePin} style={{left:plane.x,top:plane.y}}><Plane size={23} style={{transform:'rotate('+heading+'deg)'}}/></div>}
-  <div className={styles.mapCaption}>{livePoint?'MSFS SIMCONNECT · LIVE-POSITION':waypoints?.length?'SIMBRIEF-WEGPUNKTE · NICHT LIVE':demo?'DEMO-ANIMATION · KEINE TELEMETRIE':'GEPLANTE ROUTE · KEIN LIVE-TRACKING'}</div>
+  <div className={styles.mapCaption}>{livePoint?'MSFS LIVE · POSITION'+(liveProgress==null?' · KEIN ROUTENFORTSCHRITT':''):waypoints?.length?'SIMBRIEF-WEGPUNKTE · NICHT LIVE':demo?'DEMO-ANIMATION · KEINE TELEMETRIE':'GEPLANTE ROUTE · KEIN LIVE-TRACKING'}</div>
   <div className={styles.mapTools} onPointerDown={e=>e.stopPropagation()}>
    <button type="button" onClick={()=>zoom(1)} aria-label="Karte vergrößern"><ZoomIn size={17}/></button>
    <button type="button" onClick={()=>zoom(-1)} aria-label="Karte verkleinern"><ZoomOut size={17}/></button>
@@ -244,6 +257,18 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
  const remaining=mode==='demo'?Math.round(demoDuration*(1-progress/100)):null;
  const elapsed=Math.round(demoDuration*progress/100);
  const telemetry=simulatedTelemetry(progress);
+ const liveMetrics:LiveRouteMetrics|null=bridge.isLive&&bridge.snapshot&&origin&&destination&&mode==='demo'&&prepared?
+  liveRouteProgress([origin,...prepared.fixes,destination],{
+   lat:bridge.snapshot.telemetry.latitude,lon:bridge.snapshot.telemetry.longitude
+  },bridge.snapshot.telemetry.groundSpeedKt,bridge.snapshot.timestampUtc,bridge.snapshot.telemetry.onGround):null;
+ const liveProgress=bridge.isLive?liveMetrics?.progress??null:null;
+ const shownProgress=bridge.isLive?liveProgress:mode==='demo'?progress:0;
+ const shownRemaining=bridge.isLive?liveMetrics?.etaMinutes??null:remaining;
+ const liveStatus=bridge.isLive?(liveMetrics?.status==='off-route'?'Abseits der SimBrief-Route':
+  liveProgress===null?'Live-Position ohne Routenabgleich':
+  BRIDGE_PHASE_LABELS[bridge.snapshot!.phase]):mode==='demo'?flightPhase(progress):'DISPATCH ENTWURF';
+ const etaClock=bridge.isLive&&liveMetrics?.etaAtUtc?
+  new Date(liveMetrics.etaAtUtc).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):null;
  return <div className={styles.screen}>
   <section className={styles.intro}>
    <div className={styles.heroCopy}>
