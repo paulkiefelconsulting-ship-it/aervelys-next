@@ -2,11 +2,13 @@
 
 // AERVELYS NEXT Desktop – secure, first-party window around the existing NEXT platform.
 // This application does not embed or redistribute any SkyBridge code or assets.
-const {app, BrowserWindow, Menu, shell, session, dialog} = require('electron');
+const {app, BrowserWindow, Menu, shell, session, dialog, ipcMain} = require('electron');
 const {join} = require('node:path');
+const {pathToFileURL} = require('node:url');
 const {existsSync,readFileSync,writeFileSync,mkdirSync} = require('node:fs');
 
 const {HOME, isInternal, isExternalAllowed} = require('./security.cjs');
+const localStore=require('./localStore.cjs');
 const {findSdk,sourceDirectory,compileBridge,startBridge,stopBridge} = require('./nativeBridge.cjs');
 const PARTITION = 'persist:aervelys-next-desktop';
 let mainWindow = null;
@@ -72,12 +74,12 @@ async function launchNativeBridge() {
       sourceDir,buildDir:targetDir,configuredRoot:sdk.root,
       env:{MSFS2024_SDK:'',MSFS_SDK:''}
     });
-    bridgeProcess=await startBridge(result.exe);
+    bridgeProcess=await startBridge(result.exe,['--offline']);
     bridgeProcess.on('exit',()=>{bridgeProcess=null;});
     await dialog.showMessageBox(mainWindow||undefined,{
       type:'info',title:'AERVELYS SIM BRIDGE gestartet',
       message:'Die lokale MSFS-Bridge wurde gestartet.',
-      detail:'Falls der PC noch nicht gekoppelt ist, erscheint ein Fenster für den NEXT-Kopplungscode. Öffne danach NEXT → MSFS-Integration. Eine echte SimConnect-Verbindung muss im laufenden MSFS 2024 getestet werden.'
+      detail:'Die Bridge speichert Flugdaten jetzt lokal, ohne Cloud-Kopplung. Der ACARS-Bereich in NEXT Desktop liest diese Daten. Der echte MSFS-Test bleibt ausstehend.'
     });
   }catch(error){
     await dialog.showMessageBox(mainWindow||undefined,{
@@ -99,16 +101,10 @@ function openTrustedExternal(raw) {
   });
 }
 
-function displayOffline() {
-  if (!mainWindow || mainWindow.isDestroyed() || loadingOffline) return;
-  loadingOffline = true;
-  void mainWindow.loadFile(join(__dirname, 'offline.html')).catch(() => {});
-}
-
 function connect() {
+  // LOCAL UI is the application. The Cloud is optional, opened externally.
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  loadingOffline = false;
-  void mainWindow.loadURL(HOME.toString()).catch(() => displayOffline());
+  void mainWindow.loadFile(join(__dirname,'local.html'));
 }
 
 function makeMenu() {
@@ -116,7 +112,7 @@ function makeMenu() {
     {
       label: 'AERVELYS',
       submenu: [
-        {label: 'Command Center',click: () => connect()},
+        {label: 'Lokales Command Center',click: () => connect()},
         {label: 'Website im Browser öffnen',click: () => void shell.openExternal(HOME.toString())},
         {type: 'separator'},
         {label: 'Beenden',role: 'quit'}
@@ -125,7 +121,7 @@ function makeMenu() {
     {
       label: 'Verbindung',
       submenu: [
-        {label: 'Erneut verbinden',accelerator: 'CmdOrCtrl+R',click: () => connect()},
+        {label: 'Lokale Oberfläche aktualisieren',accelerator: 'CmdOrCtrl+R',click: () => connect()},
         {label: 'Seite neu laden',accelerator: 'F5',click: () => connect()}
       ]
     },
@@ -136,7 +132,7 @@ function makeMenu() {
         {label:'Bridge beenden',click:()=>stopNativeBridge()},
         {type:'separator'},
         {label:'MSFS SDK-Ordner auswählen',click:()=>{void chooseSdkRoot();}},
-        {label:'NEXT Command Center öffnen',click:()=>connect()}
+        {label:'Lokales Command Center öffnen',click:()=>connect()}
       ]
     },
     {
@@ -179,7 +175,8 @@ function createWindow() {
       allowRunningInsecureContent: false,
       webviewTag: false,
       partition: PARTITION,
-      devTools: !app.isPackaged
+      devTools: !app.isPackaged,
+      preload:join(__dirname,'preload.cjs')
     }
   };
   if (existsSync(icon)) options.icon = icon;
@@ -187,33 +184,16 @@ function createWindow() {
 
   const contents = mainWindow.webContents;
 
+  const localUrl=pathToFileURL(join(__dirname,'local.html')).toString();
   contents.setWindowOpenHandler(({url}) => {
-    if (isInternal(url)) {
-      // Internal windows remain in the single application workspace.
-      setImmediate(() => {
-        if (mainWindow && !mainWindow.isDestroyed()) connect();
-      });
-    } else {
-      openTrustedExternal(url);
-    }
-    return {action: 'deny'};
+    if(isExternalAllowed(url)||isInternal(url))void shell.openExternal(url);
+    return {action:'deny'};
   });
-
-  contents.on('will-navigate', (event, url) => {
-    if (!isInternal(url)) {
+  contents.on('will-navigate',(event,url)=>{
+    if(url!==localUrl){
       event.preventDefault();
-      openTrustedExternal(url);
+      if(isExternalAllowed(url)||isInternal(url))void shell.openExternal(url);
     }
-  });
-
-  contents.on('will-redirect', (event, url) => {
-    if (!isInternal(url)) {
-      event.preventDefault();
-    }
-  });
-
-  contents.on('did-fail-load', (_event, errorCode, _description, _url, isMainFrame) => {
-    if (isMainFrame && errorCode !== -3) displayOffline();
   });
 
   mainWindow.once('ready-to-show', () => mainWindow && mainWindow.show());
@@ -248,6 +228,45 @@ if (!app.requestSingleInstanceLock()) {
 
     app.on('web-contents-created', (_event, contents) => {
       contents.on('will-attach-webview', (event) => event.preventDefault());
+    });
+
+    // No remote website receives these IPC methods. Only our packaged local page.
+    const trustedLocalUrl=pathToFileURL(join(__dirname,'local.html')).toString();
+    function localOnly(event){
+      if(!mainWindow || mainWindow.isDestroyed() ||
+         event.sender!==mainWindow.webContents ||
+         event.senderFrame!==event.sender.mainFrame ||
+         event.senderFrame.url!==trustedLocalUrl)
+        throw Error('Local IPC denied');
+    }
+    const homeDir=()=>app.getPath('userData');
+    const appDataDir=()=>app.getPath('appData');
+    ipcMain.handle('local:snapshot',event=>{
+      localOnly(event);
+      return {state:localStore.readState(homeDir()),telemetry:localStore.lastTelemetry(appDataDir())};
+    });
+    ipcMain.handle('local:renamePilot',(event,name)=>{
+      localOnly(event);
+      return localStore.setPilotName(homeDir(),name);
+    });
+    ipcMain.handle('local:addMission',(event,payload)=>{
+      localOnly(event);
+      return localStore.addMission(homeDir(),payload);
+    });
+    ipcMain.handle('local:startBridge',async event=>{
+      localOnly(event);
+      await launchNativeBridge();
+      return {ok:true};
+    });
+    ipcMain.handle('local:stopBridge',event=>{
+      localOnly(event);
+      stopNativeBridge();
+      return {ok:true};
+    });
+    ipcMain.handle('local:openCloud',event=>{
+      localOnly(event);
+      void shell.openExternal(HOME.toString());
+      return {ok:true};
     });
 
     makeMenu();

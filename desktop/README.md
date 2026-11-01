@@ -1,57 +1,52 @@
-# AERVELYS NEXT Desktop 0.2 — integrated local SIM Bridge launcher (Windows alpha)
+# AERVELYS NEXT Desktop 0.3 — Offline-First Alpha
 
-AERVELYS NEXT is our own virtual business-aviation application. SkyBridge was a functional reference only; no SkyBridge source, binaries or assets are used.
+**Kurskorrektur nach dem SkyBridge-Vergleich:** AERVELYS NEXT Desktop ist jetzt eine **lokal startende Anwendung**, nicht mehr lediglich eine Web-App-Hülle. Die bestehenden Cloud-Module sind weiter separat verfügbar, aber nicht erforderlich, um das Windows-Programm zu öffnen oder einen lokalen SIM-Spielstand zu bearbeiten.
 
-## What the Windows installer now contains
+## In 0.3 vorhanden
 
-- Real Windows x64 Electron installer, Start Menu/Desktop links and persistent NEXT CEO login
-- Secure dedicated desktop window displaying existing NEXT cloud modules
-- **Simulator > MSFS 2024 Bridge starten / einrichten** to launch the native AERVELYS C# companion
-- Pairing dialog in Windows for NEXT HTTPS URL and single-use code (no terminal needed)
-- Windows-only build of our own companion source from Microsoft SimConnect assemblies already installed on your own computer
-- Native **Bridge beenden** option; the companion is also stopped when Desktop exits
-- Existing MSFS Integration panel for device status, ACARS and checkride evidence
+- Ein eigenes, modernes AERVELYS-Desktop-Command-Center als gebündelte HTML/CSS/JS-Anwendung (kein Webhosting nötig)
+- Lokales Pilotenprofil mit speicherbarem Namen und EDAZ als Start-Homebase
+- Lokale SIM-Charter- und Checkride-Planungsaufträge mit Route und Flugzeug
+- Lokale persistente JSON-Datei unter dem Electron-Benutzerprofil, ohne NEXT-Login
+- ACARS-Ansicht mit **echten lokal empfangenen** Messwerten, soweit die SimConnect-Bridge gestartet und verbunden ist
+- Native Bridge kann mit --offline betrieben werden und schreibt dann JSONL unter dem Windows-Benutzerprofil
+- Optionaler Link zu NEXT Cloud im externen Browser; niemals als Voraussetzung zum Desktop-Start
 
-**This is not an offline SkyBridge replacement yet.** AERVELYS NEXT's business logic still runs via Vercel/Supabase and requires internet. Our bridge's true connection to a live MSFS 2024 aircraft has not been verified on your PC. Neither type ratings nor real flight logbook entries are automatically issued yet.
+## Was noch NICHT umgesetzt ist
 
-## Install, set up & pair
+- Keine lokale Kopie der kompletten Cloud-Airline (5 Flugzeuge, Mitarbeiter, Kunden, Rechnungen, Firmenkonten)
+- Keine serverfreie KI-Kundenwirtschaft, kein autonomer Airline-Betrieb und keine vollständige lokale Chartergenerierung
+- Kein automatischer Flugabschluss, Flugstunden-/Type-Rating-Nachweis oder Auszahlung aus ACARS
+- Noch kein echter Windows/MSFS-2024-SimConnect-End-to-End-Test; die Bridge muss gegen das auf dem PC installierte offizielle Microsoft SDK kompiliert werden
+- Kein installierter SQLite-Datenbankdienst: Die aktuelle Offline-Alpha speichert kleine lokale Spielstände in einer versionierten JSON-Datei; später ist eine lokale SQL-Datenbank vorgesehen
+- Keine gesicherte Cloud-Synchronisation. **Niemals parallel denselben Flug in Cloud und Offline-Spielstand automatisch abrechnen.**
+- Keine digital signierten Installer oder automatische Updates
 
-1. Download and unzip a Windows setup artifact from **GitHub > Actions > AERVELYS NEXT Windows Desktop**.
-2. Run AERVELYS-NEXT-Setup-0.2.0-x64.exe (unsigned alpha, check GitHub build SHA-256).
-3. Install the **official Microsoft Flight Simulator 2024 SDK** (including SimConnect managed library/runtime) and ensure Windows has the .NET Framework 4.8 C# compiler / Developer Pack. This SDK is a Microsoft prerequisite, not a part of the AERVELYS installer.
-4. Start AERVELYS NEXT Desktop and sign in with the existing NEXT CEO account.
-5. Go to **MSFS-Integration** in the left navigation; click **Kopplungscode erzeugen** in the device panel.
-6. Click **Simulator > MSFS 2024 Bridge starten / einrichten** in the native application menu.
-7. If the SDK is not automatically detected, select the SDK root folder (usually C:\MSFS 2024 SDK). It must contain SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll.
-8. On first use, enter the code in the native pairing dialog and click **Sicher koppeln**. No password or service-role key is requested.
-9. Start MSFS 2024 and load an aircraft. In NEXT/MSFS-Integration the status must transition from offline to online after actual telemetry is accepted. The bridge automatically reconnects locally when MSFS starts.
-10. Stop through **Simulator > Bridge beenden**, or close AERVELYS NEXT Desktop.
+## So startet 0.3
 
-Token storage is protected with **Windows DPAPI** in %APPDATA%\AERVELYS\SimBridge\bridge.txt. The paired device can be revoked from NEXT. To pair again, remove only this local file, then generate a fresh one-use code.
+1. Den aktuellen Windows-Installer über GitHub Actions herunterladen.
+2. Vorherige AERVELYS Desktop 0.2 kann installiert bleiben bzw. wird vom Installer mit derselben App-ID aktualisiert.
+3. AERVELYS NEXT öffnen. Das **lokale Command Center** startet sofort, auch ohne Internet.
+4. Unter **Charter & Trips** einen lokalen SIM-Auftrag anlegen. Er bleibt im lokalen Profil gespeichert.
+5. Unter **Pilot & Training** einen Pilotenamen hinterlegen.
+6. Optional MSFS 2024 starten und im Menü **Simulator → MSFS 2024 Bridge starten / einrichten** verwenden.
 
-## Native builder implementation
+Für die native Bridge ist auf dem PC vorerst weiterhin das Microsoft Flight Simulator 2024 SDK inklusive Managed SimConnect Assembly und ein .NET-Framework-Compiler erforderlich. Die SDK-Dateien werden nicht von AERVELYS weiterverteilt. Unter **Live Tracking & ACARS** erscheinen echte empfangene Messwerte, sobald sie lokal gespeichert werden. Wenn MSFS nicht läuft oder die Bridge nicht funktioniert, bleibt der Status ausdrücklich OFFLINE.
 
-The Electron app bundles the three AERVELYS-owned C# source files, not a compiled Microsoft SDK or modified third-party binary. At first launch the app locates the installed Microsoft SimConnect managed reference DLL and the system csc.exe compiler. It builds the AERVELYS companion into the user's local Desktop app data directory (AERVELYS NEXT/Bridge) and caches a source/SDK fingerprint to avoid unnecessary rebuilds. No unrestricted desktop IPC, Node.js, filesystem or shell access is exposed to the remote NEXT web content; launching requires a direct click in the native app menu.
+## Technischer Aufbau
 
-The published Windows installer **does not redistribute** SimConnect.dll, Microsoft.FlightSimulator.SimConnect.dll, SDK MSI installers, or any third-party Python-SimConnect package. Use the official SDK on your own development/testing PC. Microsoft redistribution rights for SDK runtime DLLs are not presumed.
+- Electron lädt immer lokal gebündeltes **local.html**, **local.css** und **local.js**, nicht die Vercel-Webseite.
+- Der lokale Renderer bekommt über einen isolierten Preload nur eine eng definierte API. Die Main-Process-IPC-Prüfung validiert Fenster, Frame und genaue lokale Datei-URL.
+- Node.js und systemnahe Electron-APIs bleiben im Renderer gesperrt.
+- Lokaler SIM-Karrierestand: \`%APPDATA%\\aervelys-next-desktop\\local-career.json\` (genauer Windows-Pfad kann je nach Electron-App-Namen abweichen).
+- ACARS-Rohdaten: \`%APPDATA%\\AERVELYS NEXT\\Telemetry\\YYYY-MM-DD.jsonl\` (lokale Messwertdatei mit Zeitstempel, Flugphase, Position, Höhe und Geschwindigkeit).
+- Ein Menü-Klick startet den nativen, von AERVELYS geschriebenen C#-Reader im strikt lokalen Modus \`--offline\`, nicht mit Supabase-Token oder Web-Upload.
+- Der Link zur bisherigen NEXT-Cloud öffnet einen externen Browser und ist ausdrücklich optional.
+- Keine SkyBridge-Dateien, Assets, Marken oder proprietären Codeanteile enthalten.
 
-## Known gaps / test checklist
+## Desktop-Entwicklung
 
-- [ ] Install alpha on the intended Windows PC and verify that the local SDK is found
-- [ ] Compile companion using the real installed SDK and .NET Framework compiler
-- [ ] Complete first-run device pairing and verify the NEXT device comes online
-- [ ] Test cold start at EDAZ, takeoff, approach, landing, shutdown, and device reconnect
-- [ ] Test flight type detection and engine SimVars on an actual Phenom add-on
-- [ ] Improve noise, pause/slew, crash/teleport detection and training integrity
-- [ ] Link ACARS evidence to an explicit flight/checkride before allowing simulated certificate or financial posting
-- [ ] Resolve Microsoft redistributable-license requirements before creating a standalone SDK-free installer
-- [ ] Sign the Windows application for normal end-user distribution
-
-A deployed NEXT page is not proof of a simulator connection, nor does simulator evidence constitute an aviation certification or flight release.
-
-## Developer build
-
-Windows 10/11; Node.js 22, Python 3.12.
+Windows 10/11, Node 22 und Python 3.12:
 
     cd desktop
     python scripts/make-icon.py
@@ -59,7 +54,14 @@ Windows 10/11; Node.js 22, Python 3.12.
     npm test
     npm run build:win
 
-The unsigned NSIS installer appears in desktop/dist. GitHub Actions runs the same build automatically for changes to the desktop app; tests also assert that official Microsoft SDK DLLs have **not** been bundled.
+Den Installer erzeugt auch der GitHub-Actions-Workflow **AERVELYS NEXT Windows Desktop**. Prüfe die SHA-256-Prüfsumme des Build-Artefakts vor der Installation. Dieser Build ist nicht digital signiert.
 
-Official managed API documentation:
-https://docs.flightsimulator.com/msfs2024/flighting/programming-apis/simconnect/programming-simconnect-clients-using-managed-code/
+## Nächste Meilensteine
+
+1. Windows-Live-Test des lokalen Command Centers und der SimConnect-Bridge
+2. Lokale SQLite-Wirtschaftsdatenbank, Import-/Export- und Backup-Funktion
+3. Offline-Chartermarkt mit klar als SIM markierten Aufträgen, Rating- und Flottenregeln
+4. Vollständiges ACARS-Logbook, Startup-/Shutdown-Prüfung und sicherer Flight Lifecycle
+5. Optional synchronisierter Cloud-Airline-Betrieb mit Konfliktlösung und Audit-Log
+
+Die neue Richtung ist **Offline-First mit optionaler Cloud**, nicht Cloud-First als bloße Desktop-Hülle.

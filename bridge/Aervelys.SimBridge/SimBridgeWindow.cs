@@ -1,11 +1,42 @@
 using System;
 using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Web.Script.Serialization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.FlightSimulator.SimConnect;
 
 namespace Aervelys.SimBridge
 {
+    // Local SIM recorder: append-only JSONL in the current user's roaming AppData.
+    // The desktop UI reads it on the same PC, no HTTP or account required.
+    internal static class LocalTelemetryWriter
+    {
+        private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
+        private static string Folder
+        {
+            get
+            {
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "AERVELYS NEXT", "Telemetry");
+            }
+        }
+        public static void Write(object sample)
+        {
+            Directory.CreateDirectory(Folder);
+            string filename = Path.Combine(Folder, DateTime.UtcNow.ToString("yyyy-MM-dd") + ".jsonl");
+            string record = Json.Serialize(sample);
+            if (record.Length > 4000)
+                throw new InvalidOperationException("SIM-Datensatz ist zu groß.");
+            // Appends only; never writes flight logs to cloud in --offline mode.
+            using (var file = new StreamWriter(filename, true, new UTF8Encoding(false)))
+            {
+                file.WriteLine(record);
+            }
+        }
+    }
+
     // SimConnect must be accessed on one Windows message-pump thread.
     internal sealed class SimBridgeWindow : Form
     {
@@ -156,7 +187,10 @@ namespace Aervelys.SimBridge
             };
             try
             {
-                await BridgeApi.Send(_settings, sample);
+                if (_settings == null)
+                    LocalTelemetryWriter.Write(sample);
+                else
+                    await BridgeApi.Send(_settings, sample);
                 Console.WriteLine("{0:HH:mm:ss}  {1,-11} {2,8:F0} ft {3,5:F0} kt  {4}",
                     DateTime.Now, phase, d.AltitudeFt, d.GroundspeedKt, title);
             }

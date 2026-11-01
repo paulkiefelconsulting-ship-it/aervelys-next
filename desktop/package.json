@@ -1,7 +1,7 @@
 {
   "name": "aervelys-next-desktop",
-  "version": "0.2.0",
-  "description": "AERVELYS NEXT Desktop – native MSFS 2024 companion bootstrap and airline management",
+  "version": "0.3.0",
+  "description": "AERVELYS NEXT offline-first Windows aviation simulation prototype",
   "private": true,
   "author": "AERVELYS NEXT",
   "license": "UNLICENSED",
@@ -31,7 +31,12 @@
       "assets/icon.png",
       "assets/icon.ico",
       "package.json",
-      "nativeBridge.cjs"
+      "nativeBridge.cjs",
+      "local.html",
+      "local.css",
+      "local.js",
+      "preload.cjs",
+      "localStore.cjs"
     ],
     "win": {
       "target": [
