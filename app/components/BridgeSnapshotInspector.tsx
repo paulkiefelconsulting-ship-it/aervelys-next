@@ -1,65 +1,54 @@
 'use client';
 import {useState} from 'react';
-import {FileJson2,ShieldAlert,RadioTower} from 'lucide-react';
+import {FileJson2,ShieldAlert,RadioTower,PlugZap,Unplug,CheckCircle2,RefreshCw} from 'lucide-react';
+import {parseBridgeSnapshot,BRIDGE_PHASE_LABELS,type BridgeSnapshot} from '../lib/localBridge';
 
-type Snapshot={schemaVersion:1;source:'msfs2024-simconnect-local';timestampUtc:string;phase:string;telemetry:{
- latitude:number;longitude:number;altitudeFt:number;aglFt:number;verticalSpeedFpm:number;groundSpeedKt:number;indicatedSpeedKt:number;onGround:boolean;parkingBrake:boolean
-}};
-const PHASE_LABELS:Record<string,string>={
- Unknown:'Unbekannt',Parked:'Am Standplatz',TaxiOut:'Rollen zum Start',TakeoffRoll:'Startlauf',Climb:'Steigflug',
- Cruise:'Reiseflug',Descent:'Sinkflug',Approach:'Anflug',Landing:'Landung',TaxiIn:'Rollen nach der Landung'
+type Props={
+ snapshot:BridgeSnapshot|null;connected:boolean;isLive:boolean;error:string;
+ connect:()=>Promise<void>;disconnect:()=>void;
 };
-function valid(value:unknown):value is Snapshot{
- if(!value||typeof value!=='object')return false;
- const v=value as Record<string,unknown>;
- if(v.schemaVersion!==1||v.source!=='msfs2024-simconnect-local'||typeof v.phase!=='string'||
-  !(v.phase in PHASE_LABELS)||typeof v.timestampUtc!=='string')return false;
- const tele=v.telemetry as Record<string,unknown>|undefined;
- if(!tele||typeof tele!=='object')return false;
- for(const k of ['latitude','longitude','altitudeFt','aglFt','verticalSpeedFpm','groundSpeedKt','indicatedSpeedKt']){
-  if(typeof tele[k]!=='number'||!Number.isFinite(tele[k]))return false;
- }
- return typeof tele.onGround==='boolean'&&typeof tele.parkingBrake==='boolean'&&
- Math.abs(tele.latitude as number)<=90&&Math.abs(tele.longitude as number)<=180;
-}
-export default function BridgeSnapshotInspector(){
- const [snapshot,setSnapshot]=useState<Snapshot|null>(null);
- const [error,setError]=useState('');
- const [checkedAt,setCheckedAt]=useState(0);
- async function onFile(file?:File){
+export default function BridgeSnapshotInspector({snapshot,connected,isLive,error,connect,disconnect}:Props){
+ const [manual,setManual]=useState<BridgeSnapshot|null>(null);
+ const [manualError,setManualError]=useState('');
+ const [inspectedAt,setInspectedAt]=useState(0);
+ async function importSample(file?:File){
   if(!file)return;
-  setError('');setSnapshot(null);
-  if(file.size>120000){setError('Die Snapshot-Datei ist ungewöhnlich groß (max. 120 KB).');return;}
   try{
-   const json=JSON.parse(await file.text()) as unknown;
-   if(!valid(json)){setError('Nicht unterstütztes oder unvollständiges Bridge-JSON.');return;}
-   const timestamp=Date.parse(json.timestampUtc);
-   if(!Number.isFinite(timestamp)){setError('Bridge-Zeitstempel ist ungültig.');return;}
-   setSnapshot(json);setCheckedAt(Date.now());
-  }catch{setError('Die Datei ist kein gültiges JSON.');}
+   const raw=await file.text();
+   // Manual inspector accepts old snapshots for debugging, but never calls them live.
+   const parsed=JSON.parse(raw) as BridgeSnapshot;
+   if(parsed?.schemaVersion!==1||parsed?.source!=='msfs2024-simconnect-local'||
+      !parsed?.telemetry||typeof parsed.phase!=='string'||!(parsed.phase in BRIDGE_PHASE_LABELS))throw Error('Kein gültiger AERVELYS Snapshot.');
+   setManual(parsed);setManualError('');setInspectedAt(Date.now());
+  }catch(e){setManual(null);setManualError(e instanceof Error?e.message:'Ungültige Datei');}
  }
- const age=snapshot?Math.round((checkedAt-Date.parse(snapshot.timestampUtc))/1000):null;
- const fresh=age!==null&&age>=-5&&age<=10;
- return <div style={{marginTop:18,border:'1px solid #356078',borderRadius:12,background:'#0b2538',padding:20}}>
-  <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
-   <RadioTower size={20} color="#83ccea"/>
-   <strong style={{fontSize:14}}>Lokale Bridge-Diagnose</strong>
-   <span style={{fontSize:11,color:'#93b9cd'}}>Nur Datei-Prüfung · keine Netzwerkverbindung</span>
+ const shown=isLive?snapshot:manual;
+ return <section style={{marginTop:18,border:'1px solid rgba(109,197,195,.28)',borderRadius:16,background:'linear-gradient(145deg,#112b38,#0b1c2b)',padding:'clamp(17px,3vw,25px)'}}>
+  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:15,flexWrap:'wrap'}}>
+   <div style={{display:'flex',gap:11,alignItems:'center'}}><RadioTower size={24} color="#94e9db"/><div><strong style={{fontSize:17}}>AERVELYS Local Flight Link</strong><p style={{fontSize:11,margin:'5px 0 0',color:'#9abdc9'}}>Echte MSFS-Flugphasen im Browser auf demselben Windows-PC</p></div></div>
+   <span style={{border:'1px solid '+(isLive?'#388a7a':'#775f45'),borderRadius:999,padding:'8px 11px',fontWeight:800,fontSize:10,color:isLive?'#b1f8de':'#eabf9c'}}>{isLive?'● SIMCONNECT LIVE':connected?'● VERBINDUNG WARTET':'● NICHT VERBUNDEN'}</span>
   </div>
-  <p style={{fontSize:12,lineHeight:1.6,color:'#a3bdce'}}>Wenn die Bridge auf deinem PC läuft, kannst du hier die lokal erzeugte <code>telemetry.json</code> auswählen. Die Datei wird nur in diesem Browser gelesen, nicht hochgeladen. Dies ist eine Momentaufnahme, kein Live-Tracking.</p>
-  <input aria-label="Lokale telemetry.json auswählen" type="file" accept=".json,application/json" style={{color:'#d2edfd',fontSize:12,maxWidth:'100%'}} onChange={e=>{void onFile(e.target.files?.[0]);e.target.value='';}}/>
-  {error&&<p role="alert" style={{fontSize:12,color:'#ffb6a6'}}><ShieldAlert size={14} style={{verticalAlign:'middle'}}/> {error}</p>}
-  {snapshot&&<div style={{display:'grid',gap:12,marginTop:16}}>
-   <div style={{border:'1px solid '+(fresh?'#247b69':'#8f6445'),padding:12,borderRadius:8,background:fresh?'#0a3434':'#322921',color:fresh?'#9cecd2':'#ffd4a3',fontSize:12}}>
-    {fresh?'Snapshot beim Einlesen aktuell':'Snapshot beim Einlesen veraltet / Zeitabweichung'} · Zeitstempel: {new Date(snapshot.timestampUtc).toLocaleString('de-DE')} · {age} Sekunden Differenz
+  <p style={{fontSize:12,lineHeight:1.8,color:'#b2cbd5'}}>Starte zuerst die Windows-Bridge. Wähle danach einmal die Datei <code>%LOCALAPPDATA%\AERVELYS\bridge\telemetry.json</code>. Edge oder Chrome lesen sie anschließend alle 1 Sekunde lokal aus. Keine Cloud, kein offener Netzwerk-Port und kein Datei-Upload.</p>
+  <div style={{display:'flex',gap:9,flexWrap:'wrap',margin:'15px 0'}}>
+   {!connected?<button type="button" onClick={()=>void connect()} style={{display:'flex',alignItems:'center',gap:9,border:'1px solid #95e4d5',borderRadius:9,padding:'12px 16px',background:'#1a6e76',color:'white',fontWeight:800,cursor:'pointer'}}><PlugZap size={17}/> Mit Bridge verbinden</button>:
+   <><button type="button" onClick={disconnect} style={{display:'flex',alignItems:'center',gap:8,border:'1px solid #517384',borderRadius:9,padding:'12px 16px',background:'#192f42',color:'#d6eaf1',cursor:'pointer'}}><Unplug size={16}/> Trennen</button><span style={{fontSize:11,alignSelf:'center',color:'#a8d2cc'}}>Automatische Prüfung aktiv · 1 Sekunde</span></>}
+  </div>
+  {connected&&error&&<p role="alert" style={{display:'flex',gap:8,alignItems:'center',color:'#f4bf9f',fontSize:12}}><ShieldAlert size={16}/> {error}</p>}
+  {shown&&<div style={{padding:15,border:'1px solid rgba(113,166,190,.25)',background:'#0b2431',borderRadius:12}}>
+   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+    <span style={{fontSize:11,color:'#9cdddb',fontWeight:800}}>{isLive?'LIVE-SNAPSHOT':'MANUELL EINGELESENER SNAPSHOT'}</span>
+    <strong style={{color:'#e3f8fc',fontSize:13}}>{BRIDGE_PHASE_LABELS[shown.phase]||shown.phase}</strong>
    </div>
-   <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
-    <span style={{fontSize:13,color:'#f2f9ff'}}><strong>Phase:</strong> {PHASE_LABELS[snapshot.phase]}</span>
-    <span style={{fontSize:13,color:'#f2f9ff'}}><strong>Höhe:</strong> {Math.round(snapshot.telemetry.altitudeFt).toLocaleString('de-DE')} ft</span>
-    <span style={{fontSize:13,color:'#f2f9ff'}}><strong>GS:</strong> {Math.round(snapshot.telemetry.groundSpeedKt)} kt</span>
-    <span style={{fontSize:13,color:'#f2f9ff'}}><strong>VS:</strong> {Math.round(snapshot.telemetry.verticalSpeedFpm)} ft/min</span>
+   <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(125px,1fr))',gap:8,marginTop:14}}>
+    {([['ALTITUDE',Math.round(shown.telemetry.altitudeFt).toLocaleString('de-DE')+' ft'],['GROUND SPEED',Math.round(shown.telemetry.groundSpeedKt)+' kt'],['VERTICAL SPEED',Math.round(shown.telemetry.verticalSpeedFpm)+' ft/min'],['POSITION',shown.telemetry.latitude.toFixed(3)+'°, '+shown.telemetry.longitude.toFixed(3)+'°']] as const).map(([k,v])=><div key={k} style={{background:'#15374a',padding:12,borderRadius:8}}><small style={{display:'block',fontSize:9,color:'#89b8c9',letterSpacing:1,marginBottom:7}}>{k}</small><strong style={{fontSize:12}}>{v}</strong></div>)}
    </div>
-   <p style={{fontSize:11,color:'#9bb9c8',lineHeight:1.6,margin:0}}>Die Datei wird nicht automatisch aktualisiert. Zum Prüfen einer neuen Flugphase bitte erneut auswählen. Eine echte, geschützte Live-Kopplung zu AERVELYS NEXT ist noch nicht eingerichtet.</p>
+   <p style={{fontSize:10,color:'#8db2c2'}}>Messung vom {new Date(shown.timestampUtc).toLocaleString('de-DE')}. {isLive?'Position und Flugphase stehen auch der Flugkarte und der Kabinensimulation zur Verfügung.':'Diese Datei wird nicht kontinuierlich aktualisiert.'}</p>
   </div>}
- </div>;
+  <details style={{marginTop:17,paddingTop:15,borderTop:'1px solid rgba(127,167,196,.15)'}}>
+   <summary style={{fontSize:12,color:'#98cde1',cursor:'pointer'}}>Alternativ: Einzelne Diagnose-Datei manuell prüfen</summary>
+   <input type="file" accept=".json,application/json" aria-label="Einzelne Bridge-Diagnosedatei" style={{display:'block',margin:'12px 0',fontSize:11,color:'#d5e7ef'}} onChange={e=>{void importSample(e.target.files?.[0]);e.target.value='';}}/>
+   {manualError&&<p style={{color:'#edb0a0',fontSize:11}}>{manualError}</p>}
+   <p style={{color:'#809dac',fontSize:10}}>Eine einmal geladene Datei ist kein Beweis für eine aktive Live-Verbindung.</p>
+  </details>
+ </section>;
 }
