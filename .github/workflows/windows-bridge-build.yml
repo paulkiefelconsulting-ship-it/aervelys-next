@@ -1,0 +1,43 @@
+name: AERVELYS Windows Bridge build
+on:
+  push:
+    branches: [feature/passenger-experience-map]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  windows-bridge:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build portable x64 Windows app without Microsoft SDK redistribution
+        shell: pwsh
+        run: |
+          dotnet build tools/simconnect-bridge/AERVELYS.SimConnectBridge.csproj --configuration Release -p:Platform=x64 --nologo
+      - name: Check local flight phase detector
+        shell: pwsh
+        run: |
+          dotnet run --project tools/simconnect-bridge/PhaseEngine.Tests.csproj --configuration Release
+      - name: Create download package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $base = "tools/simconnect-bridge/bin/Release/net48"
+          $exe = Join-Path $base "AERVELYS.SimConnectBridge.exe"
+          if (!(Test-Path $exe)) { throw "Bridge exe was not generated." }
+          Copy-Item $exe dist/
+          $config = "$exe.config"
+          if (Test-Path $config) { Copy-Item $config dist/ }
+          Copy-Item "tools/simconnect-bridge/README.md" "dist/README.txt"
+          Compress-Archive -Path dist/* -DestinationPath AERVELYS-Flight-Bridge-Windows-x64.zip -Force
+      - name: Upload Windows Bridge ZIP (without Microsoft SDK DLLs)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: AERVELYS-Flight-Bridge-Windows-x64
+          path: AERVELYS-Flight-Bridge-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 30
