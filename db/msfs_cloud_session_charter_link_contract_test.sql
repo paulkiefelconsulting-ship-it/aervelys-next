@@ -29,9 +29,8 @@ begin
    values(uid,'ROLLBACK-ONLY MSFS SIM DEVICE',
     extensions.digest('ROLLBACK_ONLY_TEST_MSFS_20261101','sha256'),now())
    returning id into device;
-  insert into sim.msfs_bridge_samples(id,device_id,observed_at,session_id,phase,sample)
-   values((select coalesce(max(id),0)+10000 from sim.msfs_bridge_samples),
-    device,now(),sid,'CRUISE',
+  insert into sim.msfs_bridge_samples(device_id,observed_at,session_id,phase,sample)
+   values(device,now(),sid,'CRUISE',
     '{"phase":"CRUISE","latitude":52.5,"longitude":13.3,"altitude_ft":30000,"groundspeed_kt":420}'::jsonb);
   -- The overview must find this actual server-stored sample, not invented client input.
   state:=public.aervelys_msfs_charter_links_overview();
@@ -55,9 +54,8 @@ begin
   if same->>'reused'<>'true' or same->>'link_id'<>link_id::text then
    raise exception 'Idempotent link failed';
   end if;
-  insert into sim.msfs_bridge_samples(id,device_id,observed_at,session_id,phase,sample)
-   values((select coalesce(max(id),0)+10001 from sim.msfs_bridge_samples),
-    device,now(),sid2,'CRUISE',
+  insert into sim.msfs_bridge_samples(device_id,observed_at,session_id,phase,sample)
+   values(device,now(),sid2,'CRUISE',
     '{"phase":"CRUISE","latitude":52.5,"longitude":13.3,"altitude_ft":30001,"groundspeed_kt":421}'::jsonb);
   begin
    perform public.aervelys_msfs_charter_link(device,sid2,rid);
