@@ -13,11 +13,16 @@ function validIcao(value){
 }
 function readState(dir){
  const location=path.join(dir,'local-career.json');
- try {
-  const value=JSON.parse(fs.readFileSync(location,'utf8'));
-  if(value?.schema===1&&Array.isArray(value.missions)&&value.profile&&value.company)return value;
- }catch{}
- return defaultState();
+ if(!fs.existsSync(location))return defaultState();
+ // Never silently discard or replace a damaged existing career file.
+ const stat=fs.statSync(location);
+ if(stat.size>2*1024*1024)throw Error('Lokaler Spielstand zu groß. Bitte zuerst eine Sicherung erstellen.');
+ let value;
+ try {value=JSON.parse(fs.readFileSync(location,'utf8'));}
+ catch{throw Error('Lokaler Spielstand beschädigt. Datei bleibt unverändert.');}
+ if(value?.schema!==1||!Array.isArray(value.missions)||!value.profile||!value.company)
+  throw Error('Unbekanntes Spielstandformat. Datei bleibt unverändert.');
+ return value;
 }
 function writeState(dir,data){
  fs.mkdirSync(dir,{recursive:true});
@@ -38,7 +43,8 @@ function setPilotName(dir,name){
 function addMission(dir,payload){
  const departure=validIcao(payload?.departure),destination=validIcao(payload?.destination);
  if(!departure||!destination)throw Error('Bitte gültige vierstellige ICAO-Codes eingeben.');
- const kind=payload?.kind==='checkride'?'checkride':'charter';
+ if(payload?.kind!=='checkride'&&payload?.kind!=='charter')throw Error('Unbekannter Missionstyp');
+ const kind=payload.kind;
  const aircraft=typeof payload?.aircraft==='string'?payload.aircraft.trim():'';
  if(aircraft.length<2||aircraft.length>80)throw Error('Flugzeugbezeichnung: 2–80 Zeichen.');
  const state=readState(dir);
