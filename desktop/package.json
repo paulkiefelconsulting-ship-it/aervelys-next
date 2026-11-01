@@ -1,7 +1,7 @@
 {
   "name": "aervelys-next-desktop",
-  "version": "0.4.0",
-  "description": "AERVELYS NEXT offline-first multi-pilot career simulation",
+  "version": "0.5.0",
+  "description": "AERVELYS NEXT offline-first virtual pilot career and charter market",
   "private": true,
   "author": "AERVELYS NEXT",
   "license": "UNLICENSED",
@@ -37,7 +37,8 @@
       "local.js",
       "preload.cjs",
       "localStore.cjs",
-      "pilotProfiles.cjs"
+      "pilotProfiles.cjs",
+      "offlineMarket.cjs"
     ],
     "win": {
       "target": [
