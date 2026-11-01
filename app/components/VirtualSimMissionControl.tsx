@@ -6,6 +6,7 @@ import {Activity,Armchair,CheckCircle2,Clock3,Coffee,Plane,RefreshCw,
  ShieldAlert,Utensils,Users,Pause,Play,ClipboardCopy} from 'lucide-react';
 import styles from './VirtualSimMissionControl.module.css';
 import VirtualSimBridgePairing from './VirtualSimBridgePairing';
+import SimFlightInstruments,{type SimSample} from './SimFlightInstruments';
 
 type RequestRow={
  request_id:string;request_code:string;origin_icao:string;destination_icao:string;
@@ -30,7 +31,7 @@ type FinanceIndication={
  potential_difference_eur:number|null;revenue_booked:false;costs_booked:false;
  profit_realized:false;source:'fictitious_sim_indication_only';
 };
-type BridgeSession={session_id:string;request_id:string;status:'active'|'revoked';issued_at:string;expires_at:string;last_seen_at:string|null;accepted_events:number;last_phase:string|null;heartbeat_recent:boolean};
+type BridgeSession={session_id:string;request_id:string;status:'active'|'revoked';issued_at:string;expires_at:string;last_seen_at:string|null;last_sample:SimSample|null;accepted_events:number;last_phase:string|null;heartbeat_recent:boolean};
 type Overview={bridge_sessions:BridgeSession[];bridge_pairing_available:true;finance_indications:FinanceIndication[];requests:RequestRow[];missions:Mission[];passengers:Passenger[];
  events:EventRow[];simulation_only:true;simconnect_connected:false;
  real_flight_approvals:false;route_source:'pilot_simbrief_paste'};
@@ -166,8 +167,8 @@ export default function VirtualSimMissionControl(){
    'Crew/Flugzeug nicht operativ freigegeben',
    'Pilot-/SimBrief-Route: '+mission.route_text,
    'Passagiere: '+current.passengers,
-   'MSFS/SimConnect: NICHT VERBUNDEN',
-   'Flugphasen: ausschließlich manuelle Trainingssimulation'
+   'MSFS/SimConnect: '+(bridgeSession?.heartbeat_recent?'LOKALE BRIDGE – UNVERIFIZIERT':'KEINE AKTUELLEN LIVE-DATEN'),
+   'Flugphasen: '+(mission.source_mode==='local_simconnect_unverified'?'lokale, unverifizierte SimConnect-Heuristik':'manuelle Trainingssimulation')
   ].join('\n');
   try{await navigator.clipboard.writeText(txt);setNotice('SIM-Briefing in die Zwischenablage kopiert.');}
   catch{setError('Kopieren nicht möglich. Bitte Browserzugriff prüfen.');}
@@ -176,7 +177,7 @@ export default function VirtualSimMissionControl(){
   <div className={styles.heading}>
    <div><div className="eyebrow">INTEGRATED SIM MISSION / CABIN EXPERIENCE</div>
     <h2>SIM-Flugbetrieb & Passagierkabine</h2>
-    <p className="lead">Vom SIM-Charterauftrag über deine SimBrief-Route bis zum Kabinenservice und Debrief. Flugphasen werden bis zum Anschluss der Windows-Bridge manuell geführt.</p></div>
+    <p className="lead">Charterauftrag, deine SimBrief-Route, Crew-Erlebnis und Bordservice in einem Cockpit. Manuelle SIM-Phasen oder lokal gekoppelte, noch nicht flugbetrieblich verifizierte Bridge-Messwerte.</p></div>
    <button type="button" className="ops-refresh" onClick={()=>void load()} disabled={loading||busy}>
     <RefreshCw size={15}/> Aktualisieren
    </button>
@@ -234,6 +235,9 @@ export default function VirtualSimMissionControl(){
      </div>
      <VirtualSimBridgePairing key={requestId} requestId={requestId} lifecycle={mission.lifecycle}
       phase={mission.phase} session={bridgeSession} onRefresh={()=>load(true)}/>
+     <SimFlightInstruments sample={bridgeSession?.last_sample||null}
+      recent={Boolean(bridgeSession?.heartbeat_recent)} lastSeen={bridgeSession?.last_seen_at||null}
+      connectedPhase={bridgeSession?.last_phase||null}/>
      <div className={styles.metrics}>
       <div><strong>{mission.elapsed_minutes} min</strong><span>Simulierte Bordzeit</span></div>
       <div><strong>{avg===null?'—':avg.toFixed(1)+' / 100'}</strong><span>Ø Passagierzufriedenheit</span></div>
