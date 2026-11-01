@@ -60,7 +60,16 @@ begin
    where request_id=req and phase='takeoff' and source_mode='local_simconnect_unverified') then
    raise exception 'Bridge provenance missing';end if;
   perform set_config('request.jwt.claim.sub',ceo_id::text,true);
+  begin
+   perform public.aervelys_sim_mission_action(req,'phase','climb',null);
+   raise exception 'MANUAL_PHASE_DURING_BRIDGE_ACCEPTED';
+  exception when invalid_parameter_value then null;end;
   perform public.aervelys_sim_bridge_revoke(req);
+  perform public.aervelys_sim_mission_action(req,'phase','climb',null);
+  if not exists(select 1 from sim.virtual_sim_missions
+    where request_id=req and phase='climb' and source_mode='manual_simulation') then
+    raise exception 'Manual fallback after revoked bridge did not work';
+  end if;
   perform set_config('request.jwt.claim.sub','',true);
   begin
    perform public.aervelys_sim_bridge_ingest(token,4,null,'{}'::jsonb);
