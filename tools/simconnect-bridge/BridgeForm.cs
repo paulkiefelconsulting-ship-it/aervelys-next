@@ -316,12 +316,25 @@ namespace Aervelys.SimConnectBridge
             };
             try
             {
-                var temp = _outputFile + ".tmp";
-                File.WriteAllText(temp, _json.Serialize(state));
-                if (File.Exists(_outputFile)) File.Replace(temp, _outputFile, null);
-                else File.Move(temp, _outputFile);
+                // Keep one stable file identity so Chrome/Edge file handles from
+                // previous AERVELYS previews continue to see fresh snapshots.
+                // A reader hitting the brief write window can retry next second.
+                byte[] payload = System.Text.Encoding.UTF8.GetBytes(_json.Serialize(state));
+                using (var stream = new FileStream(
+                    _outputFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    stream.Position = 0;
+                    stream.Write(payload, 0, payload.Length);
+                    stream.SetLength(payload.Length);
+                    stream.Flush();
+                }
             }
-            catch (Exception e) { _info.Text = "Dateifehler: " + e.Message; }
+            catch (Exception e)
+            {
+                _status.Text = "MSFS verbunden · Schreibfehler";
+                _info.Text = "Live-Datei konnte nicht aktualisiert werden: " + e.Message;
+                return;
+            }
             _status.Text = "MSFS verbunden · LIVE-DATEN LOKAL";
             _flight.Text = phase + "  ·  " + Math.Round(snapshot.AltitudeFt) + " ft";
             _info.Text = "Groundspeed: " + Math.Round(snapshot.GroundSpeedKnots) +
