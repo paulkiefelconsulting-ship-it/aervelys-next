@@ -56,8 +56,7 @@ export default function MsfsCharterSessionLink({onlyRequestId}:{onlyRequestId?:s
     throw Error('Unbekannter SIM-Datenvertrag');
    setOverview(v);
    setSessionKey(current=>v.sessions.some(s=>keyOf(s)===current)?current:
-    (v.sessions.find(s=>s.fresh)?.device_id&&v.sessions.find(s=>s.fresh)?.session_id
-     ?keyOf(v.sessions.find(s=>s.fresh)!):''));
+    (v.sessions.find(s=>s.fresh)?keyOf(v.sessions.find(s=>s.fresh)!):''));
    setMissionId(current=>onlyRequestId||(
      v.missions.some(m=>m.request_id===current)?current:(v.missions[0]?.request_id||'')));
    setError('');
@@ -115,7 +114,7 @@ export default function MsfsCharterSessionLink({onlyRequestId}:{onlyRequestId?:s
    <div>
     <div className="eyebrow">AERVELYS NEXT / SIM FLIGHT ASSOCIATION</div>
     <h3><Link2 size={20}/> MSFS-Sitzung mit Chartermission verbinden</h3>
-    <p>Verknüpfe eine serverseitig empfangene Simulatorsitzung mit einem bereits gestarteten, fiktiven Charterflug. Flugphase und Messwerte sind **SIM-Evidenz**, keine Freigabe.</p>
+    <p>Verknüpfe eine serverseitig empfangene Simulatorsitzung mit einem bereits gestarteten, fiktiven Charterflug. Flugphase und Messwerte sind SIM-Evidenz, keine Freigabe.</p>
    </div>
    <button type="button" className="ops-refresh" disabled={busy||loading} onClick={()=>void refresh()}>
     <RefreshCw size={15}/> Status prüfen
