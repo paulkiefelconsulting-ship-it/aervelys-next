@@ -5,9 +5,9 @@ const source=fs.readFileSync(path.join(__dirname,'../app/lib/msfsAcarsEvidence.t
 const js=ts.transpileModule(source,{compilerOptions:{
  module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,strict:true
 }}).outputText;
-const exports={};
-new Function('exports',js)(exports);
-const evaluate=exports.analyseMsfsEvidence;
+const moduleExports={};
+new Function('exports',js)(moduleExports);
+const evaluate=moduleExports.analyseMsfsEvidence;
 const base=new Date('2026-11-01T19:00:00Z').getTime();
 let id=0;
 const sample=(t,ground,speed,other={})=>({
