@@ -1,68 +1,51 @@
-# AERVELYS NEXT — MSFS 2024 Bridge (Windows MVP)
+# AERVELYS Flight Bridge · Windows x64 (MVP)
 
-This is the first read-only desktop SimConnect bridge, not the finished networked integration with AERVELYS NEXT. It observes the user aircraft only and writes an atomic local JSON snapshot once per second. It never sends data to Vercel, Supabase, or a public endpoint.
+Die Flight Bridge ist eine lokale Windows-Anwendung für Microsoft Flight Simulator 2024. Sie überwacht ausschließlich das eigene Flugzeug und schreibt jede Sekunde Position, Höhe, Geschwindigkeit und erkannte Flugphase in eine lokale Datei. Kein Server und keine Datenübermittlung.
 
-## Requirements
-- Windows 10/11 with Microsoft Flight Simulator 2024 running
-- MSFS 2024 SDK with managed Microsoft.FlightSimulator.SimConnect wrapper installed
-- Visual Studio 2022 (Desktop development with .NET), targeting pack for .NET Framework 4.8, x64 build
-- Configure MSFS_SDK to the root of your installed MSFS SDK. In the .csproj, verify the reference HintPath; the filename/location can differ by SDK install. Never commit the SDK binary into the repo.
+## Installation ohne Programmierung
 
-## Build
-Open AERVELYS.SimConnectBridge.csproj in Visual Studio, select Release | x64, then Build. Alternatively, from a Visual Studio Developer Command Prompt:
+1. Gehe zur GitHub-Aktion **AERVELYS Windows Bridge build** im Repository **paulkiefelconsulting-ship-it/aervelys-next**. Wähle einen erfolgreichen Lauf auf dem Entwicklungszweig **feature/passenger-experience-map**.
+2. Lade das Artifact **AERVELYS-Flight-Bridge-Windows-x64** herunter und entpacke es. Enthalten sind die EXE sowie **Install-und-Starten.cmd**.
+3. Voraussetzung: Der offizielle **MSFS 2024 SDK** ist auf deinem Windows-PC installiert. Er enthält die beiden Microsoft-Dateien **Microsoft.FlightSimulator.SimConnect.dll** (managed) und **SimConnect.dll** (native).
+4. Doppelklick auf **Install-und-Starten.cmd**. Das Skript kopiert die DLLs aus deinem **lokalen SDK** in den Bridge-Ordner und startet die Anwendung. Es lädt keine Microsoft-Dateien herunter oder überträgt Daten ins Netz.
+5. Starte MSFS 2024. Im Bridge-Fenster erscheinen Verbindungsstatus, Flughöhe und erkannte Flugphase. Falls MSFS noch nicht geöffnet ist, verbindet sich die Bridge nach dem Start automatisch.
 
-    msbuild AERVELYS.SimConnectBridge.csproj /p:Configuration=Release /p:Platform=x64
+**Fehlerbehebung:** Falls das Skript die Dateien nicht findet, setze die Umgebungsvariable **MSFS2024_SDK** auf das SDK-Hauptverzeichnis. Alternativ kopiere beide DLLs von Hand in den Ordner der EXE:
+- aus dem SDK-Unterordner **SimConnect SDK\lib\managed**: Microsoft.FlightSimulator.SimConnect.dll
+- aus dem SDK-Unterordner **SimConnect SDK\lib**: SimConnect.dll
 
-Run the built executable first with:
+Die zwei Microsoft-SDK-Dateien sind **nicht im GitHub-Paket enthalten**. Ihre externe Weiterverteilung ist rechtlich nicht geklärt, deshalb müssen sie vom eigenen SDK stammen.
 
-    AERVELYS.SimConnectBridge.exe --self-test
+## Live im selben Browser-PC ansehen
 
-This exercises parked → taxi-out → takeoff roll → climb → cruise → descent → approach → landing → taxi-in → parked with controlled telemetry.
+1. Öffne AERVELYS NEXT Passenger Experience auf **demselben Windows-PC** in Microsoft Edge oder Google Chrome.
+2. Gehe zu **03 · Flight Connect / Integration**.
+3. Klicke auf **Mit Bridge verbinden** und wähle die lokale Datei aus:
+   **%LOCALAPPDATA%\AERVELYS\bridge\telemetry.json**
+   Im Bridge-Fenster gibt es einen Knopf **Telemetrie-Ordner öffnen**.
+4. Der Browser liest diese explizit freigegebene Datei ungefähr jede Sekunde. **Sie wird nicht hochgeladen.** Bei aktuellen Messungen erscheinen Position und Flugphase als MSFS LIVE.
+5. Die Flugkarte verwendet die tatsächliche MSFS-Position. Die Kabinensimulation nutzt die erkannte Phase für die Servicefreigabe.
 
-With MSFS running, start the executable without arguments. It reconnects if the simulator is not yet available.
+Die SimBrief-Route bleibt ein geplanter Flugweg. Für ein **anderes** Tablet/Smartphone fehlen weiterhin die sichere serverseitige Geräte- und Flugzuordnung sowie eine authentifizierte Live-Übertragung. Firefox und mobile Browser unterstützen eventuell keinen automatischen Dateizugriff.
 
-## Flight-phase detection
-Inputs requested via the official managed SimConnect API:
-- SIM ON GROUND
-- GROUND VELOCITY
-- PLANE ALT ABOVE GROUND
-- VERTICAL SPEED
-- PLANE ALTITUDE
-- BRAKE PARKING POSITION
-- GENERAL ENG COMBUSTION:1, :2
-- Latitude, longitude, indicated airspeed
+## Entwicklerversion, Tests und Quellcode
 
-The detector uses stable-ground/airborne samples, candidate time windows and phase history rather than single speed thresholds. The transitions are best-effort heuristics, not guaranteed to be perfect for every jet, helicopter, aircraft add-on or go-around. Validating aircraft types in MSFS 2024 and tuning thresholds is required before production. A proper crew/flight pairing and manual override should be added before operational use.
+- **BridgeForm.cs:** sichtbare Windows-Oberfläche; SimConnect-Wrapper erst zur Laufzeit laden (kein lizenzierter SDK-Download oder Linkzeit-Dependency).
+- **FlightPhaseDetector.cs:** Phasenerkennung mit Bodenstatus, Höhe über Grund, Vertikal-/Bodengeschwindigkeit und Zeit-Hysterese.
+- **FlightPhaseScenarios.cs:** Tests für Parken, Rollen, Startlauf, Steigen, Reise-, Sink- und Anflug, Landung und Taxiin.
+- **PhaseEngine.Tests.csproj:** automatisierte C#-Tests auf GitHub Actions.
+- **windows-bridge-build.yml:** automatischer Windows-x64-Build mit herunterladbarem ZIP ohne Microsoft-DLLs.
 
-## Local output
-Path: %LOCALAPPDATA%\AERVELYS\bridge\telemetry.json
+Kompilieren (wenn Visual Studio/.NET Framework 4.8 Targeting Pack installiert sind):
 
-Example snapshot (illustrative values, not a recorded flight):
+    dotnet build tools/simconnect-bridge/AERVELYS.SimConnectBridge.csproj -c Release -p:Platform=x64
 
-    {
-      "schemaVersion": 1,
-      "source": "msfs2024-simconnect-local",
-      "timestampUtc": "2026-10-31T18:20:00.0000000Z",
-      "phase": "Cruise",
-      "telemetry": {
-        "latitude": 52.0,
-        "longitude": 13.0,
-        "altitudeFt": 36000,
-        "aglFt": 35500,
-        "verticalSpeedFpm": 50,
-        "groundSpeedKt": 430,
-        "indicatedSpeedKt": 270,
-        "onGround": false,
-        "parkingBrake": false
-      }
-    }
+## Sicherheit und Grenzen
 
-Never treat an old file as proof of a current connection: any consumer MUST check timestampUtc, reject stale snapshots (>10 seconds), reject unexpected schema versions and revalidate phase.
+- Keine offenen Netzwerk-Ports, kein cloudbasierter Telemetrie-Upload und kein Zugriff auf OPS-Kundendaten.
+- Lokale Datei: **%LOCALAPPDATA%\AERVELYS\bridge\telemetry.json**.
+- Die Browseranzeige verwirft Messungen, deren Zeitstempel älter als 10 Sekunden ist.
+- Die Flugphasen werden anhand SimConnect-Messwerten **heuristisch** erkannt, nicht vom Simulator als fertige Phasen gemeldet.
+- Der Windows-Build und die Phasentests ersetzen **keinen echten Flugtest** mit MSFS 2024. Besonders Go-around, Touch-and-go, Flugzeug-Add-ons und On-Ground-Messungen müssen getestet werden.
+- Die Bridge ist noch **kein freigegebenes produktives ACARS-System**.
 
-## Security and limitations
-- The bridge does not expose an HTTP port, unauthenticated WebSocket, secret, or public data endpoint.
-- The file is local to the simulator PC and may contain location and flight information. Do not upload it publicly.
-- The NEXT public passenger demo cannot automatically read this file, and browser localStorage SimBrief imports remain device-local. This is intentional until authenticated device pairing and per-flight authorization are implemented.
-- Windows/SimConnect compilation and flight testing require a Windows computer with the MSFS SDK and running simulator. Vercel web builds cannot validate the native bridge.
-
-Next phases: signed device-pairing flow → explicit active-OPS-flight binding → authenticated ingest with short-lived credentials and replay protection → per-flight guest-view token → stale-data protection and permission-based release. Do not forward arbitrary unauthenticated telemetry directly to Supabase or expose the device over the public internet.
