@@ -34,6 +34,11 @@ namespace Aervelys.SimBridge
             public double VerticalSpeedFpm;
             public double AltitudeAglFt;
             public double ParkingBrake;
+            public double EngineCount;
+            public double Engine1;
+            public double Engine2;
+            public double Engine3;
+            public double Engine4;
         }
         public SimBridgeWindow(BridgeSettings settings)
         {
@@ -81,6 +86,13 @@ namespace Aervelys.SimBridge
                 _sim.AddToDataDefinition(Definitions.Aircraft, "VERTICAL SPEED", "feet per minute", SIMCONNECT_DATATYPE.FLOAT64, 0, 6);
                 _sim.AddToDataDefinition(Definitions.Aircraft, "PLANE ALT ABOVE GROUND", "feet", SIMCONNECT_DATATYPE.FLOAT64, 0, 7);
                 _sim.AddToDataDefinition(Definitions.Aircraft, "BRAKE PARKING POSITION", "bool", SIMCONNECT_DATATYPE.FLOAT64, 0, 8);
+                // Indexed MSFS engine combustion flags plus engine count. Missing/invalid
+                // engine data must never be interpreted as a confirmed cold start.
+                _sim.AddToDataDefinition(Definitions.Aircraft, "NUMBER OF ENGINES", "number", SIMCONNECT_DATATYPE.FLOAT64, 0, 9);
+                _sim.AddToDataDefinition(Definitions.Aircraft, "GENERAL ENG COMBUSTION:1", "bool", SIMCONNECT_DATATYPE.FLOAT64, 0, 10);
+                _sim.AddToDataDefinition(Definitions.Aircraft, "GENERAL ENG COMBUSTION:2", "bool", SIMCONNECT_DATATYPE.FLOAT64, 0, 11);
+                _sim.AddToDataDefinition(Definitions.Aircraft, "GENERAL ENG COMBUSTION:3", "bool", SIMCONNECT_DATATYPE.FLOAT64, 0, 12);
+                _sim.AddToDataDefinition(Definitions.Aircraft, "GENERAL ENG COMBUSTION:4", "bool", SIMCONNECT_DATATYPE.FLOAT64, 0, 13);
                 _sim.RegisterDataDefineStruct<AircraftData>(Definitions.Aircraft);
                 _sim.RequestDataOnSimObject(Requests.Aircraft, Definitions.Aircraft,
                     SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.SECOND,
@@ -116,6 +128,15 @@ namespace Aervelys.SimBridge
             var phase = _phase.Update(d.OnGround > .5, d.GroundspeedKt, d.VerticalSpeedFpm, d.AltitudeAglFt);
             var title = (d.Title ?? "").Trim();
             if (title.Length > 120) title = title.Substring(0, 120);
+            var count = (int)Math.Round(d.EngineCount);
+            bool? engineRunning = null;
+            if (count >= 1 && count <= 4 && d.Engine1 >= 0 && d.Engine2 >= 0 && d.Engine3 >= 0 && d.Engine4 >= 0)
+            {
+                engineRunning = d.Engine1 > .5 ||
+                    (count >= 2 && d.Engine2 > .5) ||
+                    (count >= 3 && d.Engine3 > .5) ||
+                    (count >= 4 && d.Engine4 > .5);
+            }
             var sample = new
             {
                 observed_at = DateTime.UtcNow.ToString("o"),
@@ -129,6 +150,8 @@ namespace Aervelys.SimBridge
                 vertical_speed_fpm = d.VerticalSpeedFpm,
                 altitude_agl_ft = d.AltitudeAglFt,
                 parking_brake = d.ParkingBrake > .5,
+                engine_running = engineRunning,
+                number_of_engines = count >= 1 && count <= 4 ? (int?)count : null,
                 phase = phase
             };
             try
