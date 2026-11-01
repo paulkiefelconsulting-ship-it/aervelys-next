@@ -1,7 +1,7 @@
 {
   "name": "aervelys-next-desktop",
-  "version": "0.3.0",
-  "description": "AERVELYS NEXT offline-first Windows aviation simulation prototype",
+  "version": "0.4.0",
+  "description": "AERVELYS NEXT offline-first multi-pilot career simulation",
   "private": true,
   "author": "AERVELYS NEXT",
   "license": "UNLICENSED",
@@ -36,7 +36,8 @@
       "local.css",
       "local.js",
       "preload.cjs",
-      "localStore.cjs"
+      "localStore.cjs",
+      "pilotProfiles.cjs"
     ],
     "win": {
       "target": [

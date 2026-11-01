@@ -8,6 +8,69 @@
 <script src="local.js" defer></script>
 </head>
 <body>
+<section class="gateway" id="pilotGateway" aria-label="Pilotenverwaltung">
+ <div class="gateway-story">
+  <div class="gateway-brand"><span class="a-symbol">A</span><span>AERVELYS <b>NEXT</b><small>YOUR AVIATION. YOUR STORY.</small></span></div>
+  <div class="gateway-story-content">
+   <div class="eyebrow">YOUR FLIGHT. YOUR CAREER.</div>
+   <h1>Build your career.<br>One flight at a time.</h1>
+   <p>Fliege reale Strecken in MSFS 2024, baue deine private Pilotenkarriere auf und verwalte später deine eigene Business-Airline – auch offline.</p>
+   <div class="gateway-story-label">LOCAL DATA&nbsp; / &nbsp;REAL SIM FLIGHTS&nbsp; / &nbsp;AERVELYS NEXT</div>
+  </div>
+ </div>
+ <div class="gateway-panel">
+  <div class="gateway-panel-inner">
+   <section id="pilotChoose">
+    <div class="eyebrow">WELCOME BACK</div>
+    <h2>Pilotenprofil auswählen</h2>
+    <p class="gateway-subtitle">Jeder Pilot besitzt einen eigenen Spielstand.</p>
+    <div id="pilotList" class="pilot-list" aria-live="polite"></div>
+    <button class="primary full-button" id="createPilotOpen" type="button">+ Neuen Piloten erstellen</button>
+    <div class="gateway-tools">
+     <button class="link" id="backupProfiles" type="button">Profile sichern</button>
+     <button class="link" id="restoreProfiles" type="button">Backup wiederherstellen</button>
+    </div>
+    <p class="gateway-notice">Keine Registrierung, keine Cloud und kein Passwort erforderlich.</p>
+   </section>
+   <section id="pilotCreate" hidden>
+    <button type="button" class="secondary back-button" id="pilotBack">← Zurück</button>
+    <div class="eyebrow">START YOUR CAREER</div>
+    <h2>Neuen Piloten erstellen</h2>
+    <form id="newPilotForm">
+     <label>Name<input name="name" maxlength="70" minlength="2" required autocomplete="off" placeholder="Pilotenname"></label>
+     <label>Wohnsitzland<select name="country" id="newCountry">
+      <option value="DE" selected>Deutschland</option><option value="AT">Österreich</option>
+      <option value="CH">Schweiz</option><option value="GB">Vereinigtes Königreich</option>
+      <option value="US">Vereinigte Staaten</option><option value="FR">Frankreich</option>
+      <option value="NL">Niederlande</option><option value="ES">Spanien</option>
+      <option value="IT">Italien</option><option value="CA">Kanada</option>
+     </select></label>
+     <label>Spielwährung<select name="currency" id="newCurrency">
+      <option value="EUR" selected>EUR – Euro</option><option value="USD">USD – US-Dollar</option>
+      <option value="GBP">GBP – Pfund</option><option value="CHF">CHF – Schweizer Franken</option>
+      <option value="CAD">CAD – Kanadischer Dollar</option>
+     </select></label>
+     <div class="field-label">SIM-Startlizenz</div>
+     <div class="licence-grid" id="licenceCards">
+      <label class="licence-choice"><input type="radio" name="licence" value="PPL"><span><strong>PPL</strong> · Privatpilot<small>50 fiktive Startstunden · keine gewerblichen Aufträge</small></span></label>
+      <label class="licence-choice"><input type="radio" name="licence" value="CPL" checked><span><strong>CPL</strong> · Commercial Pilot<small>200 fiktive Startstunden · gewerbliche Flüge nach Ratings</small></span></label>
+      <label class="licence-choice"><input type="radio" name="licence" value="FROZEN_ATPL"><span><strong>Frozen ATPL</strong> · Airline-Karriere<small>240 fiktive Startstunden · weitere Ratings nötig</small></span></label>
+     </div>
+     <div class="field-label">SIM-Startkapital</div>
+     <div class="capital-grid">
+      <button type="button" data-capital="4000">4.000</button>
+      <button type="button" data-capital="12000" class="selected">12.000</button>
+      <button type="button" data-capital="35000">35.000</button>
+      <button type="button" data-capital="90000">90.000</button>
+     </div>
+     <label>Eigenes Startkapital<input name="capital" id="newCapital" type="number" min="0" max="10000000" step="1" value="12000" required></label>
+     <button type="submit" class="primary full-button">Pilotenkarriere starten</button>
+     <p class="gateway-notice">Alle Lizenzen und Geldbeträge sind ausschließlich Teil der Simulation.</p>
+    </form>
+   </section>
+  </div>
+ </div>
+</section>
 <div class="layout">
 <aside class="sidebar">
  <div class="brand"><div class="brand-mark">A</div><div><strong>AERVELYS <span>NEXT</span></strong><small>LOCAL OPERATIONS</small></div></div>
@@ -19,7 +82,7 @@
   <button class="nav-item" data-view="career"><span>✧</span> Pilot & Training</button>
   <button class="nav-item" data-view="company"><span>▤</span> Airline & Finanzen</button>
  </nav>
- <div class="sidebar-bottom"><span class="status-dot"></span> Lokaler Betrieb · kein Login nötig <small>Alle lokalen SIM-Daten bleiben auf diesem PC.</small></div>
+ <div class="sidebar-bottom"><button type="button" id="switchPilot" class="secondary switch-pilot">Profil wechseln</button><span class="status-dot"></span> Lokaler Betrieb · kein Login nötig <small>Alle lokalen SIM-Daten bleiben auf diesem PC.</small></div>
 </aside>
 <main class="main">
  <header class="topbar">
@@ -34,7 +97,7 @@
    <article><span>LOKALE MISSIONEN</span><b id="statMissions">0</b><small>Unabhängig von NEXT Cloud</small></article>
    <article><span>ABGESCHLOSSENE FLÜGE</span><b>0</b><small>Verifizierung noch in Arbeit</small></article>
    <article><span>SIMCONNECT</span><b id="statSim">OFFLINE</b><small>Telemetrie statt Demodaten</small></article>
-   <article><span>FINANZDATEN</span><b>—</b><small>Keine erfundenen Umsätze</small></article>
+   <article><span>SIM-KONTOSTAND</span><b id="statBudget">—</b><small>Startkapital · noch keine Flugauszahlung</small></article>
   </div>
   <div class="cols">
    <article class="panel"><div class="panel-title"><h3>Nächste Mission</h3><button id="goMissions" class="link">Alle Missionen</button></div><div id="nextMission" class="empty">Noch keine lokale Mission angelegt.</div></article>
@@ -67,7 +130,7 @@
  <section id="career" class="view">
   <div class="heading"><div class="eyebrow">PILOT CAREER</div><h1>Karriere & Training</h1><p>Lokales Pilotenprofil mit eigenständigen Checkride-Missionen. Flugstunden und Zertifikate werden erst nach einer validierten Flugprüfung geführt.</p></div>
   <div class="cols">
-   <article class="panel"><h3>Pilotenprofil</h3><form id="profileForm"><label>Name<input id="pilotInput" maxlength="70" minlength="2" required></label><div class="form-actions"><button class="primary" type="submit">Lokal speichern</button></div></form></article>
+   <article class="panel"><h3>Pilotenprofil</h3><div id="pilotDetails" class="muted"></div><form id="profileForm"><label>Name<input id="pilotInput" maxlength="70" minlength="2" required></label><div class="form-actions"><button class="primary" type="submit">Lokal speichern</button></div></form></article>
    <article class="panel"><h3>Qualifikationen</h3><p class="muted">Noch keine lokal verifizierten Type Ratings.</p><p class="hint">Eine SkyBridge-Berechtigung wird nicht automatisch in AERVELYS übertragen.</p></article>
   </div>
  </section>

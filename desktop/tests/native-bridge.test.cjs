@@ -40,7 +40,7 @@ test('desktop source layout and packaged source layout stay isolated',()=>{
 
 test('electron-builder bundles OUR C# sources but never Microsoft binaries',()=>{
  const pkg=require('../package.json');
- assert.equal(pkg.version,'0.3.0');
+ assert.equal(pkg.version,'0.4.0');
  assert.equal(pkg.build.extraResources.length,1);
  const resource=pkg.build.extraResources[0];
  assert.equal(resource.to,'simbridge-src');

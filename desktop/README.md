@@ -1,3 +1,37 @@
+# AERVELYS NEXT Desktop 0.4 — Multiple local pilots
+
+This release introduces a true **offline pilot selection / pilot career onboarding** flow inspired by the *workflow* of SkyBridge, without copying its proprietary code, graphics or data.
+
+## Pilot selection
+
+- On every app start, choose an existing pilot or create a new one.
+- Pilot creation: name, country, home currency, one simulated starting licence (PPL 50h, CPL 200h, Frozen ATPL 240h) and capital preset/custom amount.
+- These starting hours represent simulated background experience; they are **not verified logbook hours** or real-world certificates.
+- Separate stable UUID identifiers and independent career/mission files mean that identically named pilots do not share a mission list or balance.
+- Change pilots via **Profil wechseln** in the desktop sidebar.
+- Every profile is local. No internet, cloud login or NEXT/Supabase account is needed.
+
+## Backups and upgrading from 0.3
+
+- **Profile sichern** creates an explicit JSON export of all local pilot careers using a user-selected file path. Protect that export as personal data.
+- **Backup wiederherstellen** imports validated AERVELYS backups as *additional* profiles with fresh IDs. It never silently overwrites an existing profile.
+- An existing 0.3 \`local-career.json\` is copied into a dedicated legacy profile on the first 0.4 launch. The original 0.3 career file is **preserved untouched**. Legacy profiles do not get invented licences, hours or opening capital.
+- New storage is \`pilots-index.json\` plus \`pilots/<UUID>/local-career.json\` in the app's Electron user-data directory.
+- The SIM bank balance is an **initial capital only** in this release. It is not a ledger and is never changed automatically by flight playback.
+
+## Limitations
+
+- No real aircraft type rating is granted, no automatic contract verification and no payout. The MSFS SimConnect connection still needs a real Windows/SDK flight test.
+- The local profiles are independent of the existing AERVELYS NEXT Cloud airline, employees, customer database and charter portfolio.
+- We intentionally do not delete pilot profiles through the UI yet. Use backup/export before future profile removal.
+- Automatic cloud sync and conflict-free import of online careers are not implemented.
+
+## Installation
+
+Download the unsigned NSIS Windows x64 Setup 0.4 from the GitHub Actions **AERVELYS NEXT Windows Desktop** run. Update over version 0.3; the app ID remains unchanged and the local profile folder remains on disk. Review the build checksum before installing.
+
+---
+
 # AERVELYS NEXT Desktop 0.3 — Offline-First Alpha
 
 **Kurskorrektur nach dem SkyBridge-Vergleich:** AERVELYS NEXT Desktop ist jetzt eine **lokal startende Anwendung**, nicht mehr lediglich eine Web-App-Hülle. Die bestehenden Cloud-Module sind weiter separat verfügbar, aber nicht erforderlich, um das Windows-Programm zu öffnen oder einen lokalen SIM-Spielstand zu bearbeiten.
