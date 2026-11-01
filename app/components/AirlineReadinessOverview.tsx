@@ -50,7 +50,7 @@ export default function AirlineReadinessOverview({openMission}:{openMission:()=>
   {value&&<>
    <div className={styles.banner}><ShieldAlert size={18}/><span>
     <strong>Airline-Simulation im Aufbau · kein freigegebener Flugbetrieb.</strong>
-    Die Simulator-Missionen sind manuell; MSFS-Telemetrie, Versicherungsnachweise und vollständige Crew-/Flottenfreigaben fehlen weiterhin.
+    SIM-Missionen nutzen manuelle Phasen oder eine lokal gekoppelte, nicht flugbetrieblich verifizierte Bridge. Der echte Windows-/MSFS-Test sowie Versicherungs-, Crew- und Flottenfreigaben fehlen weiterhin.
    </span></div>
    <div className={styles.grid}>
     <article><Plane size={19}/><strong>{value.fleet.total}</strong><span>Flugzeuge erfasst</span>
