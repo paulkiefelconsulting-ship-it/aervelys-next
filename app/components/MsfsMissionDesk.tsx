@@ -68,7 +68,7 @@ export default function MsfsMissionDesk(){
    'Geschätzte Blockzeit: '+String(plan.estimated_block_minutes??'unbekannt')+' min',
    'Planungsstatus: '+safe(plan.planning_status),
    'Bemerkung: '+safe(plan.coordinator_note),
-   'MSFS/ACARS: nicht verbunden – keine Telemetrie erfasst'
+   'MSFS/ACARS: Telemetrie im Bridge-Panel; kein automatischer Flugauftragsabgleich'
   ].join('\n');
   try{
    await navigator.clipboard.writeText(briefing);
@@ -83,18 +83,18 @@ export default function MsfsMissionDesk(){
    <div className="panelhead">
     <div className="eyebrow">FLIGHT SIMULATOR OPERATIONS / FIRST STAGE</div>
     <h2>AERVELYS SIM Mission Desk</h2>
-    <p className="lead">Deine Flugdisposition mit MSFS 2024 verbinden. Derzeit ein geschützter, lesender Dispatch-Einblick – noch keine SimConnect-Verbindung.</p>
+    <p className="lead">Deine Flugdisposition mit MSFS 2024 verbinden. Geschützter Dispatch-Einblick. Der aktuelle Simulatorstatus steht im Live-Bridge-Bereich darüber.</p>
    </div>
    <div className={styles.statusGrid}>
     <div className={styles.statusCard}>
      <div className={styles.statusTitle}><CloudOff size={19}/><strong>SIM BRIDGE</strong></div>
-     <span className={styles.offline}>Nicht eingerichtet</span>
-     <small>Lokaler Reader, geschützte SIM-Missionskopplung und Telemetrie-Eingang sind implementiert. Die tatsächliche Windows/MSFS-Verbindung ist noch nicht getestet.</small>
+     <span className={styles.offline}>Status oben prüfen</span>
+     <small>Windows-Connector, Gerätekopplung und Telemetrie-Eingang sind vorbereitet. Ob dein MSFS tatsächlich verbunden ist, zeigt ausschließlich das obere Bridge-Panel.</small>
     </div>
     <div className={styles.statusCard}>
      <div className={styles.statusTitle}><RadioTower size={19}/><strong>ACARS & TELEMETRIE</strong></div>
-     <span className={styles.offline}>Keine Live-Daten</span>
-     <small>Start, Landung und Flugphasen werden noch nicht aus MSFS übernommen.</small>
+     <span className={styles.offline}>Flugzuordnung ausstehend</span>
+     <small>Live-Messungen erscheinen nach Kopplung oben; ihre Zuordnung zu einem konkreten Charterauftrag ist noch nicht implementiert.</small>
     </div>
     <div className={styles.statusCard}>
      <div className={styles.statusTitle}><ClipboardList size={19}/><strong>NEXT DISPATCH</strong></div>
