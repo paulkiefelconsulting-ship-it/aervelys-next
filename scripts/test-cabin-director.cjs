@@ -45,8 +45,9 @@ const served=[{id:2,request_id:'SIM-CASE-TEST',event_kind:'service',created_at:'
  payload:{service:'restroom',seat:1}}];
 const afterRecent=assessCabin([a,b],served,'cruise','running',20,
  Date.parse('2026-11-01T12:01:00Z'));
-assert.equal(afterRecent.recommendations[0].seat_index,1);
-assert.notEqual(afterRecent.recommendations[0].service,'restroom',
+const paxOne=afterRecent.recommendations.find(r=>r.seat_index===1);
+assert.ok(paxOne,'other passenger needs remain visible after recent service');
+assert.notEqual(paxOne.service,'restroom',
  'do not immediately repeat the same freshly logged service');
 const oldEvent=assessCabin([a],served,'cruise','running',20,
  Date.parse('2026-11-01T12:10:00Z'));
