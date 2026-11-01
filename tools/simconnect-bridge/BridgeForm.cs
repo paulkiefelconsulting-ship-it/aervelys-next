@@ -18,6 +18,8 @@ namespace Aervelys.SimConnectBridge
     public sealed class BridgeForm : Form
     {
         private const int SimMessage = 0x0402;
+        private enum Definitions { Snapshot = 1 }
+        private enum Requests { Snapshot = 1 }
         private readonly Timer _watchdog = new Timer { Interval = 3000 };
         private readonly FlightPhaseDetector _detector = new FlightPhaseDetector();
         private readonly JavaScriptSerializer _json = new JavaScriptSerializer();
@@ -179,8 +181,7 @@ namespace Aervelys.SimConnectBridge
                 AttachEvent("OnRecvSimobjectData", nameof(ReceiveData));
                 AttachEvent("OnRecvQuit", nameof(ReceiveQuit));
                 var def = EnumValue(assembly, "SIMCONNECT_DATATYPE", "FLOAT64");
-                var definitionType = assembly.GetType("Microsoft.FlightSimulator.SimConnect.SIMCONNECT_DATA_DEFINITION_ID", true);
-                var definition = Enum.ToObject(definitionType, 1);
+                var definition = Definitions.Snapshot;
                 string[] vars = {
                     "PLANE LATITUDE", "PLANE LONGITUDE", "PLANE ALTITUDE",
                     "PLANE ALT ABOVE GROUND", "VERTICAL SPEED", "GROUND VELOCITY",
@@ -193,8 +194,7 @@ namespace Aervelys.SimConnectBridge
                     Invoke("AddToDataDefinition", definition, vars[i], units[i], def, 0f, UInt32.MaxValue);
                 var register = _clientType.GetMethods().First(m => m.Name == "RegisterDataDefineStruct" && m.IsGenericMethodDefinition);
                 register.MakeGenericMethod(typeof(SimSnapshot)).Invoke(_client, new object[] { definition });
-                var requestType = assembly.GetType("Microsoft.FlightSimulator.SimConnect.SIMCONNECT_DATA_REQUEST_ID", true);
-                var request = Enum.ToObject(requestType, 1);
+                var request = Requests.Snapshot;
                 var everySecond = EnumValue(assembly, "SIMCONNECT_PERIOD", "SECOND");
                 var flags = EnumValue(assembly, "SIMCONNECT_DATA_REQUEST_FLAG", "DEFAULT");
                 Invoke("RequestDataOnSimObject", request, definition, (uint)0, everySecond, flags,
