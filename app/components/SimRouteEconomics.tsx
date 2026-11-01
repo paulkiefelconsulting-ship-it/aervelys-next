@@ -4,6 +4,7 @@ import {useCallback,useEffect,useMemo,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
 import {Activity,ArrowRight,Calculator,Clock3,MapPinned,Plane,RefreshCw,ShieldAlert,Wallet,Wind} from 'lucide-react';
 import styles from './SimRouteEconomics.module.css';
+import SimBriefImport from './SimBriefImport';
 
 type Projection={
  request_id:string;request_code:string;origin_icao:string;destination_icao:string;
@@ -17,6 +18,8 @@ type Projection={
  passenger_component_eur:number;sim_cost_excluding_airport_fees_eur:number|null;
  airport_fee_known_subset_eur:number|null;airport_verified_fee_entries:number;
  airport_fee_coverage_complete:false;timing_source:string;timing_calculated_at:string|null;
+ simbrief_imported_at:string|null;simbrief_source_reference:string|null;
+ simbrief_route_text:string|null;simbrief_validation_status:string|null;
  speed_assumption_kt:number|null;buffer_assumption_minutes:number|null;
  range_nm_verified:number|null;range_needs_review:true;
  maintenance_overlap:boolean|null;crew_duty_overlap:boolean|null;
@@ -126,6 +129,10 @@ export default function SimRouteEconomics({initialRequestId}:{initialRequestId?:
     </div>
     <div><strong>{caseData.passengers}</strong><span>PASSAGIERE</span></div>
    </div>}
+   {caseData&&<SimBriefImport key={requestId}
+    requestId={requestId} origin={caseData.origin_icao} destination={caseData.destination_icao}
+    airframes={selected.map(p=>({aircraft_id:p.aircraft_id,registration:p.registration,aircraft_type:p.aircraft_type}))}
+    onImported={refresh}/>}
    <div className={styles.grid}>
     {viewOptions.map(p=>{
      const available=p.sim_cost_excluding_airport_fees_eur!==null;
@@ -162,7 +169,10 @@ export default function SimRouteEconomics({initialRequestId}:{initialRequestId?:
        <strong><ShieldAlert size={14}/> Nicht eingepreiste Risiken</strong>
        <ul>{p.warnings.filter((w,i)=>i>0).slice(0,5).map((w,i)=><li key={i}>{w}</li>)}</ul>
       </div>
-      <small className={styles.source}>Quelle: {p.timing_source} · keine tatsächlichen Flugdaten</small>
+      {p.simbrief_imported_at&&<div className={styles.ofpTag}>
+        SimBrief-OFP übernommen · nur für {p.registration} · ungeprüfte Flugplanquelle
+       </div>}
+       <small className={styles.source}>Quelle: {p.timing_source} · keine tatsächlichen Flugdaten</small>
      </article>;
     })}
    </div>
