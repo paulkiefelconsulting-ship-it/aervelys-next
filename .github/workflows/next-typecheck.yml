@@ -38,6 +38,8 @@ jobs:
         run: node scripts/test-local-telemetry.cjs
       - name: Validate SIM cabin experience recommendations
         run: node scripts/test-cabin-director.cjs
+      - name: Validate ACARS flight and checkride evidence
+        run: node scripts/test-msfs-acars.cjs
       - name: Strict TypeScript check
         run: npx tsc --noEmit
       - name: Production build check (no Vercel deployment)
