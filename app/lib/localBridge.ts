@@ -100,7 +100,7 @@ export function useLocalBridge(){
  // Do not claim a real airborne duration if the bridge was connected mid-flight.
  // For old bridge snapshots without flightStartedAtUtc use "since live link".
  const hasObservedTakeoff=Boolean(snapshot?.flightStartedAtUtc);
- const elapsedBasis=hasObservedTakeoff?'takeoff':'connection' as const;
+ const elapsedBasis:'takeoff'|'connection'=hasObservedTakeoff?'takeoff':'connection';
  const elapsedMinutes=useMemo(()=>{
   if(!isLive||!snapshot)return 0;
   const start=hasObservedTakeoff?Date.parse(snapshot.flightStartedAtUtc!):(connectedAt??clock);
