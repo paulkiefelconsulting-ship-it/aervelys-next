@@ -68,7 +68,7 @@ export default function MsfsMissionDesk(){
    'Geschätzte Blockzeit: '+String(plan.estimated_block_minutes??'unbekannt')+' min',
    'Planungsstatus: '+safe(plan.planning_status),
    'Bemerkung: '+safe(plan.coordinator_note),
-   'MSFS/ACARS: Telemetrie im Bridge-Panel; kein automatischer Flugauftragsabgleich'
+   'MSFS/ACARS: SIM-Sitzungszuordnung nach bestätigter Cloud-Telemetrie verfügbar; keine automatische Phasenfreigabe'
   ].join('\n');
   try{
    await navigator.clipboard.writeText(briefing);
@@ -93,8 +93,8 @@ export default function MsfsMissionDesk(){
     </div>
     <div className={styles.statusCard}>
      <div className={styles.statusTitle}><RadioTower size={19}/><strong>ACARS & TELEMETRIE</strong></div>
-     <span className={styles.offline}>Flugzuordnung ausstehend</span>
-     <small>Live-Messungen erscheinen nach Kopplung oben; ihre Zuordnung zu einem konkreten Charterauftrag ist noch nicht implementiert.</small>
+     <span className={styles.active}>SIM-Zuordnung verfügbar</span>
+     <small>Der neue Bereich „MSFS-Sitzung mit Chartermission verbinden“ zeigt nur echte Cloud-Messungen und laufende AV-SIM-Missionen. Lokale Dateitelemetrie reicht für die Zuordnung allein nicht aus.</small>
     </div>
     <div className={styles.statusCard}>
      <div className={styles.statusTitle}><ClipboardList size={19}/><strong>NEXT DISPATCH</strong></div>
