@@ -18,6 +18,8 @@ namespace Aervelys.SimConnectBridge
     public sealed class BridgeForm : Form
     {
         private const int SimMessage = 0x0402;
+        private const string ManagedName = "Microsoft.FlightSimulator.SimConnect.dll";
+        private const string NativeName = "SimConnect.dll";
         private enum Definitions { Snapshot = 1 }
         private enum Requests { Snapshot = 1 }
         private readonly Timer _watchdog = new Timer { Interval = 3000 };
@@ -57,16 +59,16 @@ namespace Aervelys.SimConnectBridge
             Controls.Add(layout);
             var header = MakeLabel(10, FontStyle.Bold, Color.FromArgb(123, 211, 214));
             header.Text = "AERVELYS NEXT   /   FLIGHT TELEMETRY BRIDGE";
-            layout.Controls.Add(header);
-            _status.Text = "SimConnect wird gesucht …";
-            layout.Controls.Add(_status);
-            _flight.Text = "—  /  —";
-            layout.Controls.Add(_flight);
-            _info.Height = 85;
+            _info.Height = 90;
             _info.Text = "Keine Verbindung. Starte MSFS 2024 und die Bridge verbindet sich automatisch.";
             layout.Controls.Add(_info);
+            _flight.Text = "—  /  —";
+            layout.Controls.Add(_flight);
+            _status.Text = "SimConnect wird gesucht …";
+            layout.Controls.Add(_status);
+            layout.Controls.Add(header);
 
-            var buttons = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 54, FlowDirection = FlowDirection.LeftToRight };
+            var buttons = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 94, FlowDirection = FlowDirection.LeftToRight, AutoScroll = true };
             layout.Controls.Add(buttons);
             var open = new Button { Text = "Telemetrie-Ordner öffnen", Width = 230, Height = 38 };
             open.Click += (s, e) => Process.Start("explorer.exe", _outputFolder);
@@ -74,6 +76,26 @@ namespace Aervelys.SimConnectBridge
             var retry = new Button { Text = "Erneut verbinden", Width = 155, Height = 38 };
             retry.Click += (s, e) => { Disconnect(); Connect(); };
             buttons.Controls.Add(retry);
+            var repair = new Button { Text = "MSFS-SDK auswählen …", Width = 195, Height = 38 };
+            repair.Click += (sender, args) => {
+                using (var dialog = new FolderBrowserDialog {
+                    Description = "Bitte den MSFS 2024 SDK-Hauptordner auswählen (z. B. C:\\MSFS 2024 SDK).",
+                    ShowNewFolderButton = false
+                }) {
+                    if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                    try {
+                        CopyLocalSdkLibraries(dialog.SelectedPath);
+                        _status.Text = "SDK-Dateien erfolgreich eingerichtet";
+                        _info.Text = "Beide Microsoft-SimConnect-DLLs wurden nur lokal in den Bridge-Ordner kopiert. Verbinde jetzt mit dem Simulator.";
+                        Disconnect();
+                        Connect();
+                    } catch (Exception ex) {
+                        _status.Text = "SDK-Ordner nicht vollständig";
+                        _info.Text = ex.GetBaseException().Message;
+                    }
+                }
+            };
+            buttons.Controls.Add(repair);
 
             _watchdog.Tick += (s, e) => {
                 if (_client == null) Connect();
@@ -88,23 +110,69 @@ namespace Aervelys.SimConnectBridge
             FormClosed += (s, e) => { _watchdog.Stop(); Disconnect(); };
         }
 
+        private static string BridgeFolder => AppDomain.CurrentDomain.BaseDirectory;
+
+        private static string[] CandidateSdkRoots()
+        {
+            return new[] {
+                Environment.GetEnvironmentVariable("MSFS2024_SDK"),
+                Environment.GetEnvironmentVariable("MSFS_SDK"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System).Substring(0, 3), "MSFS 2024 SDK"),
+                @"C:\MSFS 2024 SDK",
+                @"C:\MSFS SDK"
+            }.Where(r => !String.IsNullOrWhiteSpace(r)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        }
+
+        private static void CopyLocalSdkLibraries(string sdkRoot)
+        {
+            // Accept SDK root or any of its SimConnect SDK/lib/managed parent directories.
+            var root = sdkRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var guesses = new[] {
+                Path.Combine(root, "SimConnect SDK", "lib"),
+                Path.Combine(root, "lib"),
+                root,
+                Directory.GetParent(root)?.FullName ?? root
+            }.Distinct(StringComparer.OrdinalIgnoreCase);
+            string lib = guesses.FirstOrDefault(p =>
+                File.Exists(Path.Combine(p, NativeName)) &&
+                File.Exists(Path.Combine(p, "managed", ManagedName)));
+            if (lib == null)
+                throw new FileNotFoundException(
+                    "Im ausgewählten SDK-Ordner fehlen SimConnect SDK\\lib\\SimConnect.dll "
+                    + "oder SimConnect SDK\\lib\\managed\\" + ManagedName
+                    + ". Installiere den vollständigen offiziellen MSFS 2024 SDK und wähle dessen Hauptordner.");
+
+            string managed = Path.Combine(lib, "managed", ManagedName);
+            string native = Path.Combine(lib, NativeName);
+            string destManaged = Path.Combine(BridgeFolder, ManagedName);
+            string destNative = Path.Combine(BridgeFolder, NativeName);
+            if (!String.Equals(Path.GetFullPath(managed), Path.GetFullPath(destManaged), StringComparison.OrdinalIgnoreCase))
+                File.Copy(managed, destManaged, true);
+            if (!String.Equals(Path.GetFullPath(native), Path.GetFullPath(destNative), StringComparison.OrdinalIgnoreCase))
+                File.Copy(native, destNative, true);
+        }
+
         private string FindManagedDll()
         {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string local = Path.Combine(baseDir, "Microsoft.FlightSimulator.SimConnect.dll");
-            if (File.Exists(local)) return local;
-            string[] roots = { Environment.GetEnvironmentVariable("MSFS2024_SDK"),
-                               Environment.GetEnvironmentVariable("MSFS_SDK") };
-            foreach (var root in roots.Where(r => !String.IsNullOrWhiteSpace(r)))
+            string managed = Path.Combine(BridgeFolder, ManagedName);
+            string native = Path.Combine(BridgeFolder, NativeName);
+            if (File.Exists(managed) && File.Exists(native)) return managed;
+            foreach (var root in CandidateSdkRoots())
             {
-                string path = Path.Combine(root, "SimConnect SDK", "lib", "managed",
-                                            "Microsoft.FlightSimulator.SimConnect.dll");
-                if (File.Exists(path)) return path;
+                try {
+                    if (!Directory.Exists(root)) continue;
+                    CopyLocalSdkLibraries(root);
+                    return managed;
+                } catch (FileNotFoundException) { /* Try another SDK root. */ }
             }
+            string missing = !File.Exists(managed) && !File.Exists(native)
+                ? "Beide SimConnect-DLLs fehlen"
+                : !File.Exists(managed) ? "Microsoft.FlightSimulator.SimConnect.dll fehlt"
+                : "Die native SimConnect.dll fehlt";
             throw new FileNotFoundException(
-                "Microsoft.FlightSimulator.SimConnect.dll fehlt. Kopiere die offizielle Managed DLL "
-                + "und SimConnect.dll aus deinem MSFS-2024-SDK in den Bridge-Programmordner. "
-                + "Alternativ installiere das SDK mit gesetzter MSFS2024_SDK-Umgebungsvariable.");
+                missing + " im Bridge-Programmordner. "
+                + "Klicke auf 'MSFS-SDK auswählen ...' und wähle den installierten MSFS-2024-SDK-Hauptordner. "
+                + "Es werden keine Dateien aus dem Internet geladen.");
         }
 
         private static object EnumValue(Assembly assembly, string name, string value)
@@ -130,9 +198,10 @@ namespace Aervelys.SimConnectBridge
                     for (int i = 0; i < args.Length; i++)
                     {
                         Type expected = pars[i].ParameterType;
-                        actual[i] = args[i] == null ? null :
-                            expected.IsInstanceOfType(args[i]) ? args[i] :
-                            Convert.ChangeType(args[i], expected);
+                        if (args[i] == null) actual[i] = null;
+                        else if (expected.IsInstanceOfType(args[i])) actual[i] = args[i];
+                        else if (expected.IsEnum) actual[i] = Enum.ToObject(expected, Convert.ToInt64(args[i]));
+                        else actual[i] = Convert.ChangeType(args[i], expected);
                     }
                     return method.Invoke(_client, actual);
                 }
@@ -162,12 +231,8 @@ namespace Aervelys.SimConnectBridge
             try
             {
                 var managed = FindManagedDll();
-                var dllFolder = Path.GetDirectoryName(managed);
-                // Managed wrapper loads native SimConnect.dll at runtime.
-                if (!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SimConnect.dll")) &&
-                    !File.Exists(Path.Combine(dllFolder, "..", "SimConnect.dll")))
-                    throw new FileNotFoundException("Native SimConnect.dll fehlt im Bridge-Ordner. Kopiere sie aus dem MSFS-2024-SDK (SimConnect SDK\\lib).");
-
+                // Both DLLs are now guaranteed to be next to the running EXE,
+                // which is also the Windows native-DLL search directory.
                 var assembly = Assembly.LoadFrom(managed);
                 _clientType = assembly.GetType("Microsoft.FlightSimulator.SimConnect.SimConnect", true);
                 var constructor = _clientType.GetConstructors().First(c => c.GetParameters().Length == 5);
@@ -205,9 +270,17 @@ namespace Aervelys.SimConnectBridge
             }
             catch (Exception ex)
             {
-                var message = ex.GetBaseException().Message;
-                _status.Text = "Warte auf MSFS / SDK";
-                _info.Text = message + "\r\n\r\nDie Bridge versucht die Verbindung automatisch erneut.";
+                var baseError = ex.GetBaseException();
+                string message = baseError.Message;
+                if (baseError is BadImageFormatException)
+                    message = "32-/64-Bit-Konflikt: Bitte die x64-SimConnect.dll aus dem aktuellen MSFS-2024-SDK verwenden.";
+                else if (baseError is FileNotFoundException &&
+                         File.Exists(Path.Combine(BridgeFolder, ManagedName)) &&
+                         File.Exists(Path.Combine(BridgeFolder, NativeName)))
+                    message = "Die SimConnect-Dateien sind vorhanden, aber eine Laufzeit-Abhängigkeit konnte nicht geladen werden. "
+                        + "Prüfe, ob beide DLLs aus demselben MSFS-2024-SDK und in x64 vorliegen. Details: " + message;
+                _status.Text = "SimConnect-Verbindung nicht verfügbar";
+                _info.Text = message + "\r\nSDK auswählen oder nach der Korrektur erneut verbinden.";
                 Disconnect();
             }
         }
