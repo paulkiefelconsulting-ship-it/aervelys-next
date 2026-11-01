@@ -25,3 +25,27 @@
 .delete{display:flex;align-items:center;gap:7px;width:max-content;border:1px solid #664c4c;color:#ffb7b7;background:transparent;border-radius:7px;padding:9px;cursor:pointer;font-size:11px}
 .warning{display:flex;gap:12px;align-items:flex-start;border:1px solid #365164;background:#0f2230;border-radius:9px;padding:18px;color:#a8c3d1;margin-top:22px;font-size:12px;line-height:1.7}.warning svg{flex-shrink:0;color:#f0b178}
 @media(max-width:790px){.grid{grid-template-columns:1fr}.heading{margin-top:28px}.card{padding:18px}.header{flex-wrap:wrap}}
+
+/* V0.5 matching pilot setup */
+.page{background:radial-gradient(ellipse at 80% 0,rgba(29,97,112,.23),transparent 48%),linear-gradient(140deg,#0b1723,#090f18);color:#eff8fc;font-family:'DM Sans',Arial,sans-serif}
+.container{max-width:1160px}
+.header{border-bottom-color:rgba(141,197,214,.18);padding-bottom:26px;color:#8adcd8}
+.logo{font:800 19px Manrope,Arial,sans-serif;letter-spacing:3px}
+.logo span{color:#95e9d5}
+.heading .eyebrow{color:#8be2d8}
+.heading h1{font:800 clamp(30px,4.4vw,52px)/1.15 Manrope,Arial,sans-serif;letter-spacing:-1.5px;max-width:910px}
+.heading p{color:#9fb9c7;font-size:14px}
+.grid{gap:16px}
+.card{background:linear-gradient(150deg,#142a3c,#0e1b2a);border-color:rgba(141,197,214,.2);border-radius:18px;padding:30px}
+.card .eyebrow{color:#91ddd6}
+.card h2{font-family:Manrope,Arial,sans-serif;font-size:21px;letter-spacing:-.5px}
+.upload{min-height:220px;border-color:#508c98;background:rgba(35,76,84,.16);border-radius:14px;color:#a2eddf}
+.upload:hover{background:rgba(35,97,101,.25);border-color:#98e7d5}
+.upload strong{color:#e8faf5}
+.upload input::file-selector-button{background:#246e78}
+.success{color:#9aefd8}
+.details span{background:#1b414d;color:#b9dcd5}
+.routeText{background:#0c2632;color:#dcecf3}
+.open{background:linear-gradient(110deg,#52a7b4,#8ae0ce);color:#082b33;border:1px solid #b2f3df;box-shadow:0 10px 28px rgba(47,159,166,.13)}
+.open:hover{background:#a2ebde}
+.warning{background:rgba(91,110,92,.09);border-color:rgba(135,191,196,.23);color:#97b6c4}
