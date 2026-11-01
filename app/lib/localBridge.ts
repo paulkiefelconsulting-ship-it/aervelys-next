@@ -1,5 +1,6 @@
 'use client';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {bridgeLinkStatus} from './bridgeLinkHealth';
 
 export type BridgePhase='Unknown'|'Parked'|'TaxiOut'|'TakeoffRoll'|'Climb'|'Cruise'|'Descent'|'Approach'|'Landing'|'TaxiIn';
 export type BridgeSnapshot={
@@ -41,10 +42,17 @@ export function useLocalBridge(){
  const [snapshot,setSnapshot]=useState<BridgeSnapshot|null>(null);
  const [error,setError]=useState('');
  const [connectedAt,setConnectedAt]=useState<number|null>(null);
+ const [linked,setLinked]=useState(false);
+ const [lastGoodReadAt,setLastGoodReadAt]=useState(0);
+ const lastGoodReadRef=useRef(0);
  const [clock,setClock]=useState(0);
  const lastSeen=useRef<string>('');
  const connected=directory!==null;
- const isLive=connected&&snapshot!==null;
+ const rawStatus=bridgeLinkStatus(connected,linked,lastGoodReadAt,clock);
+ const isLive=rawStatus==='live'&&snapshot!==null&&Math.abs(clock-Date.parse(snapshot.timestampUtc))<=10_000;
+ const status=linked&&!isLive&&connected?'interrupted':rawStatus;
+ // A committed tracking session never falls back to DEMO until manually disconnected.
+ const sessionActive=connected&&linked;
  const connect=useCallback(async()=>{
   const picker=(window as Window & {showDirectoryPicker?:(
    options?:{mode?:'read'|'readwrite'}
@@ -59,7 +67,7 @@ export function useLocalBridge(){
    // the Windows bridge updates the same telemetry file once per second.
    const selected=await picker({mode:'read'});
    await selected.getFileHandle('telemetry.json');
-   setError('Verbinde lokale Bridge …');setSnapshot(null);setConnectedAt(null);lastSeen.current='';
+   setError('Verbinde lokale Bridge …');setSnapshot(null);setConnectedAt(null);setLinked(false);setLastGoodReadAt(0);lastGoodReadRef.current=0;lastSeen.current='';
    setDirectory(selected);
   }catch(err){
    if(err instanceof Error&&err.name==='AbortError')return;
@@ -67,7 +75,7 @@ export function useLocalBridge(){
   }
  },[]);
  const disconnect=useCallback(()=>{
-  setDirectory(null);setSnapshot(null);setError('');setConnectedAt(null);lastSeen.current='';
+  setDirectory(null);setSnapshot(null);setError('');setConnectedAt(null);setLinked(false);setLastGoodReadAt(0);lastGoodReadRef.current=0;lastSeen.current='';
  },[]);
  useEffect(()=>{
   if(!directory)return;
@@ -76,21 +84,44 @@ export function useLocalBridge(){
    if(closed||reading)return;
    reading=true;
    try{
-    const fileHandle=await directory!.getFileHandle('telemetry.json');
-    const file=await fileHandle.getFile();
-    const value=parseBridgeSnapshot(await file.text(),Date.now());
-    if(closed)return;
-    setSnapshot(value);setError('');
-    if(lastSeen.current!==value.timestampUtc){
-     lastSeen.current=value.timestampUtc;
-     setConnectedAt(old=>old??Date.now());
+    let value:BridgeSnapshot|null=null;
+    let readError:unknown=null;
+    // The bridge rewrites the JSON in-place to retain browser file permission.
+    // A read may land in the middle of a write; retry without losing live state.
+    for(let attempt=0;attempt<3&&!closed;attempt++){
+     try{
+      const fileHandle=await directory!.getFileHandle('telemetry.json');
+      const file=await fileHandle.getFile();
+      value=parseBridgeSnapshot(await file.text(),Date.now());
+      break;
+     }catch(e){
+      readError=e;
+      if(attempt<2)await new Promise<void>(resolve=>window.setTimeout(resolve,120));
+     }
     }
-    setClock(Date.now());
+    if(closed)return;
+    const now=Date.now();
+    if(value){
+     setSnapshot(value);
+     setLinked(true);
+     setError('');
+     if(lastSeen.current!==value.timestampUtc){
+      lastSeen.current=value.timestampUtc;
+      lastGoodReadRef.current=now;
+      setLastGoodReadAt(now);
+      setConnectedAt(old=>old??now);
+     }
+    }else if(!lastGoodReadRef.current||now-lastGoodReadRef.current>3500){
+     setError(readError instanceof Error?readError.message:'Telemetrie kann vorübergehend nicht gelesen werden.');
+    }
+    setClock(now);
    }catch(err){
     if(closed)return;
-    setSnapshot(null);
-    setError(err instanceof Error?err.message:'Telemetrie kann nicht gelesen werden.');
-    setClock(Date.now());
+    // Keep the last valid telemetry and tracked-flight identity even on errors.
+    const now=Date.now();
+    if(!lastGoodReadRef.current||now-lastGoodReadRef.current>3500)
+     setError(err instanceof Error?err.message:'Telemetrie kann vorübergehend nicht gelesen werden.');
+    setClock(now);
    }finally{reading=false;}
   }
   void check();
@@ -102,9 +133,9 @@ export function useLocalBridge(){
  const hasObservedTakeoff=Boolean(snapshot?.flightStartedAtUtc);
  const elapsedBasis:'takeoff'|'connection'=hasObservedTakeoff?'takeoff':'connection';
  const elapsedMinutes=useMemo(()=>{
-  if(!isLive||!snapshot)return 0;
+  if(!sessionActive||!snapshot)return 0;
   const start=hasObservedTakeoff?Date.parse(snapshot.flightStartedAtUtc!):(connectedAt??clock);
   return Math.max(0,Math.floor((Date.parse(snapshot.timestampUtc)-start)/60_000));
- },[isLive,snapshot,hasObservedTakeoff,connectedAt,clock]);
- return {connect,disconnect,snapshot,connected,isLive,error,elapsedMinutes,elapsedBasis};
+ },[sessionActive,snapshot,hasObservedTakeoff,connectedAt,clock]);
+ return {connect,disconnect,snapshot,connected,isLive,status,sessionActive,error,elapsedMinutes,elapsedBasis};
 }
