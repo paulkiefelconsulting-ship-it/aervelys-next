@@ -23,7 +23,7 @@ Die zwei Microsoft-SDK-Dateien sind **nicht im GitHub-Paket enthalten**. Ihre ex
 3. Klicke in der **neuen Bridge** auf **Live-Datenordner öffnen**. Das öffnet den normalen Benutzerordner
    **%USERPROFILE%\AERVELYS\FlightBridge**. Dort muss bei erfolgreicher SimConnect-Verbindung die Datei **telemetry.json** vorhanden sein.
 4. Klicke in AERVELYS NEXT auf **Live-Ordner verbinden**. Wähle in Edge/Chrome **genau diesen Ordner** aus (nicht die JSON-Datei und nicht AppData), und gewähre den Zugriff.
-5. Der Browser sucht innerhalb dieses freigegebenen Ordners jede Sekunde erneut nach **telemetry.json**. Dies funktioniert auch dann, wenn die Bridge die Datei atomar ersetzt; die Daten werden nicht durch AERVELYS ins Netz hochgeladen.
+5. Der Browser sucht innerhalb dieses freigegebenen Ordners jede Sekunde erneut nach **telemetry.json**. Die Bridge aktualisiert dieselbe Datei kontinuierlich. Die Daten werden nicht durch AERVELYS ins Netz hochgeladen.
 6. Bei aktuellen Messungen erscheinen Position und Flugphase als **MSFS LIVE**.
 7. Die Flugkarte verwendet die tatsächliche MSFS-Position. Die Kabinensimulation nutzt die erkannte Phase für die Servicefreigabe.
 
