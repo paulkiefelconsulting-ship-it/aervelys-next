@@ -44,7 +44,7 @@ export default function LocalMsfsFileLink(){
     const c=raw[spec.field];
     if(!c||typeof c!=='object'||Array.isArray(c))continue;
     const v=c as Record<string,unknown>;
-    if(typeof v.key==='string'&&/^[a-zA-Z][\\w.-]{0,63}$/.test(v.key)&&
+    if(typeof v.key==='string'&&/^[a-zA-Z][\w.-]{0,63}$/.test(v.key)&&
       typeof v.unit==='string'&&spec.units.includes(v.unit as LocalBridgeUnit))
       permitted[spec.field]={key:v.key,unit:v.unit as LocalBridgeUnit};
    }
