@@ -3,7 +3,9 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {Activity,AlertTriangle,CheckCircle2,FileJson2,FolderOpen,Link2Off,
  RadioTower,RefreshCw,ShieldCheck} from 'lucide-react';
-import {decodeLocalBridgeTelemetry,type LocalBridgeTelemetry} from '../lib/localBridgeTelemetry';
+import {decodeLocalBridgeTelemetry,localBridgeFields,
+ type LocalBridgeTelemetry,type LocalBridgeField,type LocalBridgeFieldOverrides,type LocalBridgeUnit
+} from '../lib/localBridgeTelemetry';
 import styles from './LocalMsfsFileLink.module.css';
 
 const localPath='%USERPROFILE%\\AERVELYS\\FlightBridge\\telemetry.json';
@@ -26,7 +28,41 @@ export default function LocalMsfsFileLink(){
  const [data,setData]=useState<LiveData|null>(null);
  const [error,setError]=useState('');
  const [clock,setClock]=useState(Date.now());
+ const [overrides,setOverrides]=useState<LocalBridgeFieldOverrides>({});
+ const overridesRef=useRef<LocalBridgeFieldOverrides>({});
+ const latestRaw=useRef<unknown>(null);
  const fileInput=useRef<HTMLInputElement>(null);
+ useEffect(()=>{
+  try{
+   const persisted=window.localStorage.getItem('aervelys-next-local-msfs-field-mapping');
+   if(!persisted)return;
+   const candidate:unknown=JSON.parse(persisted);
+   if(!candidate||typeof candidate!=='object'||Array.isArray(candidate))return;
+   const raw=candidate as Record<string,unknown>;
+   const permitted:LocalBridgeFieldOverrides={};
+   for(const spec of localBridgeFields){
+    const c=raw[spec.field];
+    if(!c||typeof c!=='object'||Array.isArray(c))continue;
+    const v=c as Record<string,unknown>;
+    if(typeof v.key==='string'&&/^[a-zA-Z][\w.-]{0,63}$/.test(v.key)&&
+      typeof v.unit==='string'&&spec.units.includes(v.unit as LocalBridgeUnit))
+      permitted[spec.field]={key:v.key,unit:v.unit as LocalBridgeUnit};
+   }
+   overridesRef.current=permitted;setOverrides(permitted);
+  }catch{}
+ },[]);
+ function changeMapping(field:LocalBridgeField,key:string,unit:LocalBridgeUnit){
+  const next:LocalBridgeFieldOverrides={...overridesRef.current};
+  if(!key)delete next[field];else next[field]={key,unit};
+  overridesRef.current=next;setOverrides(next);
+  try{window.localStorage.setItem('aervelys-next-local-msfs-field-mapping',JSON.stringify(next));}catch{}
+  if(latestRaw.current&&data){
+   try{
+    const info=decodeLocalBridgeTelemetry(latestRaw.current,next);
+    setData({...data,info});
+   }catch{setError('Feldzuordnung konnte nicht ausgewertet werden.');}
+  }
+ }
  const busy=useRef(false);
  const snapshotMode=link==='snapshot';
  const load=useCallback(async(f:File)=>{
@@ -35,7 +71,8 @@ export default function LocalMsfsFileLink(){
   const json=await f.text();
   let parsed:unknown;
   try{parsed=JSON.parse(json);}catch{throw Error('Die Bridge schreibt gerade eine unvollständige JSON-Datei. Beim nächsten Intervall wird erneut geprüft.');}
-  const info=decodeLocalBridgeTelemetry(parsed);
+  latestRaw.current=parsed;
+  const info=decodeLocalBridgeTelemetry(parsed,overridesRef.current);
   setData({info,lastModified:f.lastModified,filename:f.name,readAt:Date.now()});
   setError('');
  },[]);
@@ -85,7 +122,7 @@ export default function LocalMsfsFileLink(){
   event.currentTarget.value='';
  }
  function unlink(){
-  rememberedHandle=null;setData(null);setError('');
+  rememberedHandle=null;latestRaw.current=null;setData(null);setError('');
   setLink('none');
  }
  const timestamp=data?.info.observed_at?new Date(data.info.observed_at).getTime():null;
@@ -147,6 +184,40 @@ export default function LocalMsfsFileLink(){
     <span>{fresh&&hasPosition?val(info!.latitude,5)+' / '+val(info!.longitude,5):'Nicht vorhanden oder Dateistand zu alt'}</span>
     <span>SIM-SESSION: {info?.session_id||'nicht angegeben'}</span>
    </div>
+   <details className={styles.mapping} open>
+    <summary>Fehlende Anzeigen? Bridge-Felder und Einheiten zuordnen</summary>
+    <p>Die lokale Datei enthält {info?.rawKeys.length||0} erkannte Felder. Wähle die genaue Quelle und ihre Einheit, wenn Höhe oder Geschwindigkeit mit „—“ angezeigt werden. Die Einstellungen bleiben ausschließlich in diesem Browser.</p>
+    <div className={styles.mappingRows}>
+     {localBridgeFields.map(spec=>{
+      const setting=overrides[spec.field];
+      const fallbackUnit=spec.units[0];
+      return <div key={spec.field} className={styles.mappingRow}>
+       <strong>{spec.label}</strong>
+       <label>
+        <span>JSON-Feld</span>
+        <select aria-label={spec.label+' JSON-Feld'} value={setting?.key||''}
+         onChange={e=>changeMapping(spec.field,e.target.value,setting?.unit||fallbackUnit)}>
+         <option value="">Automatisch erkennen</option>
+         {info?.rawKeys.map(key=><option key={key} value={key}>{key}</option>)}
+        </select>
+       </label>
+       <label>
+        <span>Einheit des Quellwerts</span>
+        <select aria-label={spec.label+' Einheit'} value={setting?.unit||fallbackUnit}
+         disabled={!setting?.key}
+         onChange={e=>changeMapping(spec.field,setting?.key||'',e.target.value as LocalBridgeUnit)}>
+         {spec.units.map(unit=><option key={unit} value={unit}>{
+           unit==='ft'?'Fuß (ft)':unit==='m'?'Meter (m)':
+           unit==='kt'?'Knoten (kt)':unit==='mps'?'Meter pro Sekunde (m/s)':
+           unit==='fpm'?'Fuß pro Minute (ft/min)':'Fuß pro Sekunde (ft/s)'
+         }</option>)}
+        </select>
+       </label>
+      </div>;
+     })}
+    </div>
+    <p className={styles.mappingNote}>Wenn du die Einheit nicht kennst, bitte nicht raten: Wähle zunächst nur Felder mit eindeutigem Namen oder prüfe die SimConnect-Einheit im Bridge-Programm. MSL-Höhe und AGL sind unterschiedliche Messgrößen.</p>
+   </details>
    <div className={styles.checks}>
     <div>
      <h3>{cloudComplete?<CheckCircle2 size={17}/>:<AlertTriangle size={17}/>} Daten für bestehenden Cloud-Bridge-Eingang</h3>

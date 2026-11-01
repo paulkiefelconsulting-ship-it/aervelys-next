@@ -32,6 +32,29 @@ const finite=(v:unknown,min:number,max:number)=>{
  return Number.isFinite(n)&&n>=min&&n<=max?n:null;
 };
 const str=(v:unknown,max=120)=>typeof v==='string'&&v.trim()?v.trim().slice(0,max):null;
+export type LocalBridgeField='altitude_ft'|'agl_ft'|'groundspeed_kt'|'indicated_airspeed_kt'|'vertical_speed_fpm';
+export type LocalBridgeUnit='ft'|'m'|'kt'|'mps'|'fpm'|'fps';
+export type LocalBridgeFieldOverride={key:string;unit:LocalBridgeUnit};
+export type LocalBridgeFieldOverrides=Partial<Record<LocalBridgeField,LocalBridgeFieldOverride>>;
+export const localBridgeFields:{field:LocalBridgeField;label:string;units:LocalBridgeUnit[]}[]=[
+ {field:'altitude_ft',label:'Flughöhe (MSL)',units:['ft','m']},
+ {field:'agl_ft',label:'Höhe über Grund (AGL)',units:['ft','m']},
+ {field:'groundspeed_kt',label:'Groundspeed',units:['kt','mps']},
+ {field:'indicated_airspeed_kt',label:'Indicated Airspeed (IAS)',units:['kt','mps']},
+ {field:'vertical_speed_fpm',label:'Vertikalgeschwindigkeit',units:['fpm','fps','mps']}
+];
+function mappedNumber(objects:RecordValue[],mapping:LocalBridgeFieldOverride|undefined,
+  units:LocalBridgeUnit[],min:number,max:number):number|null{
+ if(!mapping||!/^[a-zA-Z][\w.-]{0,63}$/.test(mapping.key)||!units.includes(mapping.unit))
+  return null;
+ const source=pick(objects,[mapping.key]);
+ const num=finite(source,-1000000,1000000);
+ if(num===null)return null;
+ const normalized=mapping.unit==='m'?num*3.280839895:
+  mapping.unit==='mps'?(units.includes('kt')?num*1.943844492: num*196.8503937):
+  mapping.unit==='fps'?num*60:num;
+ return normalized>=min&&normalized<=max?normalized:null;
+}
 export type LocalBridgeTelemetry={
  phase:string|null;latitude:number|null;longitude:number|null;
  groundspeed_kt:number|null;indicated_airspeed_kt:number|null;
@@ -52,7 +75,7 @@ function time(v:unknown):string|null{
  const d=new Date(v);
  return Number.isFinite(d.getTime())?d.toISOString():null;
 }
-export function decodeLocalBridgeTelemetry(input:unknown):LocalBridgeTelemetry{
+export function decodeLocalBridgeTelemetry(input:unknown,overrides:LocalBridgeFieldOverrides={}):LocalBridgeTelemetry{
  const rec=object(input);
  if(!rec)throw Error('Die ausgewählte Datei enthält kein JSON-Objekt.');
  const scopes=candidates(rec);
@@ -60,12 +83,22 @@ export function decodeLocalBridgeTelemetry(input:unknown):LocalBridgeTelemetry{
  const phase=str(value('phase','flight_phase','flightPhase','phase_name'),60);
  const latitude=finite(value('latitude','lat','plane_latitude'),-90,90);
  const longitude=finite(value('longitude','lon','lng','long','plane_longitude'),-180,180);
- const groundspeed_kt=finite(value('groundspeed_kt','ground_speed_kt','groundSpeedKnots','gs_kt','groundspeedKts'),0,1500);
- const indicated_airspeed_kt=finite(value('indicated_airspeed_kt','ias_kt','airspeed_indicated_kt','iasKnots'),0,900);
+ const groundspeed_kt=overrides.groundspeed_kt?
+ mappedNumber(scopes,overrides.groundspeed_kt,['kt','mps'],0,1500):
+ finite(value('groundspeed_kt','ground_speed_kt','groundSpeedKnots','gs_kt','groundspeedKts','groundSpeedKt','groundspeedKt','ground_speed_knots','groundSpeedKts'),0,1500);
+ const indicated_airspeed_kt=overrides.indicated_airspeed_kt?
+ mappedNumber(scopes,overrides.indicated_airspeed_kt,['kt','mps'],0,900):
+ finite(value('indicated_airspeed_kt','ias_kt','airspeed_indicated_kt','iasKnots','indicatedAirspeedKt','indicatedAirspeedKts','indicatedAirspeedKnots','iasKt','iasKts','ias_knots'),0,900);
  // altitude_ft and AGL are intentionally separate: MSL/pressure altitude MUST NOT be treated as AGL.
- const altitude_ft=finite(value('altitude_ft','alt_ft','altitudeFeet','altitude_msl_ft'),-2500,110000);
- const agl_ft=finite(value('agl_ft','altitude_agl_ft','height_above_ground_ft'),-100,120000);
- const vertical_speed_fpm=finite(value('vertical_speed_fpm','verticalSpeedFpm','vs_fpm','vsi_fpm'),-15000,15000);
+ const altitude_ft=overrides.altitude_ft?
+ mappedNumber(scopes,overrides.altitude_ft,['ft','m'],-2500,110000):
+ finite(value('altitude_ft','alt_ft','altitudeFeet','altitude_msl_ft','altitudeFt','altitudeMSLFt','altitudeMslFt','altitude_feet','msl_altitude_ft'),-2500,110000);
+ const agl_ft=overrides.agl_ft?
+ mappedNumber(scopes,overrides.agl_ft,['ft','m'],-100,120000):
+ finite(value('agl_ft','altitude_agl_ft','height_above_ground_ft','aglFt','altitudeAglFt','heightAboveGroundFt'),-100,120000);
+ const vertical_speed_fpm=overrides.vertical_speed_fpm?
+ mappedNumber(scopes,overrides.vertical_speed_fpm,['fpm','fps','mps'],-15000,15000):
+ finite(value('vertical_speed_fpm','verticalSpeedFpm','vs_fpm','vsi_fpm','verticalSpeedFtMin','vertical_speed_ft_min','verticalSpeedFeetPerMinute'),-15000,15000);
  const on_ground=flag(value('on_ground','is_on_ground','sim_on_ground'));
  const engine_running=flag(value('engine_running','engine1_running','engine_1_running'));
  const observed_at=time(value('observed_at','observedAt','sample_timestamp','timestamp_utc'));
