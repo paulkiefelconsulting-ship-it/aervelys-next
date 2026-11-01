@@ -85,8 +85,8 @@ export default function PassengerSections({section,flight,originName,destination
    <div><div className={styles.eyebrow}>FLIGHT INFORMATION</div><h3>Deine Reise auf einen Blick</h3><p>{isImported?'Die dargestellte Strecke stammt aus dem von deinem Piloten vorbereiteten SimBrief-OFP mit '+prepared!.fixes.length+' Wegpunkten.':'Für diese Vorschau wurde noch kein SimBrief-Flugplan hinterlegt. Es wird eine Beispieldirektverbindung angezeigt.'}</p></div>
    <button type="button" onClick={onOpenMap} className={styles.primaryButton}><MapPinned size={17}/> Flugkarte ansehen <ArrowRight size={16}/></button>
   </div>
-  <div className={styles.disclaimer}><ShieldAlert size={15}/> Diese Kabinenansicht ist eine Simulation. Flugfortschritt und Restzeit basieren nicht auf Live-Telemetrie, Wetter- oder Flugzeugdaten.</div>
-  {publicDemo&&<div className={styles.cabinPlayback}><button type="button" onClick={onToggle}>{playing?'Demo-Flug pausieren':'Demo-Flug starten'}</button><span>Flugfortschritt und Kabinenbedürfnisse laufen gemeinsam.</span></div>}
+  <div className={styles.disclaimer}><ShieldAlert size={15}/> {liveSnapshot?'Flugphase und Positionsmessung kommen von der lokalen SimConnect-Bridge. Alle Passagiere, Services und Zufriedenheitswerte bleiben simuliert.':'Diese Kabinenansicht ist eine Simulation. Flugfortschritt und Restzeit basieren nicht auf Live-Telemetrie, Wetter- oder Flugzeugdaten.'}</div>
+  {publicDemo&&!liveSnapshot&&<div className={styles.cabinPlayback}><button type="button" onClick={onToggle}>{playing?'Demo-Flug pausieren':'Demo-Flug starten'}</button><span>Flugfortschritt und Kabinenbedürfnisse laufen gemeinsam.</span></div>}
   <CabinSimulation key={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} elapsedMinutes={liveSnapshot?bridgeElapsed:Math.round((flight?.estimated_block_minutes||115)*progress/100)} phase={liveSnapshot?bridgePhaseToCabin(liveSnapshot.phase):cabinPhase(progress)} flightKey={String(flight?.request_code)+'-'+String(prepared?.preparedAt||'draft')} playing={playing} onToggle={onToggle} publicDemo={publicDemo}/>
  </div>;
 
