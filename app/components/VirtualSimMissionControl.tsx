@@ -104,6 +104,7 @@ export default function VirtualSimMissionControl(){
  const current=snapshot?.requests.find(r=>r.request_id===requestId)||null;
  const mission=snapshot?.missions.find(m=>m.request_id===requestId)||null;
  const bridgeSession=(snapshot?.bridge_sessions||[]).find(s=>s.request_id===requestId&&s.status==='active'&&new Date(s.expires_at).getTime()>Date.now())||null;
+ const bridgeStreamActive=Boolean(bridgeSession?.heartbeat_recent);
  const finance=snapshot?.finance_indications.find(f=>f.request_id===requestId)||null;
  const passengers=useMemo(()=>(snapshot?.passengers||[]).filter(p=>p.request_id===requestId)
   .sort((a,b)=>a.seat_index-b.seat_index),[snapshot,requestId]);
@@ -253,6 +254,7 @@ export default function VirtualSimMissionControl(){
      </div>
      {mission.source_mode==='local_simconnect_unverified'&&
       <p className={styles.bridgeTag}>Flugphasen stammen aus einer gekoppelten lokalen Bridge – nicht als operative Telemetrie verifiziert.</p>}
+     {bridgeStreamActive&&<p className={styles.bridgeTag}>Ein aktueller Geräteheartbeat steuert die SIM-Flugphasen. Manuelle Phasenschritte und Zeitsprünge sind bis zum Trennen beziehungsweise Verbindungsverlust gesperrt.</p>}
      <div className={styles.phaseBox}>
       <div className={styles.sectionHeader}><h4>Flugphasen</h4><small>Manuelle Eingabe · keine automatische MSFS-Erkennung</small></div>
       <div className={styles.phaseTimeline}>
@@ -266,16 +268,16 @@ export default function VirtualSimMissionControl(){
         disabled={busy} onClick={()=>void action('start')}><Play size={15}/> Boarding-Simulation starten</button>}
        {mission.lifecycle==='running'&&<>
         {next&&next[0]!=='debrief'&&<button type="button" className="ops-refresh"
-         disabled={busy} onClick={()=>void action('phase',next[0])}>
+         disabled={busy||bridgeStreamActive} onClick={()=>void action('phase',next[0])}>
          <Plane size={15}/> Nächste Phase: {next[1]}</button>}
         {mission.phase==='arrived'&&<button type="button" className="ops-refresh"
          disabled={busy} onClick={()=>void action('debrief')}><CheckCircle2 size={15}/> SIM-Debrief erstellen</button>}
         {mission.phase!=='arrived'&&<button type="button" className="ops-refresh" disabled={busy}
          onClick={()=>void action('pause')}><Pause size={15}/> Simulationsuhr pausieren</button>}
         {mission.phase!=='arrived'&&<>
-         <button type="button" className="ops-refresh" disabled={busy}
+         <button type="button" className="ops-refresh" disabled={busy||bridgeStreamActive}
           onClick={()=>void action('clock','10')}><Clock3 size={15}/> +10 Min</button>
-         <button type="button" className="ops-refresh" disabled={busy}
+         <button type="button" className="ops-refresh" disabled={busy||bridgeStreamActive}
           onClick={()=>void action('clock','30')}><Clock3 size={15}/> +30 Min</button>
         </>}
        </>}
