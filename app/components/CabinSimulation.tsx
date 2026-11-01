@@ -3,7 +3,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {Activity,Armchair,Check,ChevronRight,Clock3,Coffee,GlassWater,Heart,RefreshCw,ShieldAlert,Sparkles,Sun,Toilet,Utensils,Users} from 'lucide-react';
 import {adjustCabin,advanceCabinWithCrew,cabinSummary,guestSatisfaction,initialCabin,performCabinService,canMoveInCabin,canProvideHotFood,SERVICE_NAMES,type CabinPhase,type CabinState,type ServiceKind} from '../lib/cabinSimulation';
 import styles from './CabinSimulation.module.css';
-type Props={elapsedMinutes:number;phase:CabinPhase;flightKey:string;playing:boolean;onToggle:()=>void;publicDemo:boolean};
+type Props={elapsedMinutes:number;phase:CabinPhase;flightKey:string;playing:boolean;onToggle:()=>void;publicDemo:boolean;livePhase:boolean;elapsedBasis:'takeoff'|'connection'};
 const services:{kind:ServiceKind;icon:typeof Coffee;label:string;caption:string}[]=[
  {kind:'cold_drink',icon:GlassWater,label:'Kaltgetränk',caption:'Wasser · Softdrinks'},
  {kind:'coffee',icon:Coffee,label:'Kaffee & Tee',caption:'Heißgetränke'},
@@ -13,7 +13,7 @@ const services:{kind:ServiceKind;icon:typeof Coffee;label:string;caption:string}
 ];
 const phaseNames:Record<CabinPhase,string>={parked:'Am Gate',taxi:'Taxi',takeoff:'Take-off',climb:'Climb',cruise:'Cruise',descent:'Descent',approach:'Approach',landing:'Landing'};
 const clock=(min:number)=>Math.floor(min/60)+'h '+String(min%60).padStart(2,'0')+'m';
-export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,onToggle,publicDemo}:Props){
+export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,onToggle,publicDemo,livePhase,elapsedBasis}:Props){
  const [count,setCount]=useState(5);
  const [state,setState]=useState<CabinState>(()=>initialCabin(5));
  const [selectedId,setSelectedId]=useState('P01');
@@ -40,9 +40,9 @@ export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,
    <div className={styles.headingMain}>
     <span className={styles.eyebrow}><Sparkles size={14}/> AERVELYS / CABIN OPERATIONS</span>
     <h3>Cabin Experience <span>Studio</span></h3>
-    <p>Ein virtuelles Kabinenteam begleitet deinen Flug. Wünsche, Komfort und Service entwickeln sich mit der simulierten Flugzeit.</p>
+    <p>Ein virtuelles Kabinenteam begleitet deinen Flug. Wünsche, Komfort und Service folgen {livePhase?'der von MSFS gemeldeten Flugphase und der verstrichenen Live-Zeit.':'der simulierten Flugzeit.'}</p>
    </div>
-   <div className={styles.headingPills}><span><Users size={14}/>{count} Gäste</span><span><Clock3 size={14}/> T+{clock(state.minute)}</span><span className={styles.phasePill}>{phaseNames[phase]} · Demo</span></div>
+   <div className={styles.headingPills}><span><Users size={14}/>{count} Gäste</span><span><Clock3 size={14}/> T+{clock(state.minute)} {livePhase?(elapsedBasis==='takeoff'?'ab Start':'ab Link'):''}</span><span className={styles.phasePill}>{phaseNames[phase]} · {livePhase?'MSFS LIVE':'Demo'}</span></div>
   </div>
 
   <div className={styles.overview}>
@@ -108,6 +108,6 @@ export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,
    </div>
   </div>
   <div className={styles.timeline}><div className={styles.timelineTitle}><span><Activity size={15}/> LIVE CABIN LOG</span><small>Simulierte Ereignisse</small></div><div>{state.events.slice(0,7).map((event,i)=><div key={i}><time>{clock(event.minute)}</time><span className={styles.eventDot}/><p>{event.label}</p></div>)}</div></div>
-  <p className={styles.disclaimer}><ShieldAlert size={14}/> Alle Gäste und Services sind simuliert. Auto-Crew verwendet vereinfachte Regeln und repräsentiert weder echte Crew noch reale Passagierdaten. Der Status „Live Cabin Log“ bezieht sich nur auf die laufende Demo.</p>
+  <p className={styles.disclaimer}><ShieldAlert size={14}/> {livePhase?'Die Flugphase stammt aus MSFS; Gäste, Bedürfnisse und alle Bordservices sind rein simuliert. Die verstrichene Zeit beginnt '+(elapsedBasis==='takeoff'?'mit dem durch die Bridge beobachteten Start.':'erst mit der lokalen Live-Verbindung (Start nicht beobachtet).'):'Alle Gäste und Services sind simuliert. Auto-Crew verwendet vereinfachte Regeln und repräsentiert weder echte Crew noch reale Passagierdaten.'}</p>
  </section>;
 }
