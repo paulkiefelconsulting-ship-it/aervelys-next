@@ -30,7 +30,7 @@ namespace Aervelys.SimBridge
             if (record.Length > 4000)
                 throw new InvalidOperationException("SIM-Datensatz ist zu groß.");
             // Appends only; never writes flight logs to cloud in --offline mode.
-            using (var file = new StreamWriter(filename, true, Encoding.UTF8))
+            using (var file = new StreamWriter(filename, true, new UTF8Encoding(false)))
             {
                 file.WriteLine(record);
             }
