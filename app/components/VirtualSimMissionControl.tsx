@@ -5,6 +5,7 @@ import {createBrowserClient} from '@supabase/ssr';
 import {Activity,Armchair,CheckCircle2,Clock3,Coffee,Plane,RefreshCw,
  ShieldAlert,Utensils,Users,Pause,Play,ClipboardCopy} from 'lucide-react';
 import styles from './VirtualSimMissionControl.module.css';
+import VirtualSimBridgePairing from './VirtualSimBridgePairing';
 
 type RequestRow={
  request_id:string;request_code:string;origin_icao:string;destination_icao:string;
@@ -14,7 +15,7 @@ type RequestRow={
 type Mission={
  request_id:string;route_text:string;route_origin:'user_simbrief_paste';
  phase:string;lifecycle:'draft'|'running'|'paused'|'completed';
- elapsed_minutes:number;source_mode:'manual_simulation';
+ elapsed_minutes:number;source_mode:'manual_simulation'|'local_simconnect_unverified';
  created_at:string;updated_at:string;average_satisfaction:number|null;
 };
 type Passenger={
@@ -29,7 +30,8 @@ type FinanceIndication={
  potential_difference_eur:number|null;revenue_booked:false;costs_booked:false;
  profit_realized:false;source:'fictitious_sim_indication_only';
 };
-type Overview={finance_indications:FinanceIndication[];requests:RequestRow[];missions:Mission[];passengers:Passenger[];
+type BridgeSession={session_id:string;request_id:string;status:'active'|'revoked';issued_at:string;expires_at:string;last_seen_at:string|null;accepted_events:number;last_phase:string|null;heartbeat_recent:boolean};
+type Overview={bridge_sessions:BridgeSession[];bridge_pairing_available:true;finance_indications:FinanceIndication[];requests:RequestRow[];missions:Mission[];passengers:Passenger[];
  events:EventRow[];simulation_only:true;simconnect_connected:false;
  real_flight_approvals:false;route_source:'pilot_simbrief_paste'};
 type Ack={simulation_only:true;telemetry_connected?:false;real_flights_modified?:0;
@@ -81,7 +83,7 @@ export default function VirtualSimMissionControl(){
    const {data,error:rpcError}=await db().rpc('aervelys_sim_missions_overview');
    const v=data as Overview|null;
    if(rpcError||!v||!Array.isArray(v.requests)||!Array.isArray(v.missions)||
-    !Array.isArray(v.passengers)||!Array.isArray(v.events)||!Array.isArray(v.finance_indications)||
+    !Array.isArray(v.passengers)||!Array.isArray(v.events)||!Array.isArray(v.finance_indications)||!Array.isArray(v.bridge_sessions)||v.bridge_pairing_available!==true||
     v.simulation_only!==true||v.simconnect_connected!==false||
     v.real_flight_approvals!==false||v.route_source!=='pilot_simbrief_paste')
     throw Error('SIM mission data unavailable');
@@ -96,11 +98,13 @@ export default function VirtualSimMissionControl(){
  },[]);
  useEffect(()=>{
   void load();
-  const t=window.setInterval(()=>void load(true),60000);
+  const t=window.setInterval(()=>void load(true),15000);
   return()=>window.clearInterval(t);
  },[load]);
  const current=snapshot?.requests.find(r=>r.request_id===requestId)||null;
  const mission=snapshot?.missions.find(m=>m.request_id===requestId)||null;
+ const bridgeSession=(snapshot?.bridge_sessions||[]).find(s=>s.request_id===requestId&&s.status==='active'&&new Date(s.expires_at).getTime()>Date.now())||null;
+ const bridgeStreamActive=Boolean(bridgeSession?.heartbeat_recent);
  const finance=snapshot?.finance_indications.find(f=>f.request_id===requestId)||null;
  const passengers=useMemo(()=>(snapshot?.passengers||[]).filter(p=>p.request_id===requestId)
   .sort((a,b)=>a.seat_index-b.seat_index),[snapshot,requestId]);
@@ -228,6 +232,8 @@ export default function VirtualSimMissionControl(){
        <ClipboardCopy size={15}/> Briefing kopieren
       </button>
      </div>
+     <VirtualSimBridgePairing key={requestId} requestId={requestId} lifecycle={mission.lifecycle}
+      phase={mission.phase} session={bridgeSession} onRefresh={()=>load(true)}/>
      <div className={styles.metrics}>
       <div><strong>{mission.elapsed_minutes} min</strong><span>Simulierte Bordzeit</span></div>
       <div><strong>{avg===null?'—':avg.toFixed(1)+' / 100'}</strong><span>Ø Passagierzufriedenheit</span></div>
@@ -246,6 +252,9 @@ export default function VirtualSimMissionControl(){
       </div>
       <p>{finance?.price_status?'SIM-Angebotsstatus: '+finance.price_status+' · ':''}Keine bestätigte Kundenzusage, keine echten Kosten und keine Finanzbuchung.</p>
      </div>
+     {mission.source_mode==='local_simconnect_unverified'&&
+      <p className={styles.bridgeTag}>Flugphasen stammen aus einer gekoppelten lokalen Bridge – nicht als operative Telemetrie verifiziert.</p>}
+     {bridgeStreamActive&&<p className={styles.bridgeTag}>Ein aktueller Geräteheartbeat steuert die SIM-Flugphasen. Manuelle Phasenschritte und Zeitsprünge sind bis zum Trennen beziehungsweise Verbindungsverlust gesperrt.</p>}
      <div className={styles.phaseBox}>
       <div className={styles.sectionHeader}><h4>Flugphasen</h4><small>Manuelle Eingabe · keine automatische MSFS-Erkennung</small></div>
       <div className={styles.phaseTimeline}>
@@ -259,16 +268,16 @@ export default function VirtualSimMissionControl(){
         disabled={busy} onClick={()=>void action('start')}><Play size={15}/> Boarding-Simulation starten</button>}
        {mission.lifecycle==='running'&&<>
         {next&&next[0]!=='debrief'&&<button type="button" className="ops-refresh"
-         disabled={busy} onClick={()=>void action('phase',next[0])}>
+         disabled={busy||bridgeStreamActive} onClick={()=>void action('phase',next[0])}>
          <Plane size={15}/> Nächste Phase: {next[1]}</button>}
         {mission.phase==='arrived'&&<button type="button" className="ops-refresh"
          disabled={busy} onClick={()=>void action('debrief')}><CheckCircle2 size={15}/> SIM-Debrief erstellen</button>}
         {mission.phase!=='arrived'&&<button type="button" className="ops-refresh" disabled={busy}
          onClick={()=>void action('pause')}><Pause size={15}/> Simulationsuhr pausieren</button>}
         {mission.phase!=='arrived'&&<>
-         <button type="button" className="ops-refresh" disabled={busy}
+         <button type="button" className="ops-refresh" disabled={busy||bridgeStreamActive}
           onClick={()=>void action('clock','10')}><Clock3 size={15}/> +10 Min</button>
-         <button type="button" className="ops-refresh" disabled={busy}
+         <button type="button" className="ops-refresh" disabled={busy||bridgeStreamActive}
           onClick={()=>void action('clock','30')}><Clock3 size={15}/> +30 Min</button>
         </>}
        </>}
