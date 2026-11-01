@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {Activity,Armchair,Check,ChevronRight,Clock3,Coffee,GlassWater,Heart,Pause,Play,RefreshCw,ShieldAlert,Sparkles,Sun,Toilet,Utensils,Users} from 'lucide-react';
+import {Activity,Armchair,Check,ChevronRight,Clock3,Coffee,GlassWater,Heart,RefreshCw,ShieldAlert,Sparkles,Sun,Toilet,Utensils,Users} from 'lucide-react';
 import {adjustCabin,advanceCabinWithCrew,cabinSummary,guestSatisfaction,initialCabin,performCabinService,canMoveInCabin,canProvideHotFood,SERVICE_NAMES,type CabinPhase,type CabinState,type ServiceKind} from '../lib/cabinSimulation';
 import styles from './CabinSimulation.module.css';
 type Props={elapsedMinutes:number;phase:CabinPhase;flightKey:string;playing:boolean;onToggle:()=>void;publicDemo:boolean};
@@ -20,7 +20,7 @@ export default function CabinSimulation({elapsedMinutes,phase,flightKey,playing,
  const [autoCrew,setAutoCrew]=useState(true);
  const [status,setStatus]=useState('');
  useEffect(()=>{setState(initialCabin(count));setSelectedId('P01');setStatus('');},[flightKey,count]);
- useEffect(()=>{setState(current=>advanceCabinWithCrew(current,elapsedMinutes,phase,autoCrew));},[elapsedMinutes,phase,autoCrew,flightKey,count]);
+ useEffect(()=>{setState(current=>advanceCabinWithCrew(elapsedMinutes<current.minute?initialCabin(count):current,elapsedMinutes,phase,autoCrew));},[elapsedMinutes,phase,autoCrew,flightKey,count]);
  const summary=useMemo(()=>cabinSummary(state),[state]);
  const selected=state.guests.find(g=>g.id===selectedId)??state.guests[0];
  const selectedScore=selected?guestSatisfaction(selected,state.temperature,state.turbulence):0;
