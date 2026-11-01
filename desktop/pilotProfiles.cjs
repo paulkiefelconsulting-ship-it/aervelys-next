@@ -148,5 +148,40 @@ function exportData(root){
   activeId:index.activeId,
   pilots:index.pilots.map(meta=>({meta,state:store.readState(profileDir(root,meta.id))}))};
 }
+function importData(root,raw){
+ if(!raw||raw.format!=='AERVELYS_LOCAL_PILOTS_BACKUP'||raw.version!==1||
+  !Array.isArray(raw.pilots)||raw.pilots.length<1||raw.pilots.length>24)
+  throw Error('Unbekanntes oder ungültiges AERVELYS-Backup.');
+ const index=loadIndex(root);
+ if(index.pilots.length+raw.pilots.length>24)throw Error('Maximal 24 Profile inklusive Backup.');
+ const drafts=raw.pilots.map(({meta,state})=>{
+  const name=cleanName(meta?.name);
+  if(!state||state.schema!==1||!Array.isArray(state.missions)||state.missions.length>500||
+    !state.profile||!state.company)
+   throw Error('Backup enthält ungültigen Karriere-Spielstand.');
+  if(state.missions.some(m=>!m||typeof m!=='object'||
+    typeof m.departure!=='string'||typeof m.destination!=='string'||
+    typeof m.aircraft!=='string'))throw Error('Ungültige Mission im Backup.');
+  const currency=CURRENCIES.includes(meta?.currency)?meta.currency:'EUR';
+  const country=Object.prototype.hasOwnProperty.call(COUNTRIES,meta?.country)?meta.country:'DE';
+  const licence=Object.prototype.hasOwnProperty.call(LICENCES,meta?.licence)?meta.licence:'LEGACY';
+  const id=crypto.randomUUID();
+  const entry={id,name,country,currency,licence,
+   startingCapital:Number.isFinite(meta?.startingCapital)?meta.startingCapital:0,
+   startingHours:Number.isFinite(meta?.startingHours)?meta.startingHours:0,
+   createdAt:new Date().toISOString(),migrated:!!meta.migrated};
+  return {entry,state:JSON.parse(JSON.stringify(state))};
+ });
+ // Refuse huge nested values, avoid bloating local career storage.
+ for(const item of drafts){
+  if(Buffer.byteLength(JSON.stringify(item.state),'utf8')>2*1024*1024)
+   throw Error('Backup-Spielstand überschreitet 2 MB.');
+ }
+ for(const item of drafts)store.writeState(profileDir(root,item.entry.id),item.state);
+ index.pilots.push(...drafts.map(x=>x.entry));
+ index.activeId=drafts[0].entry.id;
+ writeAtomic(indexPath(root),index);
+ return {count:drafts.length,activeId:index.activeId};
+}
 module.exports={LICENCES,COUNTRIES,CURRENCIES,cleanName,loadIndex,list,
- create,select,selected,updateName,addMission,exportData,profileDir,validateNew};
+ create,select,selected,updateName,addMission,exportData,importData,profileDir,validateNew};
