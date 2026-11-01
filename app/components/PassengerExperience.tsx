@@ -2,7 +2,7 @@
 
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
-import {ArrowLeftRight,Clock3,CloudOff,Expand,MapPin,Pause,Plane,Play,RadioTower,RefreshCw,Route,ShieldAlert,ZoomIn,ZoomOut} from 'lucide-react';
+import {ArrowLeftRight,ArrowUpRight,CheckCircle2,Clock3,CloudOff,Expand,FileUp,MapPin,Pause,Plane,Play,RadioTower,RefreshCw,Route,ShieldAlert,Sparkles,ZoomIn,ZoomOut} from 'lucide-react';
 import styles from './PassengerExperience.module.css';
 import PassengerSections from './PassengerSections';
 import {readPreparedPlan,type PassengerPlan,type RouteFix} from '../lib/passengerPlan';
@@ -243,13 +243,29 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
  const telemetry=simulatedTelemetry(progress);
  return <div className={styles.screen}>
   <section className={styles.intro}>
-   <div><div className="eyebrow">AERVELYS NEXT / DIGITAL CABIN</div><h2>Passenger Experience</h2><p>{publicDemo?'Öffentliche Demo der Passagierkarte – ohne Konto und ausschließlich mit fiktiven Flugdaten.':'Interaktive Fluginformationskarte für Chartergäste und Simulatorflüge. Geschützte NEXT-Integration im ersten Ausbauschritt.'}</p></div>
-   <span className={styles.beta}>PASSENGER DISPLAY · BETA</span>
+   <div className={styles.heroCopy}>
+    <div className={styles.heroEyebrow}><span className={styles.heroLine}/> AERVELYS PRIVATE AVIATION <span className={styles.heroVersion}>EXPERIENCE STUDIO · V0.5 PREVIEW</span></div>
+    <h2>Every flight.<span>Elevated.</span></h2>
+    <p>Dein digitaler Begleiter über den Wolken. Flugkarte, persönliche Kabinenerlebnisse und Flugplanung in einer durchgängigen Premium-Oberfläche.</p>
+    <div className={styles.heroActions}>
+     <button type="button" className={styles.heroPrimary} onClick={()=>setArea('cabin')}><Sparkles size={17}/> Cabin Experience öffnen <ArrowUpRight size={16}/></button>
+     {publicDemo&&<a href="/passenger-demo/setup" className={styles.heroSecondary}><FileUp size={17}/> SimBrief importieren</a>}
+    </div>
+   </div>
+   <div className={styles.heroJourney}>
+    <div className={styles.heroJourneyHead}><span>CURRENT JOURNEY</span><span className={styles.heroDemoBadge}><span/> {playing?'DEMO LÄUFT':'SIMULATION'}</span></div>
+    <div className={styles.heroCodes}><div><small>FROM</small><strong>{flight?.origin||'—'}</strong><span>{origin?.name||'—'}</span></div><div className={styles.heroPlane}><Plane size={22}/></div><div><small>TO</small><strong>{flight?.destination||'—'}</strong><span>{destination?.name||'—'}</span></div></div>
+    <div className={styles.heroProgressHead}><span>{mode==='demo'?flightPhase(progress):'DISPATCH ENTWURF'}</span><strong>{mode==='demo'?progress+'%':'—'}</strong></div>
+    <div className={styles.heroProgress} role="progressbar" aria-label="Simulierter Flugfortschritt" aria-valuenow={mode==='demo'?progress:0} aria-valuemin={0} aria-valuemax={100}><span style={{width:(mode==='demo'?progress:0)+'%'}}/></div>
+    <div className={styles.heroJourneyFoot}><span><Clock3 size={14}/> {remaining!==null?remaining+' MIN RESTZEIT (DEMO)':'KEINE LIVE-ZEIT'}</span><span><CloudOff size={14}/> MSFS OFFLINE</span></div>
+    {mode==='demo'&&<button type="button" className={styles.heroPlayback} onClick={()=>{if(progress>=100){setProgress(0);setPlaying(true);}else setPlaying(v=>!v);}}>{playing?<Pause size={16}/>:<Play size={16}/>} {playing?'Simulation pausieren':'Demo-Flug starten'}</button>}
+   </div>
   </section>
+  <div className={styles.sectionHeader}><div><span>EXPLORE THE EXPERIENCE</span><h3>Dein AERVELYS Cockpit</h3></div><span className={styles.sectionStatus}><CheckCircle2 size={15}/> DEMO-MODUS AKTIV</span></div>
   <div className={styles.areaTabs} role="tablist" aria-label="Bereiche der Passenger Experience">
-   <button role="tab" type="button" aria-selected={area==='map'} className={area==='map'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('map');setFullscreen(false);}}><MapPin size={18}/><span><strong>01 · Flugkarte</strong><small>Route & Flugfortschritt</small></span></button>
-   <button role="tab" type="button" aria-selected={area==='cabin'} className={area==='cabin'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('cabin');setFullscreen(false);}}><Plane size={18}/><span><strong>02 · Kabinendisplay</strong><small>Passagierinformationen</small></span></button>
-   <button role="tab" type="button" aria-selected={area==='connection'} className={area==='connection'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('connection');setFullscreen(false);}}><RadioTower size={18}/><span><strong>03 · Integration</strong><small>SimBrief · NEXT · MSFS</small></span></button>
+   <button role="tab" type="button" aria-selected={area==='map'} className={area==='map'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('map');setFullscreen(false);}}><span className={styles.tabNumber}>01</span><MapPin size={20}/><span><strong>Flight Map</strong><small>Route & Flugfortschritt</small></span><ArrowUpRight className={styles.tabArrow} size={15}/></button>
+   <button role="tab" type="button" aria-selected={area==='cabin'} className={area==='cabin'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('cabin');setFullscreen(false);}}><span className={styles.tabNumber}>02</span><Sparkles size={20}/><span><strong>Cabin Experience</strong><small>Gäste & Bordservice</small></span><ArrowUpRight className={styles.tabArrow} size={15}/></button>
+   <button role="tab" type="button" aria-selected={area==='connection'} className={area==='connection'?styles.areaActive:styles.areaTab} onClick={()=>{setArea('connection');setFullscreen(false);}}><span className={styles.tabNumber}>03</span><RadioTower size={20}/><span><strong>Flight Connect</strong><small>SimBrief · NEXT · MSFS</small></span><ArrowUpRight className={styles.tabArrow} size={15}/></button>
   </div>
   {area==='map'&&<>
   <div className={styles.modeBar} role="group" aria-label="Datenquelle">
@@ -258,9 +274,10 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
    <span className={styles.liveStatus}><CloudOff size={15}/> SimConnect nicht verbunden</span>
   </div>
   {mode==='demo'&&<div className={styles.preparedStatus}>
-   <div><strong>{publicDemo&&prepared?'SimBrief-Flugplan geladen':'Noch kein SimBrief-Flugplan hinterlegt'}</strong>
-   <span>{publicDemo&&prepared?prepared.origin+' → '+prepared.destination+' · '+prepared.fixes.length+' Wegpunkte · nur geplante Route':'Platzhalterstrecke EDAZ → LFMN · keine Flugplandaten'}</span></div>
-   <a href="/passenger-demo/setup" className={styles.routeLinkButton}>Flug in SimBrief vorbereiten / importieren</a>
+   <div className={styles.preparedIcon}>{publicDemo&&prepared?<CheckCircle2 size={20}/>:<FileUp size={20}/>}</div>
+   <div className={styles.preparedText}><strong>{publicDemo&&prepared?'SimBrief Flight Plan Ready':'Noch kein SimBrief-Flugplan importiert'}</strong>
+   <span>{publicDemo&&prepared?prepared.origin+' → '+prepared.destination+' · '+prepared.fixes.length+' echte Wegpunkte aus OFP':'Vorschau mit Beispielroute EDAZ → LFMN. Plane deinen Flug vorab in SimBrief.'}</span></div>
+   <a href="/passenger-demo/setup" className={styles.routeLinkButton}>{publicDemo&&prepared?'Flugplan verwalten':'Flugplan importieren'} <ArrowUpRight size={15}/></a>
   </div>}
   {mode==='dispatch'&&<div className={styles.selector}>
    <label htmlFor="passenger-flight">Gespeicherter Flugplan <select id="passenger-flight" value={selected} disabled={state!=='ready'||drafts.length===0} onChange={e=>setSelected(e.target.value)}>
@@ -273,8 +290,8 @@ export default function PassengerExperience({publicDemo=false}:{publicDemo?:bool
   </>}
   {area==='map'&&<div className={fullscreen?styles.fullscreen:styles.display}>
    <div className={styles.displayHeader}>
-    <div className={styles.brand}><span className={styles.brandIcon}>A</span><span><strong>AERVELYS</strong><small>PRIVATE AVIATION</small></span></div>
-    <div className={styles.flightId}><span>{mode==='demo'&&publicDemo&&prepared?'SIMBRIEF ROUTE / DEMO PLAYBACK':mode==='demo'?'ILLUSTRATION / DEMO':'DISPATCH DRAFT / PLANNING ONLY'}</span><strong>{flight?.request_code||'KEIN FLUG GEWÄHLT'}</strong></div>
+    <div className={styles.brand}><span className={styles.brandIcon}>A</span><span><strong>AERVELYS</strong><small>FLIGHT INFORMATION SYSTEM</small></span></div>
+    <div className={styles.flightId}><span>{mode==='demo'&&publicDemo&&prepared?'SIMBRIEF ROUTE · DEMO PLAYBACK':mode==='demo'?'FLIGHT PREVIEW · SIMULATED':'DISPATCH DRAFT · PLANNING ONLY'}</span><strong>{flight?.request_code||'KEIN FLUG GEWÄHLT'}</strong></div>
    </div>
    <div className={styles.routeHeader}>
     <div><small>DEPARTURE</small><strong>{flight?.origin||'—'}</strong><span>{flight?safeName(flight.origin):'—'}</span></div>
