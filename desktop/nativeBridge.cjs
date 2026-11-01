@@ -94,10 +94,11 @@ async function compileBridge({sourceDir,buildDir,configuredRoot,env=process.env,
   fs.writeFileSync(signaturePath,signature,'utf8');
   return {exe,cached:false,sdkRoot:sdk.root};
 }
-async function startBridge(exe) {
+async function startBridge(exe,args=[]) {
   if(!fs.existsSync(exe))throw new Error('Bridge EXE fehlt.');
   // Launched by an explicitly clicked native menu item only.
-  const child=spawn(exe,[],{
+  if(!Array.isArray(args)||args.some(x=>x!=='--offline'))throw Error('Invalid bridge arguments');
+  const child=spawn(exe,args,{
     cwd:path.dirname(exe),detached:true,stdio:'ignore',windowsHide:false
   });
   await new Promise((resolve,reject)=>{
