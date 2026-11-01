@@ -113,7 +113,7 @@ export default function PassengerSections({section,flight,originName,destination
     <span className={styles.eyebrow}>03 / LIVE TELEMETRY</span>
     <h3>MSFS 2024</h3>
     {liveSnapshot?<span className={styles.ready}><CheckCircle2 size={15}/> Lokale Live-Daten erkannt</span>:<span className={styles.off}><CloudOff size={15}/> Kein Live-Tracking</span>}
-    <p>{liveSnapshot?'Der Browser liest tatsächlich aktuelle Messwerte aus der lokalen Windows-Bridge. Phase: '+liveSnapshot.phase+'. Übertragung nur auf diesem PC.':'Die Windows-Bridge liefert echte Messwerte lokal. Wähle die Telemetriedatei im Browser, um auf demselben PC Live-Daten zu sehen.'}</p>
+    <p>{liveSnapshot?'Der Browser liest tatsächlich aktuelle Messwerte aus der lokalen Windows-Bridge. Phase: '+liveSnapshot.phase+'. Übertragung nur auf diesem PC.':'Die Windows-Bridge liefert echte Messwerte lokal. Wähle im Browser den neuen Live-Datenordner aus, um fortlaufende Daten auf demselben PC zu sehen.'}</p>
    </article>
   </div>
   <div className={styles.flowline}>
