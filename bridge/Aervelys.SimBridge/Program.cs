@@ -84,35 +84,82 @@ namespace Aervelys.SimBridge
         }
     }
 
+
+    internal sealed class BridgePairingDialog : Form
+    {
+        public string NextUrl { get { return _url.Text.Trim(); } }
+        public string PairCode { get { return _code.Text.Trim(); } }
+        private readonly TextBox _url = new TextBox();
+        private readonly TextBox _code = new TextBox();
+
+        public BridgePairingDialog()
+        {
+            Text = "AERVELYS NEXT | MSFS 2024 koppeln";
+            Width = 540; Height = 280;
+            StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false; MinimizeBox = false;
+            BackColor = System.Drawing.Color.FromArgb(13, 35, 60);
+            ForeColor = System.Drawing.Color.White;
+            Font = new System.Drawing.Font("Segoe UI", 10f);
+            var title = new Label { Text = "AERVELYS SIM BRIDGE", Left = 20, Top = 16,
+                Width = 490, Height = 30, Font = new System.Drawing.Font("Segoe UI", 14f,
+                System.Drawing.FontStyle.Bold) };
+            var sub = new Label { Text = "Einmalcode unter NEXT > MSFS-Integration erzeugen.",
+                Left = 20, Top = 51, Width = 480, Height = 28 };
+            var urlLabel = new Label { Text = "AERVELYS NEXT Adresse", Left = 20,
+                Top = 85, Width = 470, Height = 22 };
+            _url.Left = 20; _url.Top = 109; _url.Width = 480;
+            _url.Text = "https://aervelys-next-paulkiefelconsulting-9108.vercel.app";
+            var codeLabel = new Label { Text = "Kopplungscode (32 Zeichen)", Left = 20,
+                Top = 145, Width = 470, Height = 22 };
+            _code.Left = 20; _code.Top = 169; _code.Width = 480;
+            _code.MaxLength = 32; _code.UseSystemPasswordChar = true;
+            var ok = new Button { Text = "Sicher koppeln", Left = 360, Top = 203,
+                Width = 140, Height = 30, DialogResult = DialogResult.OK };
+            var cancel = new Button { Text = "Abbrechen", Left = 245, Top = 203,
+                Width = 108, Height = 30, DialogResult = DialogResult.Cancel };
+            Controls.AddRange(new Control[] { title, sub, urlLabel, _url,
+                codeLabel, _code, ok, cancel });
+            AcceptButton = ok; CancelButton = cancel;
+        }
+    }
+
     internal static class Program
     {
         [STAThread]
         private static void Main()
         {
-            Console.Title = "AERVELYS SIM BRIDGE | MSFS 2024";
-            Console.WriteLine("AERVELYS NEXT // SIM BRIDGE v0.1 (Read-only)");
-            Console.WriteLine("Dies ist Simulator-Telemetrie, keine Flugfreigabe.\n");
+            Application.EnableVisualStyles();
             var settings = BridgeSettings.Load();
             if (settings == null)
             {
-                Console.Write("NEXT-Webadresse (https://...): ");
-                var url = Console.ReadLine();
-                Console.Write("Einmaliger Kopplungscode aus NEXT: ");
-                var code = Console.ReadLine();
-                try
+                using (var prompt = new BridgePairingDialog())
                 {
-                    var uri = new Uri((url ?? "").Trim(), UriKind.Absolute);
-                    if (uri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(uri.UserInfo))
-                        throw new InvalidOperationException("Ungültige HTTPS-Adresse");
-                    var origin = uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
-                    var token = BridgeApi.Claim(origin, code ?? "").GetAwaiter().GetResult();
-                    settings = BridgeSettings.Create(origin, token);
-                    Console.WriteLine("PC gekoppelt. Geräteschlüssel unter Windows-Benutzer verschlüsselt gespeichert.");
+                    if (prompt.ShowDialog() != DialogResult.OK) return;
+                    try
+                    {
+                        var uri = new Uri(prompt.NextUrl, UriKind.Absolute);
+                        if (uri.Scheme != Uri.UriSchemeHttps ||
+                            !String.Equals(uri.Host,
+                                "aervelys-next-paulkiefelconsulting-9108.vercel.app",
+                                StringComparison.OrdinalIgnoreCase) ||
+                            !uri.IsDefaultPort || !String.IsNullOrEmpty(uri.UserInfo))
+                            throw new InvalidOperationException("Nur die eigene AERVELYS NEXT HTTPS-Adresse ist zugelassen.");
+                        var origin = uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
+                        var token = BridgeApi.Claim(origin, prompt.PairCode).GetAwaiter().GetResult();
+                        settings = BridgeSettings.Create(origin, token);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Kopplung fehlgeschlagen: " + e.Message,
+                            "AERVELYS SIM BRIDGE", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
                 }
-                catch (Exception e) { Console.WriteLine("Kopplung fehlgeschlagen: " + e.Message); return; }
             }
-            Console.WriteLine("MSFS starten, automatische Verbindung läuft. Mit STRG+C beenden.");
-            Application.EnableVisualStyles();
+            // The bridge is a local companion controlled from NEXT Desktop.
+            // Connection and telemetry states are reported in NEXT -> MSFS-Integration.
             Application.Run(new SimBridgeWindow(settings));
         }
     }
