@@ -34,6 +34,11 @@ namespace Aervelys.SimConnectBridge
         private Type _clientType;
         private MethodInfo _receive;
         private DateTime _lastDataUtc = DateTime.MinValue;
+        // A live flight clock is only trusted when the bridge actually witnessed takeoff.
+        // If connected during cruise, flightStartedAtUtc remains null (no invented duration).
+        private DateTime? _flightStartedAtUtc;
+        private bool _observedOnGround;
+        private bool _completedLanding;
 
         private static Label MakeLabel(int points, FontStyle style, Color color)
         {
@@ -299,10 +304,29 @@ namespace Aervelys.SimConnectBridge
             var now = DateTime.UtcNow;
             _lastDataUtc = now;
             var phase = _detector.Update(snapshot, now);
+            if (snapshot.OnGround > .5) _observedOnGround = true;
+            if (phase == FlightPhase.Landing || phase == FlightPhase.TaxiIn)
+                _completedLanding = true;
+            if (phase == FlightPhase.Parked && _completedLanding)
+            {
+                _flightStartedAtUtc = null;
+                _completedLanding = false;
+                _observedOnGround = true;
+            }
+            if (!_flightStartedAtUtc.HasValue && _observedOnGround &&
+                (phase == FlightPhase.TakeoffRoll ||
+                 (snapshot.OnGround < .5 && snapshot.AboveGroundFt > 70)))
+            {
+                _flightStartedAtUtc = now;
+                _completedLanding = false;
+            }
             var state = new {
                 schemaVersion = 1,
                 source = "msfs2024-simconnect-local",
                 timestampUtc = now.ToString("o"),
+                // Null means the simulator was joined mid-flight or takeoff wasn't observed.
+                flightStartedAtUtc = _flightStartedAtUtc.HasValue
+                    ? _flightStartedAtUtc.Value.ToString("o") : null,
                 phase = phase.ToString(),
                 telemetry = new {
                     latitude = snapshot.Latitude, longitude = snapshot.Longitude,
@@ -347,6 +371,7 @@ namespace Aervelys.SimConnectBridge
             try { (_client as IDisposable)?.Dispose(); } catch { /* simulator may be gone */ }
             _client = null; _clientType = null; _receive = null;
             _lastDataUtc = DateTime.MinValue; _detector.Reset();
+            _flightStartedAtUtc = null; _observedOnGround = false; _completedLanding = false;
         }
 
         protected override void WndProc(ref Message message)
