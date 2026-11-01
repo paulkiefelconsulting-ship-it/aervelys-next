@@ -94,13 +94,17 @@ async function compileBridge({sourceDir,buildDir,configuredRoot,env=process.env,
   fs.writeFileSync(signaturePath,signature,'utf8');
   return {exe,cached:false,sdkRoot:sdk.root};
 }
-function startBridge(exe) {
+async function startBridge(exe) {
   if(!fs.existsSync(exe))throw new Error('Bridge EXE fehlt.');
   // Launched by an explicitly clicked native menu item only.
   const child=spawn(exe,[],{
     cwd:path.dirname(exe),detached:true,stdio:'ignore',windowsHide:false
   });
-  child.on('error',()=>{}); // Prevent uncaught async spawn errors.
+  await new Promise((resolve,reject)=>{
+    child.once('spawn',resolve);
+    child.once('error',reject);
+  });
+  child.on('error',()=>{}); // Prevent uncaught error after successful spawn.
   child.unref();
   return child;
 }
