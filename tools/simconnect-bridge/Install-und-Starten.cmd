@@ -12,36 +12,43 @@ if not exist "AERVELYS.SimConnectBridge.exe" (
 if exist "Microsoft.FlightSimulator.SimConnect.dll" if exist "SimConnect.dll" goto launch
 
 set "SDK_ROOT=%MSFS2024_SDK%"
-if not defined SDK_ROOT set "SDK_ROOT=%MSFS_SDK%"
-if not defined SDK_ROOT set "SDK_ROOT=C:\MSFS 2024 SDK"
+if defined SDK_ROOT if exist "%SDK_ROOT%\SimConnect SDK\lib\SimConnect.dll" goto install
+set "SDK_ROOT=%MSFS_SDK%"
+if defined SDK_ROOT if exist "%SDK_ROOT%\SimConnect SDK\lib\SimConnect.dll" goto install
+set "SDK_ROOT=C:\MSFS 2024 SDK"
+if exist "%SDK_ROOT%\SimConnect SDK\lib\SimConnect.dll" goto install
+set "SDK_ROOT=C:\MSFS SDK"
+if exist "%SDK_ROOT%\SimConnect SDK\lib\SimConnect.dll" goto install
 
+echo.
+echo Keine komplette SDK-Installation automatisch gefunden.
+echo Die Bridge startet trotzdem. Im Bridge-Fenster kannst du
+echo "MSFS-SDK auswählen ..." anklicken und den installierten SDK-Ordner waehlen.
+echo Die MSFS-2024-SDK-DLLs werden nur auf diesem PC verwendet.
+echo.
+goto launch
+
+:install
 set "MANAGED=%SDK_ROOT%\SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll"
 set "NATIVE=%SDK_ROOT%\SimConnect SDK\lib\SimConnect.dll"
-if not exist "%MANAGED%" goto missing
-if not exist "%NATIVE%" goto missing
-
-echo Kopiere die beiden SimConnect-Dateien aus deinem lokal installierten MSFS 2024 SDK.
-copy /Y "%MANAGED%" "%~dp0Microsoft.FlightSimulator.SimConnect.dll" >nul || goto error
-copy /Y "%NATIVE%" "%~dp0SimConnect.dll" >nul || goto error
-echo Erfolgreich. Die SDK-Binaerdateien bleiben nur auf deinem PC.
+if not exist "%MANAGED%" (
+ echo Die Managed-DLL fehlt im SDK. Bitte im Bridge-Fenster SDK auswaehlen.
+ goto launch
+)
+echo SimConnect SDK gefunden: "%SDK_ROOT%"
+copy /Y "%MANAGED%" "%~dp0Microsoft.FlightSimulator.SimConnect.dll" >nul
+if errorlevel 1 (
+ echo Managed-DLL konnte nicht kopiert werden. Bitte Programmordner pruefen.
+ goto launch
+)
+copy /Y "%NATIVE%" "%~dp0SimConnect.dll" >nul
+if errorlevel 1 (
+ echo Native SimConnect.dll konnte nicht kopiert werden. Bitte Programmordner pruefen.
+ goto launch
+)
+echo Beide Microsoft-DLLs nur lokal aus deinem SDK bereitgestellt.
 
 :launch
 echo Starte AERVELYS Flight Bridge...
 start "" "%~dp0AERVELYS.SimConnectBridge.exe"
 exit /b 0
-
-:missing
-echo.
-echo FEHLER: MSFS 2024 SDK Dateien wurden nicht gefunden.
-echo Installiere zuerst den offiziellen MSFS-2024-SDK und starte diese Datei erneut.
-echo Erwarteter SDK-Pfad: "%SDK_ROOT%"
-echo.
-echo Du kannst alternativ MSFS2024_SDK als Umgebungsvariable setzen.
-echo Es werden keine SDK-Dateien heruntergeladen oder ins Internet uebertragen.
-pause
-exit /b 2
-
-:error
-echo FEHLER: SDK-Dateien konnten nicht kopiert werden.
-pause
-exit /b 3
