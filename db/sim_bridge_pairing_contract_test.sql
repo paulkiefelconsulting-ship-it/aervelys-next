@@ -27,9 +27,16 @@ begin
    raise exception 'Weak pairing response';end if;
   perform set_config('request.jwt.claim.sub','',true);
   response:=public.aervelys_sim_bridge_ingest(token,1,null,
-   '{"on_ground":true,"groundspeed_kt":1,"agl_ft":0,"vertical_speed_fpm":0,"indicated_airspeed_kt":0}'::jsonb);
+   '{"on_ground":true,"groundspeed_kt":1,"agl_ft":0,"vertical_speed_fpm":0,"indicated_airspeed_kt":0,"injected_key":"DO NOT STORE"}'::jsonb);
   if response->>'accepted'<>'true' or response->>'telemetry_trusted_for_ops'<>'false'
    then raise exception 'First untrusted heartbeat rejected';end if;
+  if not exists(select 1 from sim.virtual_sim_bridge_sessions b
+    where b.request_id=req and b.status='active'
+      and (b.last_sample->>'groundspeed_kt')::numeric=1
+      and (b.last_sample->>'agl_ft')::numeric=0
+      and not (b.last_sample ? 'injected_key')) then
+    raise exception 'Sanitized instruments missing or unrecognized values leaked';
+  end if;
   update sim.virtual_sim_bridge_sessions set last_seen_at=now()-interval '2 seconds'
    where request_id=req and status='active';
   response:=public.aervelys_sim_bridge_ingest(token,2,'taxi_out',
