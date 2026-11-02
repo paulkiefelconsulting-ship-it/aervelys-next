@@ -8,6 +8,7 @@ import styles from './VirtualSimMissionControl.module.css';
 import VirtualSimBridgePairing from './VirtualSimBridgePairing';
 import SimFlightInstruments,{type SimSample} from './SimFlightInstruments';
 import MsfsCharterSessionLink from './MsfsCharterSessionLink';
+import CloudSimPhaseDirector from './CloudSimPhaseDirector';
 import SimCabinDirector from './SimCabinDirector';
 
 type RequestRow={
@@ -241,6 +242,8 @@ export default function VirtualSimMissionControl(){
       recent={Boolean(bridgeSession?.heartbeat_recent)} lastSeen={bridgeSession?.last_seen_at||null}
       connectedPhase={bridgeSession?.last_phase||null}/>
      {mission.lifecycle==='running'&&<MsfsCharterSessionLink key={requestId} onlyRequestId={requestId}/>}
+     <CloudSimPhaseDirector key={requestId} requestId={requestId} missionPhase={mission.phase}
+      lifecycle={mission.lifecycle} onMissionUpdated={()=>load(true)}/>
      <div className={styles.metrics}>
       <div><strong>{mission.elapsed_minutes} min</strong><span>Simulierte Bordzeit</span></div>
       <div><strong>{avg===null?'—':avg.toFixed(1)+' / 100'}</strong><span>Ø Passagierzufriedenheit</span></div>
@@ -260,7 +263,7 @@ export default function VirtualSimMissionControl(){
       <p>{finance?.price_status?'SIM-Angebotsstatus: '+finance.price_status+' · ':''}Keine bestätigte Kundenzusage, keine echten Kosten und keine Finanzbuchung.</p>
      </div>
      {mission.source_mode==='local_simconnect_unverified'&&
-      <p className={styles.bridgeTag}>Flugphasen stammen aus einer gekoppelten lokalen Bridge – nicht als operative Telemetrie verifiziert.</p>}
+      <p className={styles.bridgeTag}>Eine oder mehrere SIM-Phasen wurden durch eine gekoppelte Simulator-Bridge ausgelöst. Ob lokal oder aus der Cloud steht im Missionsprotokoll; keine operative Telemetrieprüfung.</p>}
      {bridgeStreamActive&&<p className={styles.bridgeTag}>Ein aktueller Geräteheartbeat steuert die SIM-Flugphasen. Manuelle Phasenschritte und Zeitsprünge sind bis zum Trennen beziehungsweise Verbindungsverlust gesperrt.</p>}
      <div className={styles.phaseBox}>
       <div className={styles.sectionHeader}><h4>Flugphasen</h4><small>{bridgeStreamActive?'Gekoppelte Trainings-Bridge · unbestätigte SIM-Telemetrie':'Manuelle Eingabe · keine bestätigte Cloud-Steuerung'}</small></div>
@@ -340,7 +343,8 @@ export default function VirtualSimMissionControl(){
         <strong>{e.event_kind==='service'?
          ('Service: '+String(e.payload.service||'')+' · PAX '+e.payload.seat):
          e.event_kind==='phase_changed'?
-         ('Phasenwechsel → '+phaseName(String(e.payload.next||''))):
+         ('Phasenwechsel → '+phaseName(String(e.payload.next||''))+
+          (e.payload.source==='cloud_msfs_opt_in_unverified'?' · Cloud-Nachweis (SIM)':'')):
          e.event_kind==='cabin_clock'?
          ('SIM-Zeit +'+String(e.payload.minutes||0)+' Min'):
          e.event_kind==='debrief'?'SIM-Debrief':
@@ -351,7 +355,7 @@ export default function VirtualSimMissionControl(){
      </div>
     </>}
    </div>}
-   <p className={styles.footer}>AERVELYS NEXT bewertet hier ausschließlich manuelle Simulationsaktionen und fiktive Passagierzustände. Die Windows-SimConnect-Bridge muss für automatische Flugphasenerkennung gesondert gekoppelt und getestet werden.</p>
+   <p className={styles.footer}>AERVELYS NEXT bewertet hier ausschließlich manuelle Simulationsaktionen und fiktive Passagierzustände. Automatische SIM-Phasen werden nur bei aktiver Opt-in-Kopplung und gesicherter Cloud-/Trainings-Bridge-Evidenz verarbeitet; ein realer MSFS-2024-Test bleibt erforderlich.</p>
   </>}
  </section>;
 }
