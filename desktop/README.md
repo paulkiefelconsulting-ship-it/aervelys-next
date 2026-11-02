@@ -1,3 +1,18 @@
+# AERVELYS NEXT Desktop 0.5.1 – Bezahlte Ferry-Verträge
+
+**Behobener Fehler:** In 0.5 wurden alle Ferry-Aufträge mit 0 SIM-Währung angezeigt, obwohl diese als Aufträge einer fiktiven Flugzeugüberführungsfirma organisiert sind.
+
+- Ferry-Aufträge haben jetzt eine **positive Bruttovergütung**. Diese wird wie andere SIM-Aufträge aus Strecke, Auftragsart und simulierter Angebotsvariation ermittelt, ist kein echter Marktpreis und keine garantierte Nettosumme.
+- Für alle **bezahlten** Ferry-Aufträge gilt eine simulierte gewerbliche Pilotenberechtigung: CPL oder Frozen ATPL. PPL kann weiterhin private Flüge im separaten Missionsplaner planen, aber keine bezahlten Marktaufträge übernehmen.
+- Noch nicht geflogene, bisher mit 0 vergütete **aktive CPL-Ferry-Aufträge** aus 0.5 werden beim Öffnen des lokalen Charter Board sicher nachberechnet (mit Kennzeichnung im Spielstand). Keine Auszahlung wird vorzeitig verbucht; ein bereits beendeter/abgebrochener Flug wird nicht rückwirkend bezahlt.
+- Vorhandene alte unbezahlte PPL-Ferry-Missionen bleiben unverändert, statt rückwirkend in gewerbliche Aufträge verwandelt zu werden.
+- Akzeptierte SIM-Verträge zeigen das Bruttohonorar ausdrücklich an. **Fuel/Handling/Operator-Gebühren werden in diesem Alpha-Stand noch nicht berechnet**.
+- Der Bankkontostand verändert sich nicht beim Annehmen eines Ferry-Auftrags. Die automatische Auszahlung nach erfolgreich geprüftem MSFS-Flug ist weiterhin ein späterer Entwicklungsschritt.
+
+Bestehende lokale Pilotenprofile, Spielstände und AERVELYS-Cloud-Daten bleiben erhalten. Windows Installer Version 0.5.1 aktualisiert 0.5 mit unveränderter App-ID. Für die MSFS-Telemetrie gilt weiterhin: nur mit echter lokal funktionierender SimConnect-Bridge.
+
+---
+
 # AERVELYS NEXT Desktop 0.5 – Offline Charter Board Alpha
 
 ## What was added
