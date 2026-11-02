@@ -1,3 +1,47 @@
+# AERVELYS NEXT Desktop 0.6 – SimConnect-Prüfung und Flugabrechnung (Alpha)
+
+## Neu
+
+Der lokale Charter-/Ferry-Markt zeigt für jeden Auftrag ein **geschätztes SIM-Ergebnis**:
+Bruttohonorar – modellierter Treibstoff – modellierte Landegebühr – modelliertes Handling = voraussichtliches Netto.
+Die Werte sind **fiktive Spieltarife**, keine echten Flughafenpreise und keine Flugplanung für reale Luftfahrt.
+Die Treibstoffmenge wird aus Flugzeugtyp, Streckenlänge und geschätzter Blockzeit abgeleitet. Bei einer Abrechnung nach einem Simulatorflug ersetzt die **tatsächlich aufgezeichnete Blockzeit** diesen Zeitansatz, nicht jedoch eine fehlende Messung des echten Treibstoffverbrauchs.
+
+### Lokaler Flugablauf
+
+1. Angemessenen, zugelassenen Auftrag im Charter Board annehmen.
+2. MSFS 2024 mit der AERVELYS SimConnect-Bridge im **Offline-Modus** starten.
+3. Mit dem vereinbarten Flugzeug auf dem Startflugplatz am Gate parken (Engines OFF, Groundspeed unter 3 Knoten).
+4. Bei diesem Auftrag **Flug am Gate aktivieren** klicken. Der Auftrag wird an eine aktuelle SimConnect-Sitzung und einen Startmesswert gebunden.
+5. Engine Start, Taxi, Takeoff, Flight, Landing und Shutdown in derselben Sitzung durchführen.
+6. **Flug prüfen** klicken. Nur bei passender Start- und Endposition, konsistenter Telemetrie, Flugzeugtyp, Flugstrecke und abgeschalteten Triebwerken wird der Button **Geprüften SIM-Flug abrechnen** eingeblendet.
+7. Nach diesem bewussten Klick wird der Auftrag einmalig verbucht; das lokale SIM-Konto wird um den errechneten Netto-Betrag verändert. Ein Buchungseintrag und eine Abrechnungsquittung werden in **Airline & Finanzen** gespeichert.
+
+### Schutzmaßnahmen
+
+- Route wird mit lokal hinterlegten Flughafenzentren aus **OurAirports** (Public Domain, https://ourairports.com/data/) verglichen, nur zur SIM-Auswertung, nicht zur realen Navigation.
+- Der Start muss innerhalb von 3 NM des Abflugflugplatzes Cold and Dark dokumentiert sein.
+- Telemetrie muss aus **derselben** SimConnect-Sitzung stammen; Zeitlücken, Zeitrücksprünge, zu große Positionssprünge, falsche Flugzeugtypen und fehlender Shutdown verhindern die Abrechnung.
+- Der Zielort muss innerhalb von 3 NM des Ziel-Flugplatzreferenzpunkts liegen, Groundspeed und Triebwerksstatus müssen passen.
+- Eine Mission kann nur einmal ausgezahlt werden. Auftrag, Flugstunden, SIM-Konto und Ledger werden im selben lokalen JSON-Spielstand atomar gespeichert.
+- Missionen anderer Piloten können nicht abgerechnet werden.
+- Ein frei erstellter Flug oder ein Checkride erhält **keine** automatische Auszahlung und kein Rating.
+- Die Prüfung ist ein **heuristischer SIM-Spielnachweis**, keine fälschungssichere Telemetrie oder echte fliegerische Qualifikation. Lokale Spielstanddateien können von PC-Besitzern verändert werden.
+
+## Wichtige Grenzen
+
+- Die native Bridge braucht auf deinem Rechner weiterhin das Microsoft MSFS 2024 SDK und die C#-Entwicklungswerkzeuge. Der Windows-Echtflug-End-to-End-Test ist noch ausstehend.
+- Ohne echte lokale Telemetrie ist weder Flugaktivierung noch Abrechnung möglich.
+- Die bisherigen alten Marktaufträge können ebenfalls aufgerufen werden. Fehlende Kostenangebote werden beim Flugabschluss aus den gleichen Spieltarifen berechnet.
+- Der lokale Checkride ist nur eine Planung; Type-Rating-Freischaltung folgt erst nach einer gesonderten zuverlässigen Trainingsprüfung.
+- Keine Online-Synchronisation, keine externen Rechnungen und keine echte Bezahlung.
+- Keine automatische Flughafenpreis-, Fuel- oder Wetterabfrage, keine SimBrief-OFP-basierte Verbrauchsrechnung.
+- Erst nach einem erfolgreichen Windows/MSFS-Flugtest kann ein vollautomatischer Abschluss ohne manuelles „Flug prüfen“ sinnvoll freigeschaltet werden.
+
+Der 0.6-Installer aktualisiert die bisherige Windows-App mit identischer App-ID. Bestehende Pilotenprofile und SIM-Konten bleiben erhalten. Vor dem Update über **Profile sichern** ein Backup anlegen.
+
+---
+
 # AERVELYS NEXT Desktop 0.5.1 – Bezahlte Ferry-Verträge
 
 **Behobener Fehler:** In 0.5 wurden alle Ferry-Aufträge mit 0 SIM-Währung angezeigt, obwohl diese als Aufträge einer fiktiven Flugzeugüberführungsfirma organisiert sind.
