@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -128,8 +129,28 @@ namespace Aervelys.SimBridge
     internal static class Program
     {
         [STAThread]
+        private static Assembly ResolveLocalSimConnect(object sender, ResolveEventArgs e)
+        {
+            var name = new AssemblyName(e.Name);
+            if (!String.Equals(name.Name, "Microsoft.FlightSimulator.SimConnect",
+                               StringComparison.OrdinalIgnoreCase))
+                return null;
+            var installedDll = Environment.GetEnvironmentVariable("AERVELYS_SIMCONNECT_MANAGED");
+            if (String.IsNullOrWhiteSpace(installedDll) ||
+                !Path.IsPathRooted(installedDll) ||
+                !String.Equals(Path.GetFileName(installedDll),
+                   "Microsoft.FlightSimulator.SimConnect.dll",
+                   StringComparison.OrdinalIgnoreCase) ||
+                !File.Exists(installedDll))
+                return null;
+            return Assembly.LoadFrom(installedDll);
+        }
+
         private static void Main(string[] args)
         {
+            // Only the user-installed official Microsoft SDK assembly is resolved.
+            // It is never copied or redistributed with AERVELYS NEXT.
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveLocalSimConnect;
             Application.EnableVisualStyles();
             // Offline-first mode has no account, no internet and no pairing code.
             if (args != null && args.Length == 1 && args[0] == "--offline")
