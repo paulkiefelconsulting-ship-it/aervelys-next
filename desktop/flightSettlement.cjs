@@ -12,7 +12,7 @@ const pilots=require('./pilotProfiles.cjs');
 const {AIRPORTS,distanceFrom,nmBetween}=require('./airports.cjs');
 
 const ENGINE=Object.freeze({
- 'Cessna 172 G1000':{litres:34,speed:112,price:2.65,identity:/\b(172|C172|SKYHAWK)\b/i},
+ 'Cessna 172 G1000':{litres:34,speed:112,price:2.65,identity:/\b(C172(?:SP|S|G1000)?|172(?:SP|S)?|SKYHAWK)\b/i},
  'Diamond DA40 NG':{litres:25,speed:125,price:2.65,identity:/\bDA[\s-]?40\b/i},
  'Piper PA-28':{litres:40,speed:115,price:2.65,identity:/\b(PA[\s-]?28|CHEROKEE|ARCHER)\b/i},
  'Cessna Citation CJ4':{litres:710,speed:405,price:2.25,identity:/\b(CJ[\s-]?4|C525C|CITATION CJ4)\b/i},
@@ -49,7 +49,6 @@ function quote(contract,blockHours){
 }
 function validateRecord(sample){
  const d=sample;
- if(!d||typeof d!=='object'||!Array.isArray([d.latitude,d.longitude])){} // no-op
  return d&&typeof d==='object'&&
   typeof d.observed_at==='string'&&Number.isFinite(Date.parse(d.observed_at))&&
   typeof d.session_id==='string'&&/^[a-f0-9-]{36}$/i.test(d.session_id)&&
@@ -173,7 +172,8 @@ function evaluate(mission,samples){
   if(seconds<=0||seconds>90){reasons.push('Telemetrie-Lücke, Zeitrücksprung oder Simulatorpause erkannt.');break;}
   const distance=nmBetween([prev.latitude,prev.longitude],[s.latitude,s.longitude]);
   const derivedKnots=distance/(seconds/3600);
-  if(derivedKnots>780||distance>10){
+  const maxTrackSpeed=mission.requiredRating==='SEP'?260:780;
+  if(derivedKnots>maxTrackSpeed||distance>10){
    reasons.push('Unplausibler Positionssprung erkannt.');break;
   }
   trackNm+=distance;
