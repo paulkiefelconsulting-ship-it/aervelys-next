@@ -42,7 +42,9 @@ function board(meta,state){
   // Fictional game economy in native profile currency units, not an FX conversion.
   const factor=item.sector==='VIP'?23:item.sector==='MEDEVAC'?28:item.sector==='CHARTER'?15:9;
   const base=Math.round((distance*factor+350)*(0.87+(val%27)/100)/10)*10;
-  const fee=item.sector==='FERRY'?0:base;
+  // Ferry missions are paid aircraft-delivery contracts, not private repositioning.
+  // A self-funded private ferry is a manual flight outside the charter board.
+  const fee=base;
   return {...item,id:'SIM-'+round+'-'+i,category:CATEGORIES[item.sector],
    payment:fee,currency,round,isSimulation:true,kind:item.sector==='FERRY'?'ferry':'charter',
    customer:item.client,
@@ -59,8 +61,9 @@ function eligibility(state,offer){
  const licence=state.profile?.simLicence||'LEGACY';
  const ratings=Array.isArray(state.profile?.ratings)?state.profile.ratings:[];
  const isCommercial=licence==='CPL'||licence==='FROZEN_ATPL';
- if(offer.kind!=='ferry'&&!isCommercial)return {
-  eligible:false,reason:'Gewerblicher SIM-Auftrag benötigt CPL oder Frozen ATPL.'};
+ // All paid contracts (including ferry deliveries) require a commercial licence.
+ if(offer.payment>0&&!isCommercial)return {
+  eligible:false,reason:'Bezahlter SIM-Auftrag (auch Ferry) benötigt CPL oder Frozen ATPL.'};
  if(offer.rating!=='SEP'&&!ratings.includes(offer.rating))
   return {eligible:false,reason:'SIM-Type-Rating fehlt: '+offer.ratingName};
  if(offer.rating==='SEP'&&!['PPL','CPL','FROZEN_ATPL'].includes(licence) &&
@@ -95,6 +98,7 @@ function accept(root,offerId){
   aircraft:offer.aircraft,category:offer.sector,client:offer.customer,
   title:offer.title,offerId:offer.id,source:'local_market',
   gameReward:offer.payment,gameCurrency:offer.currency,
+  paymentType:'gross_contract_fee',
   requiredRating:offer.rating,
   createdAt:new Date().toISOString(),
   status:'accepted',verified:false,certificateIssued:false,settled:false
