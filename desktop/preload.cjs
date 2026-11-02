@@ -15,6 +15,9 @@ contextBridge.exposeInMainWorld('AERVELYS_LOCAL',Object.freeze({
  marketRefresh:()=>ipcRenderer.invoke('local:marketRefresh'),
  marketCancel:(id)=>ipcRenderer.invoke('local:marketCancel',id),
  trainingPlan:(type)=>ipcRenderer.invoke('local:trainingPlan',type),
+ flightArm:(id)=>ipcRenderer.invoke('local:flightArm',id),
+ flightReview:(id)=>ipcRenderer.invoke('local:flightReview',id),
+ flightSettle:(id)=>ipcRenderer.invoke('local:flightSettle',id),
  startBridge:()=>ipcRenderer.invoke('local:startBridge'),
  stopBridge:()=>ipcRenderer.invoke('local:stopBridge'),
  openCloud:()=>ipcRenderer.invoke('local:openCloud')

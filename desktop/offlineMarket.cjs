@@ -7,6 +7,7 @@
 const crypto=require('node:crypto');
 const storage=require('./localStore.cjs');
 const profiles=require('./pilotProfiles.cjs');
+const finance=require('./flightSettlement.cjs');
 
 const CATALOG=[
  {dep:'EDAZ',arr:'EDDB',nm:24,aircraft:'Cessna 172 G1000',rating:'SEP',sector:'FERRY',client:'Brandenburg Flight School',title:'Aircraft relocation to BER'},
@@ -106,6 +107,7 @@ function list(root){
   .map(m=>m.offerId));
  return board(meta,state).map(offer=>({
   ...offer,...eligibility(state,offer),
+  costPreview:finance.quote({...offer,departure:offer.dep,destination:offer.arr}),
   alreadyTaken:taken.has(offer.id)
  }));
 }
@@ -128,6 +130,7 @@ function accept(root,offerId){
   title:offer.title,offerId:offer.id,source:'local_market',
   gameReward:offer.payment,gameCurrency:offer.currency,
   paymentType:'gross_contract_fee',
+  costEstimate:finance.quote({...offer,departure:offer.dep,destination:offer.arr}),
   requiredRating:offer.rating,
   createdAt:new Date().toISOString(),
   status:'accepted',verified:false,certificateIssued:false,settled:false

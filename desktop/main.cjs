@@ -11,6 +11,7 @@ const {HOME, isInternal, isExternalAllowed} = require('./security.cjs');
 const localStore=require('./localStore.cjs');
 const pilots=require('./pilotProfiles.cjs');
 const offlineMarket=require('./offlineMarket.cjs');
+const flightSettlement=require('./flightSettlement.cjs');
 const {findSdk,sourceDirectory,compileBridge,startBridge,stopBridge} = require('./nativeBridge.cjs');
 const PARTITION = 'persist:aervelys-next-desktop';
 let mainWindow = null;
@@ -76,7 +77,7 @@ async function launchNativeBridge() {
       sourceDir,buildDir:targetDir,configuredRoot:sdk.root,
       env:{MSFS2024_SDK:'',MSFS_SDK:''}
     });
-    bridgeProcess=await startBridge(result.exe,['--offline']);
+    bridgeProcess=await startBridge(result.exe,['--offline'],sdk.file);
     bridgeProcess.on('exit',()=>{bridgeProcess=null;});
     await dialog.showMessageBox(mainWindow||undefined,{
       type:'info',title:'AERVELYS SIM BRIDGE gestartet',
@@ -286,6 +287,18 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.handle('local:trainingPlan',(event,type)=>{
       localOnly(event);
       return offlineMarket.planTypeCheck(homeDir(),type);
+    });
+    ipcMain.handle('local:flightArm',(event,missionId)=>{
+      localOnly(event);
+      return flightSettlement.arm(homeDir(),appDataDir(),missionId);
+    });
+    ipcMain.handle('local:flightReview',(event,missionId)=>{
+      localOnly(event);
+      return flightSettlement.inspect(homeDir(),appDataDir(),missionId);
+    });
+    ipcMain.handle('local:flightSettle',(event,missionId)=>{
+      localOnly(event);
+      return flightSettlement.finalize(homeDir(),appDataDir(),missionId);
     });
     ipcMain.handle('local:backup',async event=>{
       localOnly(event);

@@ -1,7 +1,7 @@
 {
   "name": "aervelys-next-desktop",
-  "version": "0.5.1",
-  "description": "AERVELYS NEXT offline-first virtual pilot career and charter market",
+  "version": "0.6.0",
+  "description": "AERVELYS NEXT offline pilot career with SimConnect-gated charter economy",
   "private": true,
   "author": "AERVELYS NEXT",
   "license": "UNLICENSED",
@@ -38,7 +38,9 @@
       "preload.cjs",
       "localStore.cjs",
       "pilotProfiles.cjs",
-      "offlineMarket.cjs"
+      "offlineMarket.cjs",
+      "airports.cjs",
+      "flightSettlement.cjs"
     ],
     "win": {
       "target": [
