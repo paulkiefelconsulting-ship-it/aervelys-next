@@ -94,12 +94,18 @@ async function compileBridge({sourceDir,buildDir,configuredRoot,env=process.env,
   fs.writeFileSync(signaturePath,signature,'utf8');
   return {exe,cached:false,sdkRoot:sdk.root};
 }
-async function startBridge(exe,args=[]) {
+async function startBridge(exe,args=[],sdkManagedAssembly=null) {
   if(!fs.existsSync(exe))throw new Error('Bridge EXE fehlt.');
   // Launched by an explicitly clicked native menu item only.
   if(!Array.isArray(args)||args.some(x=>x!=='--offline'))throw Error('Invalid bridge arguments');
+  if(sdkManagedAssembly!==null &&
+      (!path.isAbsolute(sdkManagedAssembly)||
+       path.basename(sdkManagedAssembly)!==DLL||!fs.existsSync(sdkManagedAssembly)))
+    throw Error('Managed SDK-Assembly fehlt.');
   const child=spawn(exe,args,{
-    cwd:path.dirname(exe),detached:true,stdio:'ignore',windowsHide:false
+    cwd:path.dirname(exe),detached:true,stdio:'ignore',windowsHide:false,
+    env:{...process.env,
+      ...(sdkManagedAssembly?{AERVELYS_SIMCONNECT_MANAGED:sdkManagedAssembly}:{})}
   });
   await new Promise((resolve,reject)=>{
     child.once('spawn',resolve);
