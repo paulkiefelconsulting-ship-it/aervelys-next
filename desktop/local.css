@@ -85,3 +85,17 @@ nav{display:grid;gap:5px}.nav-item{color:#9db4c9;background:transparent;border:1
 .account-balance{font-size:28px;font-weight:800;color:#71d4f2;margin-top:12px}
 @media(max-width:1000px){.market-card{grid-template-columns:minmax(0,1fr) 180px}}
 @media(max-width:700px){.market-card{grid-template-columns:1fr}.offer-actions{border-left:0;border-top:1px solid #254158;padding:12px 0 0;justify-items:start}.offer-actions small{text-align:left}.market-header{flex-wrap:wrap}.market-filters{display:grid}.market-filters select{width:100%}}
+
+
+/* Local ACARS settlement and audit ledger. All values are simulated. */
+.offer-net{font-size:11px;color:#88e4c7;line-height:1.5;text-align:right;margin-top:4px}
+.flight-review{margin-top:20px;padding:14px 16px;border:1px solid #3d657c;
+ background:#122c3e;border-radius:9px;color:#cfdfeb;font-size:12px;line-height:1.65}
+.flight-review:empty{display:none}
+.flight-review strong{display:block;font-size:13px;margin-bottom:7px}
+.flight-review .primary{margin-top:8px}
+.ledger-row{padding:14px 0;border-bottom:1px solid #2a4055;font-size:12px;line-height:1.5}
+.ledger-row:last-child{border-bottom:none}
+.ledger-row strong:last-child{color:#80d8bd}
+.ledger-row p{font-size:11px;color:#98b3c9}
+@media(max-width:700px){.offer-net{text-align:left}}
