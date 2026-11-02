@@ -40,6 +40,8 @@ jobs:
         run: node scripts/test-cabin-director.cjs
       - name: Validate ACARS flight and checkride evidence
         run: node scripts/test-msfs-acars.cjs
+      - name: Verify unified NEXT flight lifecycle
+        run: node scripts/test-next-integration-pipeline.cjs
       - name: Strict TypeScript check
         run: npx tsc --noEmit
       - name: Production build check (no Vercel deployment)
