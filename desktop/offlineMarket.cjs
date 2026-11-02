@@ -42,7 +42,9 @@ function board(meta,state){
   // Fictional game economy in native profile currency units, not an FX conversion.
   const factor=item.sector==='VIP'?23:item.sector==='MEDEVAC'?28:item.sector==='CHARTER'?15:9;
   const base=Math.round((distance*factor+350)*(0.87+(val%27)/100)/10)*10;
-  const fee=item.sector==='FERRY'?0:base;
+  // Ferry missions are paid aircraft-delivery contracts, not private repositioning.
+  // A self-funded private ferry is a manual flight outside the charter board.
+  const fee=base;
   return {...item,id:'SIM-'+round+'-'+i,category:CATEGORIES[item.sector],
    payment:fee,currency,round,isSimulation:true,kind:item.sector==='FERRY'?'ferry':'charter',
    customer:item.client,
@@ -59,8 +61,9 @@ function eligibility(state,offer){
  const licence=state.profile?.simLicence||'LEGACY';
  const ratings=Array.isArray(state.profile?.ratings)?state.profile.ratings:[];
  const isCommercial=licence==='CPL'||licence==='FROZEN_ATPL';
- if(offer.kind!=='ferry'&&!isCommercial)return {
-  eligible:false,reason:'Gewerblicher SIM-Auftrag benötigt CPL oder Frozen ATPL.'};
+ // All paid contracts (including ferry deliveries) require a commercial licence.
+ if(offer.payment>0&&!isCommercial)return {
+  eligible:false,reason:'Bezahlter SIM-Auftrag (auch Ferry) benötigt CPL oder Frozen ATPL.'};
  if(offer.rating!=='SEP'&&!ratings.includes(offer.rating))
   return {eligible:false,reason:'SIM-Type-Rating fehlt: '+offer.ratingName};
  if(offer.rating==='SEP'&&!['PPL','CPL','FROZEN_ATPL'].includes(licence) &&
@@ -68,8 +71,37 @@ function eligibility(state,offer){
   return {eligible:false,reason:'SIM-Klassenberechtigung SEP nicht hinterlegt.'};
  return {eligible:true,reason:'SIM-Karrierevoraussetzungen erfüllt (keine echte Flugfreigabe).'};
 }
+function reconcileLegacyUnpaidFerry(root,meta,state,dir){
+ // V0.5 accidentally stored commercial ferry fees as zero. Correct only an
+ // active, unpaid, unverified market contract with a matching original offer.
+ // Existing PPL ferry legs stay at 0 (noncommercial grandfathered flights).
+ if(!['CPL','FROZEN_ATPL'].includes(state.profile?.simLicence))return state;
+ let modified=false;
+ for(const mission of state.missions){
+  if(mission?.source!=='local_market'||mission.category!=='FERRY'||
+     mission.status!=='accepted'||mission.gameReward!==0||
+     mission.verified!==false||mission.settled!==false ||
+     typeof mission.offerId!=='string')continue;
+  const match=/^SIM-(\d{1,5})-(\d{1,2})$/.exec(mission.offerId);
+  if(!match)continue;
+  const cycle=Number(match[1]),index=Number(match[2]);
+  if(!Number.isSafeInteger(cycle)||cycle>10000||index>=CATALOG.length)continue;
+  const offer=board(meta,{marketCycle:cycle})[index];
+  if(!offer||offer.id!==mission.offerId||offer.sector!=='FERRY'||
+     offer.dep!==mission.departure||offer.arr!==mission.destination||
+     offer.aircraft!==mission.aircraft||mission.gameCurrency!==offer.currency)continue;
+  mission.gameReward=offer.payment;
+  mission.paymentType='gross_contract_fee';
+  mission.pricingRevision='paid_ferry_v051';
+  mission.previousGameReward=0;
+  modified=true;
+ }
+ if(modified)storage.writeState(dir,state);
+ return state;
+}
 function list(root){
- const {meta,state}=profileRef(root);
+ const {meta,state,dir}=profileRef(root);
+ reconcileLegacyUnpaidFerry(root,meta,state,dir);
  const taken=new Set(state.missions.filter(m=>m.source==='local_market')
   .map(m=>m.offerId));
  return board(meta,state).map(offer=>({
@@ -95,6 +127,7 @@ function accept(root,offerId){
   aircraft:offer.aircraft,category:offer.sector,client:offer.customer,
   title:offer.title,offerId:offer.id,source:'local_market',
   gameReward:offer.payment,gameCurrency:offer.currency,
+  paymentType:'gross_contract_fee',
   requiredRating:offer.rating,
   createdAt:new Date().toISOString(),
   status:'accepted',verified:false,certificateIssued:false,settled:false
