@@ -128,7 +128,6 @@ namespace Aervelys.SimBridge
 
     internal static class Program
     {
-        [STAThread]
         private static Assembly ResolveLocalSimConnect(object sender, ResolveEventArgs e)
         {
             var name = new AssemblyName(e.Name);
@@ -153,6 +152,7 @@ namespace Aervelys.SimBridge
             Application.Run(new SimBridgeWindow(settings));
         }
 
+        [STAThread]
         private static void Main(string[] args)
         {
             // Only the user-installed official Microsoft SDK assembly is resolved.
