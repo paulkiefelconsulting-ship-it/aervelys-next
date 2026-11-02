@@ -29,13 +29,27 @@ function row(parent,mission){
  const small=document.createElement('p');
  small.textContent=(mission.kind==='checkride'?'SIM-Checkride':mission.kind==='ferry'?'SIM-Ferry':'SIM-Charter')+' · '+
   format(mission.createdAt)+' · '+(mission.status==='cancelled'?'abgebrochen':
-   mission.status==='accepted'?'angenommen, nicht geflogen':'geplant, nicht verifiziert')+
+   mission.status==='completed'?'geflogen und gebucht':mission.status==='accepted'?'angenommen, noch nicht abgerechnet':'geplant, nicht verifiziert')+
   (Number.isFinite(mission.gameReward)?
    ' · Bruttohonorar: '+money(mission.gameReward,mission.gameCurrency||'EUR')+' (noch nicht ausgezahlt)':'');
  left.append(strong,small);
  const tag=document.createElement('span');tag.className='mission-tag';tag.textContent='GEPLANT';
  div.append(left,tag);
  if(mission.source==='local_market'&&mission.status==='accepted'){
+  const flightAction=document.createElement('button');
+  flightAction.className='primary';flightAction.type='button';
+  flightAction.textContent=mission.tracking?'Flug prüfen':'Flug am Gate aktivieren';
+  flightAction.addEventListener('click',()=>{void action(async()=>{
+   if(!mission.tracking){
+    const result=await bridge.flightArm(mission.id);
+    if(result)toast('Auftrag an aktuellen Simulatorflug gebunden. Starte jetzt die Triebwerke.');
+    return result;
+   }
+   const review=await bridge.flightReview(mission.id);
+   showFlightReview(review,mission);
+   return review;
+  });});
+  div.append(flightAction);
   const button=document.createElement('button');button.className='secondary';button.type='button';
   button.textContent='Auftrag abbrechen';
   button.addEventListener('click',()=>{
@@ -91,6 +105,7 @@ function render(data){
  text('statBudget',Number.isFinite(balance)?
   new Intl.NumberFormat('de-DE',{maximumFractionDigits:0}).format(balance)+' '+state.finances.currency:'—');
  text('companyBalance',Number.isFinite(balance)?money(balance,state.finances.currency):'Kein lokales SIM-Budget');
+ renderLedger(state);
  const next=$('nextMission');next.replaceChildren();
  if(state.missions.length)row(next,state.missions[0]);
  else next.textContent='Noch keine lokale Mission angelegt.';
@@ -115,6 +130,61 @@ function render(data){
   'Noch keine lokalen MSFS-Messwerte. Im Offline-Modus schreibt die SimConnect-Bridge auf diesen PC.');
 }
 
+function showFlightReview(review,mission){
+ const box=$('flightReviewBox');
+ if(!box)return;
+ box.replaceChildren();
+ const title=document.createElement('strong');
+ title.textContent=review.passed?
+  'SIM-Flugprüfung erfolgreich – Abrechnung kann gebucht werden':
+  'Flugprüfung noch nicht erfüllt';
+ box.append(title);
+ const content=document.createElement('p');
+ content.textContent=review.passed?
+  'SimConnect-Sitzung, Muster, Start/Flug/Landung und Shutdown sind stimmig. '+
+  'Samples: '+review.sampleCount+' · aufgezeichnet: '+review.durationHours+' h.':
+  (review.reasons||['Keine gültigen Flugdaten']).join(' · ');
+ box.append(content);
+ if(review.passed){
+  const button=document.createElement('button');
+  button.type='button';button.className='primary';
+  button.textContent='Geprüften SIM-Flug abrechnen';
+  button.addEventListener('click',()=>{void action(async()=>{
+   const result=await bridge.flightSettle(mission.id);
+   if(!result?.settled){
+    showFlightReview(result?.review||{passed:false,reasons:['Belegprüfung fehlgeschlagen.']},mission);
+    return result;
+   }
+   box.replaceChildren();
+   const receipt=document.createElement('p');
+   receipt.textContent='Gebucht: '+money(result.receipt.net,result.receipt.currency)+
+    ' · Neuer SIM-Kontostand: '+money(result.balance,result.receipt.currency)+
+    '. Details unter Airline & Finanzen.';
+   box.append(receipt);
+   toast('Flugabrechnung sicher verbucht.');
+   return result;
+  });});
+  box.append(button);
+ }
+}
+function renderLedger(state){
+ const node=$('ledgerList');node.replaceChildren();
+ const transactions=state.finances?.transactions||[];
+ if(!transactions.length){node.textContent='Noch keine abgerechneten SIM-Flüge.';return;}
+ for(const tx of transactions.slice(-25).reverse()){
+  const wrap=document.createElement('article');wrap.className='ledger-row';
+  const heading=document.createElement('strong');
+  heading.textContent='SimConnect-Flug '+tx.missionId.slice(0,8)+' · '+format(tx.createdAt);
+  const details=document.createElement('p');
+  details.textContent='Brutto '+money(tx.gross,tx.currency)+
+   ' − Treibstoff '+money(tx.fuel,tx.currency)+
+   ' − Landegebühr '+money(tx.landing,tx.currency)+
+   ' − Handling '+money(tx.handling,tx.currency);
+  const total=document.createElement('strong');
+  total.textContent='SIM-Ergebnis: '+money(tx.net,tx.currency);
+  wrap.append(heading,details,total);node.append(wrap);
+ }
+}
 function marketCard(offer){
  const article=document.createElement('article');article.className='market-card';
  const main=document.createElement('div');
@@ -136,7 +206,16 @@ function marketCard(offer){
  value.className='offer-value';
  value.textContent=money(offer.payment,offer.currency);
  const hint=document.createElement('small');
- hint.textContent='SIM-Bruttohonorar · Auszahlung erst nach geprüfter Landung und Abrechnung';
+ const preview=offer.costPreview;
+ hint.textContent=preview?
+  'Treibstoff '+money(preview.fuel,preview.currency)+
+  ' · Landing '+money(preview.landing,preview.currency)+
+  ' · Handling '+money(preview.handling,preview.currency):
+  'Betriebskosten noch nicht verfügbar';
+ const projected=document.createElement('strong');
+ projected.className='offer-net';
+ projected.textContent=preview?'Voraussichtlich netto: '+money(preview.net,preview.currency):'';
+
  const actionButton=document.createElement('button');
  actionButton.type='button';actionButton.className=offer.eligible?'primary':'secondary';
  actionButton.disabled=!offer.eligible||offer.alreadyTaken||hasActiveMarketMission;
@@ -148,7 +227,7 @@ function marketCard(offer){
   toast('SIM-Auftrag gespeichert – noch kein Flugabschluss oder Geldeingang.');
   return result;
  });});
- side.append(value,hint,actionButton);
+ side.append(value,hint,projected,actionButton);
  article.append(main,side);
  return article;
 }
