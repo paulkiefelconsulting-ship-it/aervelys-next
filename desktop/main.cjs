@@ -77,7 +77,7 @@ async function launchNativeBridge() {
       sourceDir,buildDir:targetDir,configuredRoot:sdk.root,
       env:{MSFS2024_SDK:'',MSFS_SDK:''}
     });
-    bridgeProcess=await startBridge(result.exe,['--offline']);
+    bridgeProcess=await startBridge(result.exe,['--offline'],sdk.file);
     bridgeProcess.on('exit',()=>{bridgeProcess=null;});
     await dialog.showMessageBox(mainWindow||undefined,{
       type:'info',title:'AERVELYS SIM BRIDGE gestartet',
