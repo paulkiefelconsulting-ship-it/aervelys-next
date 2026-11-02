@@ -21,7 +21,7 @@ function fixture(t){
 }
 function samplesFor(mission,{wrongArrival=false,session=SESSION,short=false,wrongAircraft=false}={}){
  const start=AIRPORTS[mission.departure],end=AIRPORTS[mission.destination];
- const origin=Date.now()-(short?90000:12*60000);
+ const origin=Date.now()-(short?90000:13*60000);
  const duration=short?12:145;
  const output=[];
  for(let i=0;i<=duration;i++){
