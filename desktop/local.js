@@ -27,9 +27,11 @@ function row(parent,mission){
  const strong=document.createElement('strong');
  strong.textContent=mission.departure+' → '+mission.destination+' · '+mission.aircraft;
  const small=document.createElement('p');
- small.textContent=(mission.kind==='checkride'?'SIM-Checkride':'SIM-Charter')+' · '+
+ small.textContent=(mission.kind==='checkride'?'SIM-Checkride':mission.kind==='ferry'?'SIM-Ferry':'SIM-Charter')+' · '+
   format(mission.createdAt)+' · '+(mission.status==='cancelled'?'abgebrochen':
-   mission.status==='accepted'?'angenommen, nicht geflogen':'geplant, nicht verifiziert');
+   mission.status==='accepted'?'angenommen, nicht geflogen':'geplant, nicht verifiziert')+
+  (Number.isFinite(mission.gameReward)?
+   ' · Bruttohonorar: '+money(mission.gameReward,mission.gameCurrency||'EUR')+' (noch nicht ausgezahlt)':'');
  left.append(strong,small);
  const tag=document.createElement('span');tag.className='mission-tag';tag.textContent='GEPLANT';
  div.append(left,tag);
@@ -132,9 +134,9 @@ function marketCard(offer){
  const side=document.createElement('div');side.className='offer-actions';
  const value=document.createElement('strong');
  value.className='offer-value';
- value.textContent=offer.payment>0?money(offer.payment,offer.currency):'0 '+offer.currency;
+ value.textContent=money(offer.payment,offer.currency);
  const hint=document.createElement('small');
- hint.textContent=offer.payment===0?'Nicht vergüteter SIM-Ferryflug':'Mögliche SIM-Auszahlung nach Flugprüfung';
+ hint.textContent='SIM-Bruttohonorar · Auszahlung erst nach geprüfter Landung und Abrechnung';
  const actionButton=document.createElement('button');
  actionButton.type='button';actionButton.className=offer.eligible?'primary':'secondary';
  actionButton.disabled=!offer.eligible||offer.alreadyTaken||hasActiveMarketMission;
