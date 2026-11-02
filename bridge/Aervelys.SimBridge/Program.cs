@@ -146,6 +146,13 @@ namespace Aervelys.SimBridge
             return Assembly.LoadFrom(installedDll);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(
+          System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void RunNativeBridge(BridgeSettings settings)
+        {
+            Application.Run(new SimBridgeWindow(settings));
+        }
+
         private static void Main(string[] args)
         {
             // Only the user-installed official Microsoft SDK assembly is resolved.
@@ -155,7 +162,7 @@ namespace Aervelys.SimBridge
             // Offline-first mode has no account, no internet and no pairing code.
             if (args != null && args.Length == 1 && args[0] == "--offline")
             {
-                Application.Run(new SimBridgeWindow(null));
+                RunNativeBridge(null);
                 return;
             }
             var settings = BridgeSettings.Load();
@@ -187,7 +194,7 @@ namespace Aervelys.SimBridge
             }
             // The bridge is a local companion controlled from NEXT Desktop.
             // Connection and telemetry states are reported in NEXT -> MSFS-Integration.
-            Application.Run(new SimBridgeWindow(settings));
+            RunNativeBridge(settings);
         }
     }
 }
