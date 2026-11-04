@@ -1,0 +1,16 @@
+select
+ (select count(*) from sim.v2_companies) v2_companies,
+ (select count(*) from sim.v2_staff) v2_staff,
+ (select count(*) from sim.v2_aircraft) v2_aircraft,
+ (select count(*) from sim.v2_requests) v2_requests,
+ (select count(*) from sim.v2_events) v2_events,
+ (select count(*) from sim.v2_ledger) v2_ledger,
+ (select count(*) from sim.aircraft) existing_v1_aircraft,
+ (select count(*) from sim.sim_customer_cases) existing_v1_customers,
+ (select count(*) from sim.virtual_sim_missions) existing_v1_missions,
+ has_function_privilege('anon','public.aervelys_v2_overview()','EXECUTE') anon_can_overview,
+ has_function_privilege('anon','public.aervelys_v2_initialize()','EXECUTE') anon_can_initialize,
+ has_function_privilege('anon','public.aervelys_v2_run_office()','EXECUTE') anon_can_run_office,
+ has_function_privilege('authenticated','public.aervelys_v2_overview()','EXECUTE') auth_can_call_overview,
+ has_table_privilege('authenticated','sim.v2_companies','SELECT') browser_direct_company_read,
+ has_table_privilege('authenticated','sim.v2_ledger','INSERT') browser_direct_finance_write;
