@@ -18,8 +18,13 @@ type Charter={id:string;code:string;customer:string;reason:string;origin:string;
  captain_name:string|null;pilot_mode:'ceo'|'virtual';completed_at:string|null};
 type Event={id:number;request_id:string|null;actor:string;kind:string;note:string;at:string};
 type Ledger={id:string;request_id:string;kind:'revenue'|'cost';category:string;amount_eur:number;at:string};
+type Ferry={id:string;request_id:string;request_code:string;
+ aircraft_registration:string;aircraft_type:string;captain_name:string;
+ origin:string;destination:string;hours:number;cost_eur:number;
+ pilot_mode:'ceo'|'virtual';status:'planned'|'in_flight'|'arrived'|'linked';
+ completed_at:string|null};
 type Snapshot={initialized:boolean;company:Company|null;staff:Staff[];aircraft:Aircraft[];
- requests:Charter[];events:Event[];ledger:Ledger[];
+ requests:Charter[];ferries:Ferry[];events:Event[];ledger:Ledger[];
  simulation_only:true;real_flights_modified:0;financial_bank_transactions:0};
 type Ack={simulation_only:true;[key:string]:unknown};
 const navigation:{id:Department;title:string;eyebrow:string;icon:typeof Plane}[]=[
@@ -80,7 +85,8 @@ export default function V2AirlineCockpit(){
    if(r.error||!value||value.simulation_only!==true||value.real_flights_modified!==0||
      value.financial_bank_transactions!==0||!Array.isArray(value.requests)||
      !Array.isArray(value.staff)||!Array.isArray(value.aircraft)||
-     !Array.isArray(value.ledger)||!Array.isArray(value.events))
+     !Array.isArray(value.ledger)||!Array.isArray(value.events)||
+     !Array.isArray(value.ferries))
     throw Error(r.error?.message||'Unerwartete Airline-Daten.');
    setData(value);setError('');
   }catch(e){
@@ -109,6 +115,9 @@ export default function V2AirlineCockpit(){
  const staff=data?.staff||[];
  const events=data?.events||[];
  const ledger=data?.ledger||[];
+ const ferries=data?.ferries||[];
+ const activeFerries=ferries.filter(f=>f.status==='planned'||f.status==='in_flight'||f.status==='arrived');
+ const flightableFerries=ferries.filter(f=>f.status==='planned'||f.status==='in_flight');
  const company=data?.company||null;
  const active=requests.filter(r=>r.status!=='completed'&&r.status!=='declined');
  const ready=requests.filter(r=>r.status==='ready'||r.status==='in_flight');
@@ -129,6 +138,17 @@ export default function V2AirlineCockpit(){
   await action(mode==='ceo'?'Flug für dich reserviert':'Flug an virtuellen Piloten übergeben',
    'aervelys_v2_choose_pilot',{p_request_id:id,p_mode:mode});
  }
+ async function chooseFerry(id:string,mode:'ceo'|'virtual'){
+  await action(mode==='ceo'?'Ferry-Flug für dich reserviert':'Ferry-Flug an virtuellen Piloten vergeben',
+   'aervelys_v2_choose_ferry_pilot',{p_ferry_id:id,p_mode:mode});
+ }
+ async function ferryMove(id:string,step:'start'|'complete'){
+  if(step==='complete'&&typeof window!=='undefined'&&!window.confirm(
+   'Leeren Positionierungsflug abschließen? Der Jet wird zum Zielflughafen bewegt und die geschätzten Betriebskosten ohne Chartereinnahmen gebucht. Eine echte MSFS-Landung ist noch nicht bestätigt.'
+  ))return;
+  await action(step==='start'?'Ferry-Flug gestartet':'Ferry-Flug als angekommen eingetragen',
+   'aervelys_v2_ferry_action',{p_ferry_id:id,p_action:step});
+ }
  async function move(id:string,step:'start'|'complete'){
   if(step==='complete'&&typeof window!=='undefined'&&!window.confirm(
     'SIM-Flug als abgeschlossen bestätigen? Es werden ausschließlich fiktive Erlöse und Modellkosten erfasst. Die tatsächliche MSFS-Landung wurde noch nicht nachgewiesen.'
@@ -141,8 +161,8 @@ export default function V2AirlineCockpit(){
    caption:'Anfangskapital + abgeschlossene SIM-Flüge',icon:Wallet},
   {title:'OFFENE AUFTRÄGE',value:String(active.length),
    caption:pending.length+' in Vertriebs-/Dispatchbearbeitung',icon:BriefcaseBusiness},
-  {title:'EINSATZBEREITE FLÜGE',value:String(ready.length),
-   caption:'Für dich oder virtuelle Piloten',icon:PlaneTakeoff},
+  {title:'FLÜGE ZU ENTSCHEIDEN',value:String(ready.length+flightableFerries.length),
+   caption:ready.length+' Charter · '+flightableFerries.length+' Positionierungen',icon:PlaneTakeoff},
   {title:'SIM-ERGEBNIS',value:euro(totalRevenue-totalCost),
    caption:'Nur abgeschlossene Flüge; keine Fixkosten',icon:CircleDollarSign}
  ];
@@ -260,6 +280,11 @@ export default function V2AirlineCockpit(){
            <i/><div><strong>{e.actor}</strong><p>{e.note}</p><small>{timestamp(e.at)}</small></div></div>)}</div>}
         </section>
        </div>
+       {activeFerries.length>0&&<section className={styles.callout}>
+        <Route size={22}/><div><strong>{activeFerries.length} Positionierungsflug/-flüge sind offen.</strong>
+         <p>Ein Businessjet muss erst an den Abflugort des Kunden gelangen. Leerflüge werden separat mit Kosten und ohne Erlöse geplant.</p></div>
+        <button type="button" onClick={()=>navigate('myflights')}>Ferry Flights <ArrowRight size={16}/></button>
+       </section>}
        {ready.length>0&&<section className={styles.callout}>
         <PlaneTakeoff size={22}/><div><strong>{ready.length} Flugauftrag/Flugaufträge stehen bereit.</strong>
          <p>Du kannst einen dieser Aufträge selbst übernehmen oder delegiert lassen.</p></div>
@@ -334,6 +359,28 @@ export default function V2AirlineCockpit(){
         </div>)}</div>
        </section>
        <section className={styles.panel}>
+        <div className={styles.panelTitle}>
+         <div><span className={styles.eyebrow}>POSITIONING / FERRY FLIGHTS</span>
+          <h3>Leere Flugzeugpositionierungen</h3></div><Route size={19}/>
+        </div>
+        {activeFerries.length===0?
+         <EmptyState icon={Route} title="Keine Positionierungsflüge offen"
+          description="Dispatch versucht zunächst ein freies Flugzeug am Kundenabflugort zu finden. Ist nur ein Jet an einem anderen Standort verfügbar, plant das System einen eigenen Leerflug."/>:
+         activeFerries.map(f=><div className={styles.ferryRow} key={f.id}>
+          <div><span className={styles.ferryBadge}>LEERFLUG · 0 PAX</span>
+           <strong>{f.origin} <ArrowRight size={14}/> {f.destination}</strong>
+           <small>{f.aircraft_registration} · {f.captain_name} · {f.hours} h geschätzt</small>
+           <small>Charter: {f.request_code}</small></div>
+          <div className={styles.ferryRight}>
+           <strong>{euro(Number(f.cost_eur))}</strong>
+           <span>{f.status==='planned'?'Geplant':
+            f.status==='in_flight'?'In Durchführung':'Am Abflugort eingetroffen'}</span>
+           <button type="button" onClick={()=>navigate('myflights')}>Cockpit öffnen <ArrowRight size={14}/></button>
+          </div>
+         </div>)}
+        <div className={styles.softNote}>Blockzeiten und Ferry-Kosten sind konservative SIM-Schätzungen aus Flughafenpositionen und Flugzeugkostensätzen. Kein echter Flugplan, kein NOTAM-/Wettercheck.</div>
+       </section>
+       <section className={styles.panel}>
         <div className={styles.panelTitle}><div><span className={styles.eyebrow}>DISPATCH DESK</span><h3>Aktuelle Flugplanung</h3></div>
          <button type="button" disabled={!!busy||pending.length===0} className={styles.textButton}
           onClick={()=>void process()}><RefreshCw size={15}/> Dispatch ausführen</button></div>
@@ -347,7 +394,7 @@ export default function V2AirlineCockpit(){
             <small>{r.captain_name||'Crew noch nicht zugewiesen'}</small></div>
            <StatusPill status={r.status}/>
           </div>)}
-        <div className={styles.softNote}>Dispatch respektiert Flugzeugstandorte, Kapazitäten und bereits gebundene Crews. Positionierungs- und Mehrtagesplanung folgen in späteren Ausbaustufen.</div>
+        <div className={styles.softNote}>Dispatch respektiert Standorte, Sitze, Musterberechtigungen und exklusive Ressourcenreservierungen. Erforderliche Positionierungen werden als separate Leerflüge geplant. Tages- und Crew-Dienstzeiten, Slots und echte Flugrouten folgen später.</div>
        </section>
       </>}
       {dept==='myflights'&&<>
@@ -356,6 +403,59 @@ export default function V2AirlineCockpit(){
         <div className={styles.bandActions}><button type="button" onClick={()=>navigate('operations')} className={styles.altButton}>
          <Route size={16}/> Dispatch anzeigen</button></div>
        </div>
+       <section className={styles.panel}>
+        <div className={styles.panelTitle}>
+         <div><span className={styles.eyebrow}>FLIGHT SELECTION / POSITIONING</span>
+          <h3>Positionierungsflüge · leer und kostenpflichtig</h3></div>
+         <Route size={20}/>
+        </div>
+        {flightableFerries.length===0?
+         <EmptyState icon={Route} title="Derzeit keine offenen Leerflüge"
+          description="Wenn Dispatch einen Jet an einem anderen Flughafen benötigt, erscheint der echte SIM-Positionierungsauftrag hier. Du kannst auch diesen Flug selbst fliegen."/>:
+         <div className={styles.ferryGrid}>{flightableFerries.map(f=>
+          <article className={styles.ferryTask} key={f.id}>
+           <div className={styles.ferryTaskHead}>
+            <span className={styles.ferryBadge}>FERRY / 0 PAX</span>
+            <span>{f.status==='planned'?'GEPLANT':'SIM-FLUG LÄUFT'}</span>
+           </div>
+           <div className={styles.flightRoute}><strong>{f.origin}</strong>
+            <span><PlaneTakeoff size={23}/></span><strong>{f.destination}</strong></div>
+           <div className={styles.flightFacts}>
+            <span>{f.aircraft_registration}</span>
+            <span>{f.hours} h geschätzt</span>
+            <span>Charter {f.request_code}</span>
+           </div>
+           <div className={styles.ferryEconomics}>
+            <span>Geschätzte Positionierungskosten</span>
+            <strong>−{euro(Number(f.cost_eur))}</strong>
+           </div>
+           {f.status==='planned'?<>
+            <div className={styles.choiceRow}>
+             <button type="button" disabled={!!busy}
+              className={f.pilot_mode==='ceo'?styles.choiceActive:styles.choice}
+              aria-pressed={f.pilot_mode==='ceo'} onClick={()=>void chooseFerry(f.id,'ceo')}>
+              Ich fliege den Leerflug</button>
+             <button type="button" disabled={!!busy}
+              className={f.pilot_mode==='virtual'?styles.choiceActive:styles.choice}
+              aria-pressed={f.pilot_mode==='virtual'} onClick={()=>void chooseFerry(f.id,'virtual')}>
+              Virtueller Pilot</button>
+            </div>
+            <button type="button" className={styles.fullButton}
+             disabled={!!busy} onClick={()=>void ferryMove(f.id,'start')}>
+             <PlaneTakeoff size={16}/> SIM-Leerflug starten</button>
+           </>:<button type="button" className={styles.fullButton}
+             disabled={!!busy} onClick={()=>void ferryMove(f.id,'complete')}>
+             <CheckCircle2 size={16}/> Leerflug-Ankunft bestätigen</button>}
+           <p>Eine Bestätigung ist derzeit manuell und keine aus MSFS verifizierte Landung.</p>
+          </article>)}</div>}
+        {activeFerries.some(f=>f.status==='arrived')&&
+         <div className={styles.ferryArrived}>
+          <CheckCircle2 size={18}/>
+          <div><strong>Positionierung abgeschlossen</strong>
+           <p>Das Flugzeug ist angekommen. Starte den Mitarbeiterprozess, damit Dispatch den eigentlichen Kundencharter freigibt.</p></div>
+          <button type="button" disabled={!!busy} onClick={()=>void process()}>Dispatch fortsetzen</button>
+         </div>}
+       </section>
        {ready.length===0?<EmptyState icon={PlaneTakeoff} title="Noch keine Flugaufträge bereit"
         description="Erzeuge im Commercial-Bereich eine Anfrage und lasse Sales und Dispatch arbeiten. Bereite anschließend deinen ersten Flug vor."/>:
         <div className={styles.flightCards}>{ready.map(r=><article key={r.id} className={styles.flightCard}>
@@ -408,7 +508,7 @@ export default function V2AirlineCockpit(){
         {ledger.length===0?<EmptyState icon={Coins} title="Noch keine Buchungen"
          description="Erst ein bestätigter SIM-Flugabschluss erzeugt Erlös und Modellkosten. Angebote zählen nicht als Umsatz."/>:
          ledger.map(l=><div key={l.id} className={styles.ledgerLine}>
-          <div><strong>{l.kind==='revenue'?'Chartererlös':'Flugbetriebskosten'}</strong>
+          <div><strong>{l.kind==='revenue'?'Chartererlös':l.category==='positioning'?'Positionierungskosten':'Flugbetriebskosten'}</strong>
            <small>{timestamp(l.at)} · {requests.find(r=>r.id===l.request_id)?.code||'SIM'}</small></div>
           <strong className={l.kind==='revenue'?styles.positive:styles.negative}>
            {l.kind==='revenue'?'+':'−'}{euro(Number(l.amount_eur))}</strong>
@@ -435,7 +535,8 @@ export default function V2AirlineCockpit(){
            ['Startkapital',euro(Number(company?.opening_cash_eur||0))],
            ['Kundenanfragen','Deterministische fiktive Szenarien'],
            ['Sales','Preis auf Basis modellierter Flugkosten'],
-           ['Dispatch','Standort, Sitzplätze und verfügbare Piloten'],
+           ['Dispatch','Standort, Sitze, Musterberechtigungen, exklusive Crew/Flotte'],
+           ['Positionierungen','Ferry-Legs mit eigener Crew, Kosten und Standortwechsel'],
            ['Flugwahl','CEO oder virtueller Captain'],
            ['Simulationsfortschritt','Manuell ausgelöst, keine Hintergrundautomatik'],
            ['MSFS-Bridge','Bestehende NEXT-1.0-Bridge noch nicht angeschlossen']
