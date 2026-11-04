@@ -6,6 +6,8 @@ import {Activity,ArrowLeft,ArrowRight,BriefcaseBusiness,Building2,CheckCircle2,
  Gauge,Handshake,LayoutDashboard,LoaderCircle,Menu,Plane,PlaneTakeoff,
  Plus,RefreshCw,Route,Settings2,ShieldCheck,Sparkles,Users,Wallet,X} from 'lucide-react';
 import styles from './V2AirlineCockpit.module.css';
+import V2OperationsFoundation from './V2OperationsFoundation';
+import V2SimbriefButton from './V2SimbriefButton';
 import {CharterOffer,FinanceReviewBoard,type V2Quote,type V2FinanceReview}
  from './V2CharterOffer';
 
@@ -348,6 +350,7 @@ export default function V2AirlineCockpit(){
        </div>
       </>}
       {dept==='operations'&&<>
+       <div className={styles.softNote}><strong>Flottenfreigabe:</strong> Die Phenom 300E ist derzeit für Charterangebote und Charterpositionierungen gesperrt. Bestehende Mitarbeiter und Flugzeuge sowie langfristige Dienstplanung findest du unter Airline Administration → Operations Foundation. Der laufende CJ4-SIM-Auftrag bleibt unverändert.</div>
        <div className={styles.kpis}>
         {[
          {title:'FLOTTE',value:String(fleet.length),caption:'Simulierte Businessjets',icon:Plane},
@@ -436,6 +439,10 @@ export default function V2AirlineCockpit(){
             <span>{f.hours} h geschätzt</span>
             <span>Charter {f.request_code}</span>
            </div>
+           <V2SimbriefButton leg={{
+            origin:f.origin,destination:f.destination,aircraftType:f.aircraft_type,
+            estimatedHours:Number(f.hours),passengers:0
+           }}/>
            <div className={styles.ferryEconomics}>
             <span>Geschätzte Positionierungskosten</span>
             <strong>−{euro(Number(f.cost_eur))}</strong>
@@ -477,6 +484,11 @@ export default function V2AirlineCockpit(){
          </div>
          <div className={styles.flightCrew}><Users size={16}/>
           <span>{r.pilot_mode==='ceo'?'DU ÜBERNIMMST DIESEN FLUG':'VIRTUELLER PILOT: '+(r.captain_name||'unbekannt')}</span></div>
+         <V2SimbriefButton leg={{
+          origin:r.origin,destination:r.destination,
+          aircraftType:fleet.find(a=>a.registration===r.aircraft_registration)?.type||'',
+          estimatedHours:Number(r.hours),passengers:r.pax,departureAt:r.departure_at
+         }}/>
          {r.status==='ready'?<>
           <div className={styles.choiceRow}>
            <button type="button" disabled={!!busy} aria-pressed={r.pilot_mode==='ceo'}
@@ -529,6 +541,7 @@ export default function V2AirlineCockpit(){
        <div className={styles.softNote}>Wirtschaftlicher Rechenkern V2.2: Anfangskapital {euro(Number(company?.opening_cash_eur||0))} · geplant {euro(monthlyPayroll)}/Monat Personalkosten. Diese Fixkosten, Steuern, Leasing, Wartung und echte Flughafengebühren werden noch nicht periodisch gebucht. Der angezeigte Flugbeitrag ist daher ausdrücklich **kein Unternehmensgewinn**.</div>
       </>}
       {dept==='administration'&&<>
+       <V2OperationsFoundation/>
        <div className={styles.columns}>
         <section className={styles.panel}>
          <div className={styles.panelTitle}><div><span className={styles.eyebrow}>YOUR TEAM</span><h3>Fiktive Mitarbeiter</h3></div><Users size={19}/></div>
@@ -554,6 +567,10 @@ export default function V2AirlineCockpit(){
            ['Nachkalkulation','Planwerte gegen gebuchte SIM-Kosten, vor Fixkosten'],
            ['Flugwahl','CEO oder virtueller Captain'],
            ['Simulationsfortschritt','Manuell ausgelöst, keine Hintergrundautomatik'],
+           ['Phenom 300E','Für Charter und Charterpositionierungen in V2 gesperrt'],
+           ['Mitarbeiter-Stamm','31 bestehende Mitarbeiter, V2-Demo-Personal noch nicht verknüpft'],
+           ['Schulungen und Rufbereitschaft','SIM-Planung bis zu 18 Monate im Voraus'],
+           ['SimBrief','Vorbefüllter Dispatch-Link ohne zusätzliche API-Kosten'],
            ['MSFS-Bridge','Bestehende NEXT-1.0-Bridge noch nicht angeschlossen']
           ].map(([k,v])=><div key={k}><span>{k}</span><strong>{v}</strong></div>)}
          </div>
