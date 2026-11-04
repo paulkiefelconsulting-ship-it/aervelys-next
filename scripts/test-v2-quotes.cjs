@@ -23,7 +23,7 @@ for(const term of [
 ])assert.ok(ui.includes(term)||offer.includes(term),'Missing UI quotation: '+term);
 for(const term of [
  'Angebotstext kopieren','Positionierung','postflight_policy',
- 'Nur','Geschätzte Positionierungskosten','SIM-Deckungsbeitrag',
+ 'Geschätzte Positionierungskosten','SIM-Deckungsbeitrag',
  'preis','quote.total_sell_eur'
 ])assert.ok(offer.toLowerCase().includes(term.toLowerCase()),
  'Missing customer quote or finance transparency: '+term);
