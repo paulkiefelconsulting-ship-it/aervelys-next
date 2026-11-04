@@ -19,20 +19,24 @@ alter table sim.v2_airport_reference enable row level security;
 revoke all on sim.v2_airport_reference from public,anon,authenticated;
 
 create function sim.v2_estimate_ferry_hours(p_from text,p_to text)
-returns numeric language sql stable security definer set search_path=''
+returns numeric language plpgsql stable security definer set search_path=''
 as $estimate$
- select case when p_from=p_to and exists(
-  select 1 from sim.v2_airport_reference x where x.icao=p_from) then 0::numeric
- else (
- select greatest(0.5::numeric,
-   (ceil(((0.30 + (3440.065 * acos(least(1::float8,greatest(-1::float8,
-   sin(radians(a.latitude_deg))*sin(radians(b.latitude_deg))+
-   cos(radians(a.latitude_deg))*cos(radians(b.latitude_deg))*
-   cos(radians(a.longitude_deg-b.longitude_deg))))))/320)*4)::numeric)/4)::numeric
- from sim.v2_airport_reference a join sim.v2_airport_reference b
-  on a.icao=p_from and b.icao=p_to
- ) end
-$estimate$;
+declare
+ a sim.v2_airport_reference%rowtype;
+ b sim.v2_airport_reference%rowtype;
+ nautical_miles double precision;
+begin
+ select * into a from sim.v2_airport_reference where icao=p_from;
+ if not found then return null;end if;
+ select * into b from sim.v2_airport_reference where icao=p_to;
+ if not found then return null;end if;
+ if p_from=p_to then return 0;end if;
+ nautical_miles:=3440.065*acos(least(1::double precision,greatest(-1::double precision,
+  sin(radians(a.latitude_deg))*sin(radians(b.latitude_deg))+
+  cos(radians(a.latitude_deg))*cos(radians(b.latitude_deg))*
+  cos(radians(a.longitude_deg-b.longitude_deg)))));
+ return greatest(0.5::numeric,ceil(((0.30+nautical_miles/320)*4)::numeric)/4);
+end $estimate$;
 revoke all on function sim.v2_estimate_ferry_hours(text,text) from public,anon,authenticated;
 
 alter table sim.v2_ledger drop constraint v2_ledger_category_check;
