@@ -48,6 +48,8 @@ jobs:
         run: node scripts/test-v2-positioning.cjs
       - name: Verify V2 client quote lock and finance review
         run: node scripts/test-v2-quotes.cjs
+      - name: Verify V2 original roster, Phenom block and SimBrief link
+        run: node scripts/test-v2-ops-foundation.cjs
       - name: Strict TypeScript check
         run: npx tsc --noEmit
       - name: Production build check (no Vercel deployment)
