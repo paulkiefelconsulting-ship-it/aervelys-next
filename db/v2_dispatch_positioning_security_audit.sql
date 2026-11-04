@@ -1,0 +1,16 @@
+select
+ (select count(*) from sim.v2_companies) company_count,
+ (select count(*) from sim.v2_ferry_legs) ferry_count,
+ (select count(*) from sim.v2_ledger) ledger_count,
+ (select count(*) from sim.v2_requests) charter_count,
+ (select count(*) from sim.aircraft) legacy_aircraft,
+ (select count(*) from sim.sim_customer_cases) legacy_customers,
+ has_table_privilege('anon','sim.v2_ferry_legs','SELECT') anon_can_read_ferry,
+ has_table_privilege('authenticated','sim.v2_ferry_legs','INSERT') auth_can_directly_write_ferry,
+ has_table_privilege('authenticated','sim.v2_airport_reference','SELECT') auth_can_read_airports,
+ has_function_privilege('anon','public.aervelys_v2_ferry_action(uuid,text)','EXECUTE') anon_can_finish_ferry,
+ has_function_privilege('anon','public.aervelys_v2_choose_ferry_pilot(uuid,text)','EXECUTE') anon_can_choose_ferry,
+ has_function_privilege('authenticated','public.aervelys_v2_ferry_action(uuid,text)','EXECUTE') auth_can_call_guarded_rpc,
+ sim.v2_estimate_ferry_hours('EDAZ','EDAZ') same_airport_hours,
+ sim.v2_estimate_ferry_hours('EDDM','EDAZ') eddm_to_edaz_hours,
+ sim.v2_estimate_ferry_hours('ZZZZ','EDAZ') unknown_airport_hours;
