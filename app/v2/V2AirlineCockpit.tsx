@@ -407,6 +407,13 @@ export default function V2AirlineCockpit(){
            <div><AircraftMarker registration={r.aircraft_registration}/>
             <small>{r.captain_name||'Crew noch nicht zugewiesen'}</small></div>
            <StatusPill status={r.status}/>
+           {r.aircraft_registration&&<div style={{gridColumn:'1 / -1'}}>
+            <V2SimbriefButton leg={{
+             origin:r.origin,destination:r.destination,
+             aircraftType:fleet.find(a=>a.registration===r.aircraft_registration)?.type||'',
+             passengers:r.pax,estimatedHours:Number(r.hours),departureAt:r.departure_at
+            }}/>
+           </div>}
           </div>)}
         <div className={styles.softNote}>Dispatch respektiert Standorte, Sitze, Musterberechtigungen und exklusive Ressourcenreservierungen. Erforderliche Positionierungen werden als separate Leerflüge geplant. Tages- und Crew-Dienstzeiten, Slots und echte Flugrouten folgen später.</div>
        </section>
@@ -544,7 +551,8 @@ export default function V2AirlineCockpit(){
        <V2OperationsFoundation/>
        <div className={styles.columns}>
         <section className={styles.panel}>
-         <div className={styles.panelTitle}><div><span className={styles.eyebrow}>YOUR TEAM</span><h3>Fiktive Mitarbeiter</h3></div><Users size={19}/></div>
+         <div className={styles.panelTitle}><div><span className={styles.eyebrow}>V2 DISPATCH · TECHNISCHER ÜBERGANGSBESTAND</span><h3>Beispielrollen – noch nicht mit Originalteam verknüpft</h3></div><Users size={19}/></div>
+         <div className={styles.softNote}>Die echten 31 AERVELYS-Mitarbeiter siehst du oben in Operations Foundation. Diese sechs V2-Beispielrollen bleiben nur zum Schutz des bereits laufenden CJ4-SIM-Auftrags bestehen und werden später kontrolliert zugeordnet.</div>
          {staff.map(s=><div className={styles.employee} key={s.id}>
           <span className={styles.avatar}>{s.name.split(' ').map(x=>x[0]).slice(0,2).join('')}</span>
           <div><strong>{s.name}</strong><small>{staffRoles[s.role]||s.role}{s.rating?' · '+s.rating:''}</small></div>
