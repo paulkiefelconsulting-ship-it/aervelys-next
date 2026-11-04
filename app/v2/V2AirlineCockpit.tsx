@@ -6,6 +6,8 @@ import {Activity,ArrowLeft,ArrowRight,BriefcaseBusiness,Building2,CheckCircle2,
  Gauge,Handshake,LayoutDashboard,LoaderCircle,Menu,Plane,PlaneTakeoff,
  Plus,RefreshCw,Route,Settings2,ShieldCheck,Sparkles,Users,Wallet,X} from 'lucide-react';
 import styles from './V2AirlineCockpit.module.css';
+import {CharterOffer,FinanceReviewBoard,type V2Quote,type V2FinanceReview}
+ from './V2CharterOffer';
 
 type Department='dashboard'|'commercial'|'operations'|'myflights'|'finance'|'administration';
 type Status='new'|'quoted'|'accepted'|'declined'|'planned'|'ready'|'in_flight'|'completed';
@@ -24,7 +26,7 @@ type Ferry={id:string;request_id:string;request_code:string;
  pilot_mode:'ceo'|'virtual';status:'planned'|'in_flight'|'arrived'|'linked';
  completed_at:string|null};
 type Snapshot={initialized:boolean;company:Company|null;staff:Staff[];aircraft:Aircraft[];
- requests:Charter[];ferries:Ferry[];events:Event[];ledger:Ledger[];
+ requests:Charter[];ferries:Ferry[];quotes:V2Quote[];finance_reviews:V2FinanceReview[];events:Event[];ledger:Ledger[];
  simulation_only:true;real_flights_modified:0;financial_bank_transactions:0};
 type Ack={simulation_only:true;[key:string]:unknown};
 const navigation:{id:Department;title:string;eyebrow:string;icon:typeof Plane}[]=[
@@ -86,7 +88,8 @@ export default function V2AirlineCockpit(){
      value.financial_bank_transactions!==0||!Array.isArray(value.requests)||
      !Array.isArray(value.staff)||!Array.isArray(value.aircraft)||
      !Array.isArray(value.ledger)||!Array.isArray(value.events)||
-     !Array.isArray(value.ferries))
+     !Array.isArray(value.ferries)||!Array.isArray(value.quotes)||
+     !Array.isArray(value.finance_reviews))
     throw Error(r.error?.message||'Unerwartete Airline-Daten.');
    setData(value);setError('');
   }catch(e){
@@ -115,6 +118,8 @@ export default function V2AirlineCockpit(){
  const staff=data?.staff||[];
  const events=data?.events||[];
  const ledger=data?.ledger||[];
+ const quotes=data?.quotes||[];
+ const financeReviews=data?.finance_reviews||[];
  const ferries=data?.ferries||[];
  const activeFerries=ferries.filter(f=>f.status==='planned'||f.status==='in_flight'||f.status==='arrived');
  const flightableFerries=ferries.filter(f=>f.status==='planned'||f.status==='in_flight');
@@ -238,7 +243,7 @@ export default function V2AirlineCockpit(){
       {dept==='dashboard'&&<>
        <section className={styles.hero}>
         <div className={styles.heroText}>
-         <span className={styles.heroEyebrow}><Sparkles size={14}/> AIRLINE BUSINESS ENGINE · V2.0</span>
+         <span className={styles.heroEyebrow}><Sparkles size={14}/> AIRLINE BUSINESS ENGINE · V2.2</span>
          <h2>The airline runs.<br/><em>You take command.</em></h2>
          <p>Dein virtuelles Unternehmen organisiert Sales, Dispatch, Crew und Finanzen. Sobald ein Flug bereit ist, kannst du ihn selbst übernehmen.</p>
          <div className={styles.heroActions}>
@@ -328,7 +333,13 @@ export default function V2AirlineCockpit(){
             ['SIM-Angebot',euro(spotlight.quote_eur)],
             ['Modellierte Kosten',euro(spotlight.cost_eur)]
            ].map(([key,value])=><div key={key}><span>{key}</span><strong>{value}</strong></div>)}</div>
-           <div className={styles.softNote}>Automatische Sales-Entscheidungen sind derzeit nachvollziehbare Regeln, noch keine generativen Kundengespräche.</div>
+           <CharterOffer
+            quote={quotes.find(q=>q.request_id===spotlight.id)||null}
+            request={{code:spotlight.code,customer:spotlight.customer,
+             origin:spotlight.origin,destination:spotlight.destination,
+             departure_at:spotlight.departure_at,pax:spotlight.pax,hours:spotlight.hours}}
+            companyName={company?.name||'AERVELYS'}/>
+           <div className={styles.softNote}>Sales kalkuliert den gesamten SIM-Kundenpreis einschließlich notwendiger Anflugpositionierungen. Der angenommene Preis ist in der Datenbank gesperrt; Dispatch darf nicht stillschweigend nachberechnen. Generative Kundengespräche sind noch nicht vorhanden.</div>
            {['new','quoted','accepted','planned'].includes(spotlight.status)&&
             <button type="button" disabled={!!busy} className={styles.fullButton} onClick={()=>void process()}>
              <Users size={16}/> Mitarbeiterprozess fortsetzen</button>}
@@ -489,6 +500,7 @@ export default function V2AirlineCockpit(){
        </section>}
       </>}
       {dept==='finance'&&<>
+       <FinanceReviewBoard reviews={financeReviews}/>
        <div className={styles.kpis}>
         {[
          {title:'SIM-BANKBESTAND',value:company?euro(Number(company.cash_eur)):'—',
@@ -514,7 +526,7 @@ export default function V2AirlineCockpit(){
            {l.kind==='revenue'?'+':'−'}{euro(Number(l.amount_eur))}</strong>
          </div>)}
        </section>
-       <div className={styles.softNote}>Wirtschaftlicher Rechenkern V2.1: Anfangskapital {euro(Number(company?.opening_cash_eur||0))} · geplant {euro(monthlyPayroll)}/Monat Personalkosten. Diese Fixkosten, Steuern, Leasing, Wartung und echte Flughafengebühren werden noch nicht periodisch gebucht. Der angezeigte Flugbeitrag ist daher ausdrücklich **kein Unternehmensgewinn**.</div>
+       <div className={styles.softNote}>Wirtschaftlicher Rechenkern V2.2: Anfangskapital {euro(Number(company?.opening_cash_eur||0))} · geplant {euro(monthlyPayroll)}/Monat Personalkosten. Diese Fixkosten, Steuern, Leasing, Wartung und echte Flughafengebühren werden noch nicht periodisch gebucht. Der angezeigte Flugbeitrag ist daher ausdrücklich **kein Unternehmensgewinn**.</div>
       </>}
       {dept==='administration'&&<>
        <div className={styles.columns}>
@@ -536,7 +548,10 @@ export default function V2AirlineCockpit(){
            ['Kundenanfragen','Deterministische fiktive Szenarien'],
            ['Sales','Preis auf Basis modellierter Flugkosten'],
            ['Dispatch','Standort, Sitze, Musterberechtigungen, exklusive Crew/Flotte'],
-           ['Positionierungen','Ferry-Legs mit eigener Crew, Kosten und Standortwechsel'],
+           ['Positionierungen','Ferry-Legs vor Kundenflug im Angebot enthalten'],
+           ['Angebotsbindung','Kunden-Gesamtpreis ab Annahme unveränderbar'],
+           ['Rückflug zur Basis','Nicht automatisch enthalten; Rotation bleibt am Kundenziel'],
+           ['Nachkalkulation','Planwerte gegen gebuchte SIM-Kosten, vor Fixkosten'],
            ['Flugwahl','CEO oder virtueller Captain'],
            ['Simulationsfortschritt','Manuell ausgelöst, keine Hintergrundautomatik'],
            ['MSFS-Bridge','Bestehende NEXT-1.0-Bridge noch nicht angeschlossen']
