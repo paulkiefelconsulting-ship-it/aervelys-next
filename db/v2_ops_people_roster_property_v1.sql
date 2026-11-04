@@ -77,7 +77,7 @@ begin
  select id into cid from sim.v2_companies where owner_id=u;
  return jsonb_build_object(
   'simulation_only',true,'company_exists',cid is not null,
-  'legacy_roster_integrated',true,'legacy_dispatch_integrated',false,
+  'legacy_roster_integrated',false,'legacy_dispatch_integrated',false,
   'real_crew_qualifications_verified',false,'property_purchase_executed',false,
   'aircraft',coalesce((select jsonb_agg(jsonb_build_object(
      'id',a.id,'registration',a.registration,'type',a.aircraft_type,
@@ -146,6 +146,12 @@ begin
   or p_start<now()-interval '7 days' or p_start>now()+interval '18 months'
   or p_end>p_start+interval '90 days' then
   raise exception 'Training dates outside planning horizon' using errcode='22023';end if;
+ perform pg_advisory_xact_lock(hashtext('aervelys_v2_roster'),hashtext(p_person_id::text));
+ if exists(select 1 from sim.v2_duty_roster d where d.company_id=cid
+  and d.person_id=p_person_id and d.status<>'cancelled'
+  and d.starts_at<p_end and d.ends_at>p_start)then
+   raise exception 'Training conflicts with existing duty/standby/leave/rest'
+    using errcode='22023';end if;
  insert into sim.v2_training_records(company_id,person_id,title,category,
   starts_at,ends_at,cost_eur,notes)
  values(cid,p_person_id,p_title,p_category,p_start,p_end,p_cost,coalesce(p_notes,''))
