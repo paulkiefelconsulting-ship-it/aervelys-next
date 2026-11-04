@@ -310,7 +310,7 @@ begin
           if found then
             proposed_cost:=ceil(((r.estimated_hours*a.hourly_cost_eur)+450+
               (r.estimated_hours*280))*1.12/10)*10;
-            if proposed_cost+f.estimated_cost_eur>q.total_sell_eur*0.90 then
+            if proposed_cost+f.estimated_cost_eur>q.total_sell_eur*0.95 then
               raise exception 'Locked customer price does not cover rotated flight'
                using errcode='22023';end if;
             update sim.v2_requests set aircraft_id=a.id,captain_id=captain.id,
@@ -333,7 +333,7 @@ begin
     where a0.company_id=cid and a0.status='available'
       and a0.current_icao=r.origin_icao and a0.seats>=r.passengers
       and ceil(((r.estimated_hours*a0.hourly_cost_eur)+450+
-        (r.estimated_hours*280))*1.12/10)*10<=q.total_sell_eur*0.90
+        (r.estimated_hours*280))*1.12/10)*10<=q.total_sell_eur*0.95
       and not exists(select 1 from sim.v2_requests busy
        where busy.aircraft_id=a0.id and busy.status in('planned','ready','in_flight'))
       and not exists(select 1 from sim.v2_ferry_legs busy
@@ -398,7 +398,7 @@ begin
         ferry_cost:=ceil(((ferry_hours*(a.hourly_cost_eur+280)+240)*1.12)/10)*10;
         proposed_cost:=ceil(((r.estimated_hours*a.hourly_cost_eur)+450+
           (r.estimated_hours*280))*1.12/10)*10;
-        if q.total_sell_eur < (proposed_cost+ferry_cost)/0.90 then
+        if q.total_sell_eur < (proposed_cost+ferry_cost)/0.95 then
           if not exists(select 1 from sim.v2_events e
             where e.request_id=r.id and e.event_kind='reposition_cost_review') then
             insert into sim.v2_events(company_id,request_id,actor_name,event_kind,note)
