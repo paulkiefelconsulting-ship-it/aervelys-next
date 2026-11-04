@@ -42,6 +42,8 @@ jobs:
         run: node scripts/test-msfs-acars.cjs
       - name: Verify unified NEXT flight lifecycle
         run: node scripts/test-next-integration-pipeline.cjs
+      - name: Verify AERVELYS NEXT 2.0 airline core
+        run: node scripts/test-v2-airline-core.cjs
       - name: Strict TypeScript check
         run: npx tsc --noEmit
       - name: Production build check (no Vercel deployment)
