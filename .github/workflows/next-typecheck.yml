@@ -44,6 +44,8 @@ jobs:
         run: node scripts/test-next-integration-pipeline.cjs
       - name: Verify AERVELYS NEXT 2.0 airline core
         run: node scripts/test-v2-airline-core.cjs
+      - name: Verify AERVELYS V2 ferry and dispatch contract
+        run: node scripts/test-v2-positioning.cjs
       - name: Strict TypeScript check
         run: npx tsc --noEmit
       - name: Production build check (no Vercel deployment)
