@@ -46,6 +46,13 @@ begin
   if out->>'real_duty_time_verified'<>'false' then
    raise exception 'Standby inappropriately verified as real duty';end if;
   begin
+   perform public.aervelys_v2_training_add(person,
+    'Overlapping new type training prohibited','type_rating',
+    future_start+interval '4 hours',future_start+interval '7 hours',
+    null,'should be rejected');
+   raise exception 'TRAINING_OVER_EXISTING_STANDBY_ACCEPTED';
+  exception when invalid_parameter_value then null;end;
+  begin
    perform public.aervelys_v2_duty_add(person,'duty',
     future_start+interval '4 hours',future_start+interval '7 hours','EDAZ',
     'Overlap not allowed');
