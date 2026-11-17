@@ -2,6 +2,7 @@
 import {useState} from 'react';
 import {Plane, LayoutDashboard, BriefcaseBusiness, UsersRound, Wallet, MapPin, ShieldCheck, Menu, X, Bell, ArrowRight, FileClock, Handshake, Clock3, Building2, GraduationCap, Search, CircleHelp, ChevronRight, ClipboardList, BookUser} from 'lucide-react';
 import './preview.css';
+import {aervelysBrandMark} from './brand-mark';
 
 type Area='Übersicht'|'Kunden & Charter'|'Pilot Services'|'Flotte & Training'|'Personal'|'Standorte'|'Finanzen'|'Behörden';
 const sections:{name:Area;icon:typeof Plane}[]=[
@@ -33,7 +34,7 @@ export default function TycoonPreview(){
  return <div className="tycoon-preview">
   <aside className={'tycoon-side '+(mobile?'mobile-open':'')}>
    <div className="tycoon-logo">
-    <span className="tycoon-logo-letter" aria-hidden="true">A</span>
+    <img className="tycoon-logo-image" src={aervelysBrandMark} alt="AERVELYS Markenzeichen" />
     <div><strong>AERVELYS</strong><small>BUSINESS AVIATION</small></div>
    </div>
    <div className="tycoon-side-label">TYCOON · COMMAND CENTER</div>
